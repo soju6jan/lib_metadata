@@ -25,8 +25,10 @@ class SiteJavbus(object):
     @staticmethod 
     def search(keyword, do_trans=True, proxy_url=None, image_mode='0'):
         try:
+            ret = {'data':[]}
             keyword = keyword.strip().lower()
             # 2020-06-24
+            
             if keyword[-3:-1] == 'cd':
                 keyword = keyword[:-3]
             keyword = keyword.replace(' ', '-')
@@ -34,7 +36,7 @@ class SiteJavbus(object):
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url)
             #lists = tree.xpath('//*[@id="waterfall"]/div')
             lists = tree.xpath('//a[@class="movie-box"]')
-            ret = {'data' : []}
+            
             for node in lists:
                 try:
                     item = EntityAVSearch(site_name)

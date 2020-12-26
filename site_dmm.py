@@ -21,15 +21,14 @@ site_base_url = 'https://www.dmm.co.jp'
 module_char = 'C'
 site_char = 'D'
 
-
-dmm_headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
-    'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Language' : 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Cookie' : 'age_check_done=1',
-} 
-
 class SiteDmm(object):
+    dmm_headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
+        'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language' : 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie' : 'age_check_done=1',
+    } 
+
     @staticmethod 
     def search(keyword, do_trans=True, proxy_url=None, image_mode='0'):
         try:
@@ -50,7 +49,7 @@ class SiteDmm(object):
             logger.debug('keyword [%s] -> [%s]', keyword, dmm_keyword)
 
             url = '%s/digital/videoa/-/list/search/=/?searchstr=%s' % (site_base_url, dmm_keyword)
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=dmm_headers)
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers)
 
             lists = tree.xpath('//*[@id="list"]/li')
             ret = {'data' : []}
@@ -143,7 +142,7 @@ class SiteDmm(object):
         try:
             ret = {}
             url = '%s/digital/videoa/-/detail/=/cid=%s/' % (site_base_url, code[2:])
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=dmm_headers)
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers)
             
             entity = EntityMovie(site_name, code)
             entity.country = [u'일본']
@@ -259,8 +258,8 @@ class SiteDmm(object):
             try:
                 tmp = tree.xpath('//*[@id="detail-sample-movie"]/div/a')[0].attrib['onclick']
                 url = site_base_url + tmp.split("'")[1]
-                url = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=dmm_headers).xpath('//iframe')[0].attrib['src']
-                text = SiteUtil.get_text(url, proxy_url=proxy_url, headers=dmm_headers)
+                url = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers).xpath('//iframe')[0].attrib['src']
+                text = SiteUtil.get_text(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers)
                 pos = text.find('var params = {')
                 data = json.loads(text[text.find('{', pos):text.find(';', pos)])
                 #logger.debug(json.dumps(data, indent=4))

@@ -44,8 +44,7 @@ class SiteUtil(object):
 
     @staticmethod
     def process_image_mode(image_mode, image_url, proxy_url=None):
-        if image_mode == '0':
-            ret = image_url
+        ret = image_url
         if image_mode == '1':
             tmp = '{ddns}/metadata/api/image_proxy?url=' + py_urllib.quote_plus(image_url)
             if proxy_url is not None:
