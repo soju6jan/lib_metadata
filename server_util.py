@@ -19,8 +19,8 @@ logger = P.logger
 server_plugin_ddns = 'https://sjva-server.soju6jan.com'
 
 class MetadataServerUtil(object):
-    @staticmethod
-    def get_metadata(code):
+    @classmethod
+    def get_metadata(cls, code):
         try:
             from framework import py_urllib
             url = '{server_plugin_ddns}/server/normal/metadata/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
@@ -31,8 +31,8 @@ class MetadataServerUtil(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
     
-    @staticmethod
-    def search_metadata(keyword):
+    @classmethod
+    def search_metadata(cls, keyword):
         try:
             from framework import py_urllib
             url = '{server_plugin_ddns}/server/normal/metadata/search?keyword={keyword}'.format(server_plugin_ddns=server_plugin_ddns, keyword=keyword)
@@ -43,8 +43,8 @@ class MetadataServerUtil(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc()) 
 
-    @staticmethod
-    def set_metadata(code, data, keyword):
+    @classmethod
+    def set_metadata(cls, code, data, keyword):
         try:
             from framework import py_urllib
             url = '{server_plugin_ddns}/server/normal/metadata/set'.format(server_plugin_ddns=server_plugin_ddns)

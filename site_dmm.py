@@ -274,15 +274,17 @@ class SiteDmm(object):
                 logger.error(traceback.format_exc())
 
             try:
-                tmp = tree.xpath('//*[@id="detail-sample-movie"]/div/a')[0].attrib['onclick']
-                url = cls.site_base_url + tmp.split("'")[1]
-                url = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers).xpath('//iframe')[0].attrib['src']
-                text = SiteUtil.get_text(url, proxy_url=proxy_url, headers=cls.dmm_headers)
-                pos = text.find('var params = {')
-                data = json.loads(text[text.find('{', pos):text.find(';', pos)])
-                #logger.debug(json.dumps(data, indent=4))
-                data['bitrates'] = sorted(data['bitrates'], key=lambda k: k['bitrate'], reverse=True)
-                entity.extras = [EntityExtra('trailer', SiteUtil.trans(data['title'], do_trans=do_trans), 'mp4', 'https:%s' % data['bitrates'][0]['src'])]
+                tmp = tree.xpath('//*[@id="detail-sample-movie"]/div/a')
+                if tmp:
+                    tmp = tmp[0].attrib['onclick']
+                    url = cls.site_base_url + tmp.split("'")[1]
+                    url = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers).xpath('//iframe')[0].attrib['src']
+                    text = SiteUtil.get_text(url, proxy_url=proxy_url, headers=cls.dmm_headers)
+                    pos = text.find('var params = {')
+                    data = json.loads(text[text.find('{', pos):text.find(';', pos)])
+                    #logger.debug(json.dumps(data, indent=4))
+                    data['bitrates'] = sorted(data['bitrates'], key=lambda k: k['bitrate'], reverse=True)
+                    entity.extras = [EntityExtra('trailer', SiteUtil.trans(data['title'], do_trans=do_trans), 'mp4', 'https:%s' % data['bitrates'][0]['src'])]
             except Exception as exception: 
                 logger.error('Exception:%s', exception)
                 logger.error(traceback.format_exc())
