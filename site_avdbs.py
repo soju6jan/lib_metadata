@@ -16,10 +16,12 @@ logger = P.logger
 # 사이트 차단
 
 class SiteAvdbs(object):
+    site_char = 'A'
     @staticmethod
     def get_actor_info(entity_actor, proxy_url=None, retry=True):
         try:
             url = 'https://www.avdbs.com/w2017/page/search/search_actor.php?kwd=%s' % entity_actor['originalname']
+            logger.debug(url)
             proxies = None
             if proxy_url is not None:
                 proxies = {"http"  : proxy_url, "https" : proxy_url}
@@ -29,15 +31,21 @@ class SiteAvdbs(object):
             res.encoding = 'utf-8'
             data = '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">' + res.text
             tree = html.fromstring(data)
-            nodes = tree.xpath('//img')
-            if nodes:
-                entity_actor['thumb'] = SiteUtil.process_image_mode('3', nodes[0].attrib['src'].strip())
+            img_tag = tree.xpath('//img')
+
+            if img_tag:
                 nodes = tree.xpath('//div[@class="dscr"]/p')
-                entity_actor['name'] = nodes[0].xpath('./a')[0].text_content().strip()
-                entity_actor['name2'] = nodes[1].xpath('./a')[0].text_content().strip().split('(')[0]
-                entity_actor['site'] = 'avdbs'
+                tmp = nodes[1].xpath('./a')[0].text_content().strip()
+                #tmp = nodes[1].xpath('./a')[0].text_content().strip()
+                if tmp.split('(')[1].split(')')[0] == entity_actor['originalname']:
+                    entity_actor['name'] = nodes[0].xpath('./a')[0].text_content().strip()
+                    entity_actor['name2'] = nodes[1].xpath('./a')[0].text_content().strip().split('(')[0]
+                    entity_actor['site'] = 'avdbs'
+                    entity_actor['thumb'] = SiteUtil.process_image_mode('3', img_tag[0].attrib['src'].strip())
+                else:
+                    logger.debug('Avads miss match')
             else:
-                logger.debug('mmmmmmmmmmmmm')
+                logger.debug('Avads no match')
             return entity_actor
         except ValueError:
             # 2020-06-01

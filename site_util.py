@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-import time
+import time, json
 
 import requests
 import traceback
@@ -15,6 +15,8 @@ from .plugin import P
 logger = P.logger
 
 class SiteUtil(object):
+    session = requests.Session()
+
     default_headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
         'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -22,28 +24,44 @@ class SiteUtil(object):
         'Cookie' : 'over18=1;age_check_done=1;',
     } 
 
-    @staticmethod 
-    def get_tree(url, proxy_url=None, headers=None):
-        return html.fromstring(SiteUtil.get_text(url, proxy_url=proxy_url, headers=headers))
+    @classmethod 
+    def get_tree(cls, url, proxy_url=None, headers=None, post_data=None):
+        text = cls.get_text(url, proxy_url=proxy_url, headers=headers, post_data=post_data)
+        #logger.debug(text)
+        if text is None:
+            return
+        return html.fromstring(text)
     
-    @staticmethod 
-    def get_text(url, proxy_url=None, headers=None):
+    @classmethod 
+    def get_text(cls, url, proxy_url=None, headers=None, post_data=None):
+        res = cls.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data)
+        logger.debug('url: %s, %s', res.status_code, url)
+        #if res.status_code != 200:
+        #    return None
+        return res.text
+
+    @classmethod 
+    def get_response(cls, url, proxy_url=None, headers=None, post_data=None):
         proxies = None
         if proxy_url is not None and proxy_url != '':
             proxies = {"http"  : proxy_url, "https" : proxy_url}
         if headers is None:
-            headers = SiteUtil.default_headers
+            headers = cls.default_headers
 
-        res = requests.get(url, headers=headers, proxies=proxies)
-        if res.status_code != 200:
-            return None
-        #logger.debug(headers)
+        logger.debug(headers)
+
+        if post_data is None:
+            res = cls.session.get(url, headers=headers, proxies=proxies)
+        else:
+            res = cls.session.post(url, headers=headers, proxies=proxies, data=post_data)
+        
+        #logger.debug(res.headers)
         #logger.debug(res.text)
-        return res.text
+        return res
 
 
-    @staticmethod
-    def process_image_mode(image_mode, image_url, proxy_url=None):
+    @classmethod
+    def process_image_mode(cls, image_mode, image_url, proxy_url=None):
         ret = image_url
         if image_mode == '1':
             tmp = '{ddns}/metadata/api/image_proxy?url=' + py_urllib.quote_plus(image_url)
@@ -54,8 +72,7 @@ class SiteUtil(object):
             tmp = '{ddns}/metadata/api/discord_proxy?url=' + py_urllib.quote_plus(image_url)
             ret = Util.make_apikey(tmp)
         elif image_mode == '3':
-            from framework.common.notify import discord_proxy_image
-            ret = discord_proxy_image(image_url)
+            ret = cls.discord_proxy_image(image_url)
         elif image_mode == '4': #landscape to poster
             ret = '{ddns}/metadata/normal/image_process.jpg?mode=landscape_to_poster&url=' + py_urllib.quote_plus(image_url)
             ret = ret.format(ddns=SystemModelSetting.get('ddns'))
@@ -74,54 +91,59 @@ class SiteUtil(object):
 
     
 
-    @staticmethod
-    def trans(text, do_trans=True, source='ja', target='ko'):
+    @classmethod
+    def trans(cls, text, do_trans=True, source='ja', target='ko'):
         if do_trans:
             return SystemLogicTrans.trans(text, source=source, target=target)
         return text
 
 
-    @staticmethod
-    def discord_proxy_get_target(image_url):
-        from framework.common.notify import discord_proxy_get_target 
-        return discord_proxy_get_target(image_url)
+    @classmethod
+    def discord_proxy_get_target(cls, image_url):
+        from tool_expand import ToolExpandDiscord
+        return ToolExpandDiscord.discord_proxy_get_target(image_url)
     
-    @staticmethod
-    def discord_proxy_get_target_poster(image_url):
-        from framework.common.notify import discord_proxy_get_target 
-        return discord_proxy_get_target(image_url + 'av_poster')
+    @classmethod
+    def discord_proxy_get_target_poster(cls, image_url):
+        from tool_expand import ToolExpandDiscord
+        return ToolExpandDiscord.discord_proxy_get_target(image_url + 'av_poster')
     
 
-    @staticmethod
-    def discord_proxy_set_target(source, target):
-        from framework.common.notify import discord_proxy_set_target 
-        return discord_proxy_set_target(source, target)
+    @classmethod
+    def discord_proxy_set_target(cls, source, target):
+        from tool_expand import ToolExpandDiscord
+        return ToolExpandDiscord.discord_proxy_set_target(source, target)
 
-    @staticmethod
-    def discord_proxy_set_target_poster(source, target):
-        from framework.common.notify import discord_proxy_set_target 
-        return discord_proxy_set_target(source + 'av_poster', target)
+    @classmethod
+    def discord_proxy_set_target_poster(cls, source, target):
+        from tool_expand import ToolExpandDiscord
+        return ToolExpandDiscord.discord_proxy_set_target(source + 'av_poster', target)
 
+    @classmethod
+    def discord_proxy_image(cls, image_url):
+        from tool_expand import ToolExpandDiscord
+        return ToolExpandDiscord.discord_proxy_image(image_url)
 
-    @staticmethod
-    def get_image_url(image_url, image_mode, proxy_url=None, with_poster=False):
+    @classmethod
+    def get_image_url(cls, image_url, image_mode, proxy_url=None, with_poster=False):
         try:
             ret = {}
-            tmp = SiteUtil.discord_proxy_get_target(image_url)
+            tmp = cls.discord_proxy_get_target(image_url)
             if tmp is None:
-                ret['image_url'] = SiteUtil.process_image_mode(image_mode, image_url, proxy_url=proxy_url)
+                ret['image_url'] = cls.process_image_mode(image_mode, image_url, proxy_url=proxy_url)
             else:
                 ret['image_url'] = tmp
 
             if with_poster:
-                ret['poster_image_url'] = SiteUtil.discord_proxy_get_target_poster(image_url)
+                ret['poster_image_url'] = cls.discord_proxy_get_target_poster(image_url)
                 if ret['poster_image_url'] is None:
-                    tmp = SiteUtil.process_image_mode('4', ret['image_url']) #포스터이미지 url 본인 sjva
+                    tmp = cls.process_image_mode('4', ret['image_url']) #포스터이미지 url 본인 sjva
                     #if image_mode == '3': # 디스코드 url 모드일때만 포스터도 디스코드로
-                    ret['poster_image_url'] = SiteUtil.process_image_mode('3', tmp) #디스코드 url / 본인 sjva가 소스이므로 공용으로 등록
-                    SiteUtil.discord_proxy_set_target_poster(image_url, ret['poster_image_url'])
+                    ret['poster_image_url'] = cls.process_image_mode('3', tmp) #디스코드 url / 본인 sjva가 소스이므로 공용으로 등록
+                    cls.discord_proxy_set_target_poster(image_url, ret['poster_image_url'])
             
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
         return ret
+

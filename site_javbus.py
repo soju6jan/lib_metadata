@@ -16,14 +16,16 @@ from .site_util import SiteUtil
 
 logger = P.logger
 
-site_name = 'javbus'
-site_base_url = 'https://www.javbus.com'
-module_char = 'C'
-site_char = 'B'
+
 
 class SiteJavbus(object):
-    @staticmethod 
-    def search(keyword, do_trans=True, proxy_url=None, image_mode='0'):
+    site_name = 'javbus'
+    site_base_url = 'https://www.javbus.com'
+    module_char = 'C'
+    site_char = 'B'
+
+    @classmethod 
+    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0'):
         try:
             ret = {'data':[]}
             keyword = keyword.strip().lower()
@@ -32,14 +34,14 @@ class SiteJavbus(object):
             if keyword[-3:-1] == 'cd':
                 keyword = keyword[:-3]
             keyword = keyword.replace(' ', '-')
-            url = '{site_base_url}/search/{keyword}'.format(site_base_url=site_base_url, keyword=keyword)
+            url = '{site_base_url}/search/{keyword}'.format(site_base_url=cls.site_base_url, keyword=keyword)
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url)
             #lists = tree.xpath('//*[@id="waterfall"]/div')
             lists = tree.xpath('//a[@class="movie-box"]')
             
             for node in lists:
                 try:
-                    item = EntityAVSearch(site_name)
+                    item = EntityAVSearch(cls.site_name)
                     tag = node.xpath('.//img')[0]
                     item.image_url = tag.attrib['src'].lower()
                     tmp = SiteUtil.discord_proxy_get_target(item.image_url)
@@ -49,7 +51,7 @@ class SiteJavbus(object):
                         item.image_url = tmp
                     tag = node.xpath('.//date')
                     item.ui_code = tag[0].text_content().strip()
-                    item.code = module_char + site_char + node.attrib['href'].split('/')[-1]
+                    item.code = cls.module_char + cls.site_char + node.attrib['href'].split('/')[-1]
                     item.desc = u'발매일 : ' + tag[1].text_content().strip()
                     item.year = int(tag[1].text_content().strip()[:4])
                     item.title = item.title_ko = node.xpath('.//span/text()')[0].strip()
@@ -74,14 +76,14 @@ class SiteJavbus(object):
         return ret
 
 
-    @staticmethod 
-    def info(code, do_trans=True, proxy_url=None, image_mode='0'):
+    @classmethod 
+    def info(cls, code, do_trans=True, proxy_url=None, image_mode='0'):
         try:
             ret = {}
-            url = '{site_base_url}/{code}'.format(site_base_url=site_base_url, code=code[2:])
+            url = '{site_base_url}/{code}'.format(site_base_url=cls.site_base_url, code=code[2:])
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url)
 
-            entity = EntityMovie(site_name, code)
+            entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
             entity.mpaa = u'청소년관람불가'
             entity.thumb = []
@@ -141,7 +143,9 @@ class SiteJavbus(object):
                         continue
                     entity.actor = []
                     for tmp in value.split(' '):
-                        entity.actor.append(EntityActor(tmp))
+                        if tmp.strip() == '':
+                            continue
+                        entity.actor.append(EntityActor(tmp.strip()))
             entity.tagline = SiteUtil.trans(tree.xpath('/html/body/div[5]/h3/text()')[0].strip(), do_trans=do_trans).replace(entity.title, '').strip()
             entity.plot = entity.tagline
 

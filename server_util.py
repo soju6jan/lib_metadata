@@ -11,6 +11,9 @@ from framework import app, path_data, check_api, py_urllib, SystemModelSetting
 from framework.logger import get_logger
 from framework.util import Util
 
+
+from .plugin import P
+logger = P.logger
 # 패키지
 
 server_plugin_ddns = 'https://sjva-server.soju6jan.com'

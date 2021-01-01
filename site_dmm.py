@@ -16,12 +16,14 @@ from .site_util import SiteUtil
 
 logger = P.logger
 
-site_name = 'dmm'
-site_base_url = 'https://www.dmm.co.jp'
-module_char = 'C'
-site_char = 'D'
+
 
 class SiteDmm(object):
+    site_name = 'dmm'
+    site_base_url = 'https://www.dmm.co.jp'
+    module_char = 'C'
+    site_char = 'D'
+
     dmm_headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
         'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -29,8 +31,8 @@ class SiteDmm(object):
         'Cookie' : 'age_check_done=1',
     } 
 
-    @staticmethod 
-    def search(keyword, do_trans=True, proxy_url=None, image_mode='0'):
+    @classmethod 
+    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0'):
         try:
             ret = {}
             keyword = keyword.strip().lower()
@@ -48,24 +50,26 @@ class SiteDmm(object):
                 dmm_keyword = keyword
             logger.debug('keyword [%s] -> [%s]', keyword, dmm_keyword)
 
-            url = '%s/digital/videoa/-/list/search/=/?searchstr=%s' % (site_base_url, dmm_keyword)
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers)
+            url = '%s/digital/videoa/-/list/search/=/?searchstr=%s' % (cls.site_base_url, dmm_keyword)
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers)
 
+            logger.debug('2222222222222222222222')
+            logger.debug(tree)
             lists = tree.xpath('//*[@id="list"]/li')
             ret = {'data' : []}
             score = 60
             logger.debug('len lists2 :%s', len(lists))
             for node in lists:
                 try:
-                    item = EntityAVSearch(site_name)
+                    item = EntityAVSearch(cls.site_name)
                     tag = node.xpath('.//div/p[@class="tmb"]/a')[0]
                     href = tag.attrib['href'].lower()
                     match = re.compile(r'\/cid=(?P<code>.*?)\/').search(href)
                     if match:
-                        item.code = module_char + site_char + match.group('code')
+                        item.code = cls.module_char + cls.site_char + match.group('code')
                     already_exist = False
                     for exist_item in ret['data']:
-                        if exist_item.code == item.code:
+                        if exist_item['code'] == item.code:
                             already_exist = True
                             break
                     if already_exist:
@@ -127,7 +131,7 @@ class SiteDmm(object):
             ret['ret'] = 'success'
             if len(ret['data']) == 0 and len(keyword_tmps) == 2 and len(keyword_tmps[1]) == 5:
                 new_title = '%s%s' % (keyword_tmps[0], keyword_tmps[1].zfill(6))
-                return SiteDmm.search(new_title, do_trans=do_trans, proxy_url=proxy_url, image_mode=image_mode)
+                return cls.search(new_title, do_trans=do_trans, proxy_url=proxy_url, image_mode=image_mode)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -137,14 +141,14 @@ class SiteDmm(object):
 
 
 
-    @staticmethod 
-    def info(code, do_trans=True, proxy_url=None, image_mode='0'):
+    @classmethod 
+    def info(cls, code, do_trans=True, proxy_url=None, image_mode='0'):
         try:
             ret = {}
-            url = '%s/digital/videoa/-/detail/=/cid=%s/' % (site_base_url, code[2:])
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers)
+            url = '%s/digital/videoa/-/detail/=/cid=%s/' % (cls.site_base_url, code[2:])
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers)
             
-            entity = EntityMovie(site_name, code)
+            entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
             entity.mpaa = u'청소년관람불가'
             entity.thumb = []
@@ -168,6 +172,7 @@ class SiteDmm(object):
   
             entity.tagline = SiteUtil.trans(img_tag.attrib['alt'], do_trans=do_trans)
             tags = tree.xpath('{basetag}/table//tr'.format(basetag=basetag))
+            tmp_premiered = None
             for tag in tags:
                 td_tag = tag.xpath('.//td')
                 if len(td_tag) != 2:
@@ -179,12 +184,20 @@ class SiteDmm(object):
                 if key == u'商品発売日：':
                     entity.premiered = value.replace('/', '-')
                     entity.year = int(value[:4])
+                elif key == u'配信開始日：':
+                    tmp_premiered = value.replace('/', '-')
                 elif key == u'収録時間：':
                     entity.runtime = int(value.replace(u'分', ''))
                 elif key == u'出演者：':
                     entity.actor = []
-                    for v in value.split(' '):
-                        entity.actor.append(EntityActor(v.strip()))
+                    a_tags = tag.xpath('.//a')
+                    for a_tag in a_tags:
+                        tmp = a_tag.text_content().strip()
+                        if tmp == u'▼すべて表示する':
+                            break
+                        entity.actor.append(EntityActor(tmp))
+                    #for v in value.split(' '):
+                    #    entity.actor.append(EntityActor(v.strip()))
                 elif key == u'監督：':
                     entity.director =  value                  
                 elif key == u'シリーズ：':
@@ -221,6 +234,10 @@ class SiteDmm(object):
                             entity.tag = []
                         entity.tag.append(match.group('real').upper())
                     entity.title = entity.originaltitle = entity.sorttitle = value
+            if entity.premiered is None and tmp_premiered is not None:
+                entity.premiered = tmp_premiered
+                entity.year = int(tmp_premiered[:4])
+
             try:
                 tag = tree.xpath('{basetag}/table//tr[13]/td[2]/img'.format(basetag=basetag))
                 if tag:
@@ -247,19 +264,20 @@ class SiteDmm(object):
                 entity.fanart.append(SiteUtil.process_image_mode(image_mode, image_url, proxy_url=proxy_url))
                 
             try:
-                point = float(tree.xpath('//div[@class="d-review__points"]/p[1]/strong')[0].text_content().replace(u'点', '').strip())
-                votes = int(tree.xpath('//div[@class="d-review__points"]/p[2]/strong')[0].text_content().strip())
-                entity.ratings[0].value = point
-                entity.ratings[0].votes = votes
+                if tree.xpath('//div[@class="d-review__points"]/p[1]/strong'):
+                    point = float(tree.xpath('//div[@class="d-review__points"]/p[1]/strong')[0].text_content().replace(u'点', '').strip())
+                    votes = int(tree.xpath('//div[@class="d-review__points"]/p[2]/strong')[0].text_content().strip())
+                    entity.ratings[0].value = point
+                    entity.ratings[0].votes = votes
             except Exception as exception: 
                 logger.error('Exception:%s', exception)
                 logger.error(traceback.format_exc())
 
             try:
                 tmp = tree.xpath('//*[@id="detail-sample-movie"]/div/a')[0].attrib['onclick']
-                url = site_base_url + tmp.split("'")[1]
-                url = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers).xpath('//iframe')[0].attrib['src']
-                text = SiteUtil.get_text(url, proxy_url=proxy_url, headers=SiteDmm.dmm_headers)
+                url = cls.site_base_url + tmp.split("'")[1]
+                url = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers).xpath('//iframe')[0].attrib['src']
+                text = SiteUtil.get_text(url, proxy_url=proxy_url, headers=cls.dmm_headers)
                 pos = text.find('var params = {')
                 data = json.loads(text[text.find('{', pos):text.find(';', pos)])
                 #logger.debug(json.dumps(data, indent=4))

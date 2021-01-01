@@ -4,12 +4,12 @@ from .plugin import P
 logger = P.logger
 
 class EntityRatings(object):
-    def __init__(self, value, max=None, name=None, image_url=None):
+    def __init__(self, value, max=None, votes=None, name=None, image_url=None):
         self.name = name
         self.max = max
         self.default = True
         self.value = value
-        self.votes = None
+        self.votes = votes
         self.image_url = image_url
 
     def __repr__(self):
