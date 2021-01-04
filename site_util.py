@@ -48,8 +48,6 @@ class SiteUtil(object):
         if headers is None:
             headers = cls.default_headers
 
-        logger.debug(headers)
-
         if post_data is None:
             res = cls.session.get(url, headers=headers, proxies=proxies)
         else:
