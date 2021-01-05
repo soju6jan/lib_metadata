@@ -59,6 +59,8 @@ class SiteDmm(object):
             ret = {'data' : []}
             score = 60
             logger.debug('len lists2 :%s', len(lists))
+            if len(lists) > 10:
+                lists = lists[:10]
             for node in lists:
                 try:
                     item = EntityAVSearch(cls.site_name)

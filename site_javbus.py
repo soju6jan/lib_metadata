@@ -114,8 +114,12 @@ class SiteJavbus(object):
                 if key == u'識別碼':
                     entity.title = entity.originaltitle = entity.sorttitle = value
                 elif key == u'發行日期':
-                    entity.premiered = value
-                    entity.year = int(value[:4])
+                    if value != '0000-00-00':
+                        entity.premiered = value
+                        entity.year = int(value[:4])
+                    else:
+                        entity.premiered = '1999-12-31'
+                        entity.year = 1999
                 elif key == u'長度':
                     entity.runtime = int(value.replace(u'分鐘', '')) 
                 elif key == u'導演':
