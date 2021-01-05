@@ -89,7 +89,11 @@ class SiteJavbus(object):
             entity.thumb = []
             tag = tree.xpath('/html/body/div[5]/div[1]/div[1]/a/img')[0]
             
+            logger.debug('bbbbbbbbbbbbb')
+            logger.debug(tag.attrib['src'])
             data = SiteUtil.get_image_url(tag.attrib['src'], image_mode, proxy_url=proxy_url, with_poster=True)
+
+
             entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
             entity.thumb.append(EntityThumb(aspect='poster', value=data['poster_image_url']))
             

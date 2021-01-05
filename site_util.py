@@ -60,6 +60,9 @@ class SiteUtil(object):
 
     @classmethod
     def process_image_mode(cls, image_mode, image_url, proxy_url=None):
+        logger.debug('process_image_mode : %s %s', image_mode, image_url)
+        if image_url is None:
+            return
         ret = image_url
         if image_mode == '1':
             tmp = '{ddns}/metadata/api/image_proxy?url=' + py_urllib.quote_plus(image_url)
@@ -72,6 +75,7 @@ class SiteUtil(object):
         elif image_mode == '3':
             ret = cls.discord_proxy_image(image_url)
         elif image_mode == '4': #landscape to poster
+            logger.debug(image_url)
             ret = '{ddns}/metadata/normal/image_process.jpg?mode=landscape_to_poster&url=' + py_urllib.quote_plus(image_url)
             ret = ret.format(ddns=SystemModelSetting.get('ddns'))
             #ret = Util.make_apikey(tmp)
@@ -125,8 +129,13 @@ class SiteUtil(object):
     @classmethod
     def get_image_url(cls, image_url, image_mode, proxy_url=None, with_poster=False):
         try:
+            logger.debug('get_image_url')
+            logger.debug(image_url)
+            logger.debug(image_mode)
             ret = {}
             tmp = cls.discord_proxy_get_target(image_url)
+
+            logger.debug('tmp : %s', tmp)
             if tmp is None:
                 ret['image_url'] = cls.process_image_mode(image_mode, image_url, proxy_url=proxy_url)
             else:
@@ -143,5 +152,7 @@ class SiteUtil(object):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+        logger.debug('get_image_url')
+        logger.debug(ret)
         return ret
 
