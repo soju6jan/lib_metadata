@@ -55,3 +55,23 @@ class MetadataServerUtil(object):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def set_metadata_jav_censored(cls, code, data, keyword):
+        try:
+            if data['thumb'] is None or len(data['thumb']) < 2:
+                return
+            for tmp in data['thumb']:
+                if not tmp['value'].startswith('https://images-ext-'):
+                    return
+                if requests.get(tmp['value']).status_code != 200:
+                    return
+            if data['fanart'] is not None:
+                for tmp in data['fanart']:
+                    if not tmp.startswith('https://images-ext-'):
+                        return
+            cls.set_metadata(code, data, keyword)   
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
