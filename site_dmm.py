@@ -167,7 +167,7 @@ class SiteDmm(object):
             try:
                 a_nodes = nodes[0].xpath('.//a')
                 anodes = a_nodes
-                logger.debug(html.tostring(anodes[0]))
+                #logger.debug(html.tostring(anodes[0]))
                 img_tag = anodes[0].xpath('.//img')[0]
                 data = SiteUtil.get_image_url(a_nodes[0].attrib['href'], image_mode, proxy_url=proxy_url, with_poster=True)
                 entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
