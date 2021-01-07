@@ -152,7 +152,7 @@ class EntityMovie(object):
 
 
 
-class EntitySearchItem(object):
+class EntitySearchItemTv(object):
     def __init__(self, site):
         self.site = site
         self.code = None
@@ -162,6 +162,15 @@ class EntitySearchItem(object):
         self.desc = None
         self.score = 0
 
+        self.status = 1 #1:방송중, 0:방송종료, 2:방송예정
+        self.extra_info = None
+        self.studio = None
+        self.broadcast_info = None
+        self.broadcast_term = None
+        self.series = None
+        self.equal_name = None
+
+
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
         tmp += 'code : %s\n' % self.code
@@ -170,6 +179,14 @@ class EntitySearchItem(object):
         tmp += 'image_url : %s\n' % self.image_url
         tmp += 'desc : %s\n' % self.desc
         tmp += 'score : %s\n' % self.score
+
+        tmp += 'status : %s\n' % self.status
+        tmp += 'extra_info : %s\n' % self.extra_info
+        tmp += 'studio : %s\n' % self.studio
+        tmp += 'broadcast_info : %s\n' % self.broadcast_info
+        tmp += 'broadcast_term : %s\n' % self.broadcast_term
+        tmp += 'series : %s\n' % self.series
+
         return tmp
 
 
@@ -182,4 +199,11 @@ class EntitySearchItem(object):
             'image_url' : self.image_url,
             'desc' : self.desc,            
             'score' : self.score,
+            'extra_info' : self.extra_info,
+            'studio' : self.studio,
+            'broadcast_info' : self.broadcast_info,
+            'broadcast_term' : self.broadcast_term,
+            'series' : self.series,
+            'equal_name' : self.equal_name,
+
         }
