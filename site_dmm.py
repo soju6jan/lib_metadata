@@ -156,13 +156,12 @@ class SiteDmm(object):
             if not nodes:
                 logger.debug('CRITICAL!!!')
                 return entity
-            a_nodes = nodes[0].xpath('.//a')
+            a_nodes = nodes[0].xpath('.//a[class="crs_full"]')
            
-            logger.debug(url)
-            #logger.debug(html.tostring(tree))
             # 2020-05-31 A태그가 없는 경우가 있음. 확대이미지가 없는 경우
             if a_nodes:
                 nodes = a_nodes
+                logger.debug(html.tostring(nodes[0]))
                 img_tag = nodes[0].xpath('.//img')[0]
                 data = SiteUtil.get_image_url(a_nodes[0].attrib['href'], image_mode, proxy_url=proxy_url, with_poster=True)
                 entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))

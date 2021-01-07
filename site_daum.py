@@ -39,7 +39,7 @@ class SiteDaum(object):
             match = re.compile(r'q\=(?P<title>.*?)&').search(tags[tag_index].attrib['href'])
             if match:
                 entity.title = py_urllib.unquote(match.group('title'))
-            entity.code = re.compile(r'irk\=(?P<id>\d+)').search(tags[tag_index].attrib['href']).group('id')
+            entity.code = cls.module_char + cls.site_char + re.compile(r'irk\=(?P<id>\d+)').search(tags[tag_index].attrib['href']).group('id')
 
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/span/span')
             if len(tags) == 1:
@@ -48,7 +48,7 @@ class SiteDaum(object):
                 elif tags[0].text == u'방송예정':
                     entity.status = 0
 
-            entity.image_url = root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']
+            entity.image_url = 'https:' + root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']
 
 
             logger.debug('get_show_info_on_home status: %s', entity.status)
@@ -72,10 +72,13 @@ class SiteDaum(object):
             entity.broadcast_term = extra_infos[-1].split(',')[-1].strip()
             entity.year = re.compile(r'(?P<year>\d{4})').search(extra_infos[-1]).group('year')
             
+            entity.desc = root.xpath('//*[@id="tv_program"]/div[1]/dl[1]/dd/text()')[0]
+            
+
             #logger.debug('get_show_info_on_home 1: %s', entity['status'])
             #시리즈
             entity.series = []
-            entity.series.append({'title':entity.title, 'id' : entity.code, 'year' : entity.year})
+            entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year})
             tags = root.xpath('//*[@id="tv_series"]/div/ul/li')
 
             if tags:
@@ -97,14 +100,14 @@ class SiteDaum(object):
                 for tag in tags:
                     dic = {}
                     dic['title'] = tag.xpath('a')[0].text
-                    dic['code'] = re.compile(r'irk\=(?P<id>\d+)').search(tag.xpath('a')[0].attrib['href']).group('id')
+                    dic['code'] = cls.module_char + cls.site_char + re.compile(r'irk\=(?P<id>\d+)').search(tag.xpath('a')[0].attrib['href']).group('id')
                     if tag.xpath('span'):
                         dic['date'] = tag.xpath('span')[0].text
                         dic['year'] = re.compile(r'(?P<year>\d{4})').search(dic['date']).group('year')
                     else:
                         dic['year'] = None
                     entity.series.append(dic)
-                entity.series = sorted(entity.series, key=lambda k: int(k['id'])) 
+                entity.series = sorted(entity.series, key=lambda k: int(k['code'][2:])) 
             logger.debug('SERIES : %s', len(entity.series))
             #동명
             entity.equal_name = []
@@ -115,7 +118,7 @@ class SiteDaum(object):
                     if tag.tag == 'a':
                         dic = {}
                         dic['title'] = tag.text
-                        dic['code'] = re.compile(r'irk\=(?P<id>\d+)').search(tag.attrib['href']).group('id')
+                        dic['code'] = cls.module_char + cls.site_char + re.compile(r'irk\=(?P<id>\d+)').search(tag.attrib['href']).group('id')
                     elif tag.tag == 'span':
                         match = re.compile(r'\((?P<studio>.*?),\s*(?P<year>\d{4})?\)').search(tag.text)
                         if match:

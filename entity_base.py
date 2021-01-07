@@ -155,20 +155,20 @@ class EntityMovie(object):
 class EntitySearchItemTv(object):
     def __init__(self, site):
         self.site = site
-        self.code = None
-        self.title = None
-        self.year = None        
-        self.image_url = None        
-        self.desc = None
+        self.code = ''
+        self.title = ''
+        self.year = ''        
+        self.image_url = ''        
+        self.desc = ''
         self.score = 0
 
         self.status = 1 #1:방송중, 0:방송종료, 2:방송예정
-        self.extra_info = None
-        self.studio = None
-        self.broadcast_info = None
-        self.broadcast_term = None
-        self.series = None
-        self.equal_name = None
+        self.extra_info = ''
+        self.studio = ''
+        self.broadcast_info = ''
+        self.broadcast_term = ''
+        self.series = []
+        self.equal_name = []
 
 
     def __repr__(self):
@@ -207,3 +207,79 @@ class EntitySearchItemTv(object):
             'equal_name' : self.equal_name,
 
         }
+
+
+class EntityShow(object):
+    # https://kodi.wiki/view/NFO_files/Movies
+    def __init__(self, site, code):
+        self.site = site
+        self.code = code  # uniqueid
+
+        self.title = ''
+        self.originaltitle = ''
+        self.sorttitle = ''
+        self.ratings = []
+        self.userrating = ''
+
+        self.season = 1 # 시즌카운트
+        self.episode = 0 # 에피소드 카운트
+        self.plot = ''
+        self.tagline = ''
+        self.thumb = []
+        self.fanart = []
+        self.mpaa = ''
+        
+        self.genre = []
+        self.tag = [] #colletion
+        self.premiered = ''
+        self.year = ''
+        self.status = ''
+        self.studio = ''
+        self.trailer = ''
+        self.actor = []
+        self.namedseason = []
+
+        # kodi spec에 없음.
+        self.country = [] #없음
+        self.credits = [] #에피소드
+        self.director = [] #에피소
+        self.extras = []
+
+    def __repr__(self):
+        tmp = 'site : %s\n' % self.site
+        tmp += 'code : %s\n' % self.code
+        tmp += 'title : %s\n' % self.title
+        tmp += 'originaltitle : %s\n' % self.originaltitle
+        return tmp
+
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,
+            'originaltitle' : self.originaltitle,
+            'sorttitle' : self.sorttitle,
+            'ratings' : [x.as_dict() for x in self.ratings] if self.ratings is not None else None,
+            'userrating' : self.userrating,
+            'season' : self.season,
+            'episode' : self.episode,
+            'plot' : self.plot,
+            'tagline' : self.tagline,
+            'thumb' : [x.as_dict() for x in self.thumb] if self.thumb is not None else None,
+            'fanart' : self.fanart,
+            'mpaa' : self.mpaa,
+            'genre' : self.genre,
+            'tag' : self.tag,
+            'premiered' : self.premiered,
+            'year' : self.year,
+            'status' : self.status,
+            'studio' : self.studio,
+            'trailer' : self.trailer,
+            'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
+            'country' : self.country,
+            'credits' : self.credits,
+            'director' : self.director,
+            'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
+        }
+
