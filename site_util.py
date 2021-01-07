@@ -156,3 +156,7 @@ class SiteUtil(object):
         #logger.debug(ret)
         return ret
 
+    @classmethod
+    def change_html(cls, text):
+        if text is not None:
+            return text.replace('&nbsp;', ' ').replace('&nbsp', ' ').replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').replace('&quot;', '"').replace('&#35;', '#').replace('&#39;', "‘")

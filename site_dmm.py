@@ -51,6 +51,8 @@ class SiteDmm(object):
             logger.debug('keyword [%s] -> [%s]', keyword, dmm_keyword)
 
             url = '%s/digital/videoa/-/list/search/=/?searchstr=%s' % (cls.site_base_url, dmm_keyword)
+            #url = '%s/search/=/?searchstr=%s' % (cls.site_base_url, dmm_keyword)
+            #https://www.dmm.co.jp/search/=/searchstr=tsms00060/
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers)
             lists = tree.xpath('//*[@id="list"]/li')
             ret = {'data' : []}
@@ -156,19 +158,24 @@ class SiteDmm(object):
             if not nodes:
                 logger.debug('CRITICAL!!!')
                 return entity
-            a_nodes = nodes[0].xpath('.//a[class="crs_full"]')
-           
-            # 2020-05-31 A태그가 없는 경우가 있음. 확대이미지가 없는 경우
-            if a_nodes:
-                nodes = a_nodes
-                logger.debug(html.tostring(nodes[0]))
-                img_tag = nodes[0].xpath('.//img')[0]
+            
+
+            #logger.debug('crs-full :%s ', len(a_nodes))
+            # 2020-05-31 A태그가 없는 경우가 있음. 확대이미지가 없는 경우  tsds-42464
+            #if a_nodes:
+
+            try:
+                a_nodes = nodes[0].xpath('.//a')
+                anodes = a_nodes
+                logger.debug(html.tostring(anodes[0]))
+                img_tag = anodes[0].xpath('.//img')[0]
                 data = SiteUtil.get_image_url(a_nodes[0].attrib['href'], image_mode, proxy_url=proxy_url, with_poster=True)
                 entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
                 entity.thumb.append(EntityThumb(aspect='poster', value=data['poster_image_url']))
-            else:
+            except:
                 img_tag = nodes[0].xpath('.//img')[0]
                 entity.thumb.append(EntityThumb(aspect='poster', value=SiteUtil.process_image_mode(image_mode, img_tag.attrib['src'], proxy_url=proxy_url)))
+    
   
             entity.tagline = SiteUtil.trans(img_tag.attrib['alt'], do_trans=do_trans)
             tags = tree.xpath('{basetag}/table//tr'.format(basetag=basetag))

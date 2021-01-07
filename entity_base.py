@@ -199,6 +199,7 @@ class EntitySearchItemTv(object):
             'image_url' : self.image_url,
             'desc' : self.desc,            
             'score' : self.score,
+            'status' : self.status,
             'extra_info' : self.extra_info,
             'studio' : self.studio,
             'broadcast_info' : self.broadcast_info,

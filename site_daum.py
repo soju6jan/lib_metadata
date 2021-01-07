@@ -8,6 +8,8 @@ from lxml import html
 from framework import SystemModelSetting, py_urllib
 from framework.util import Util
 from system import SystemLogicTrans
+from system.logic_site import SystemLogicSite
+
 
 from .plugin import P
 from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv
@@ -53,7 +55,7 @@ class SiteDaum(object):
 
             logger.debug('get_show_info_on_home status: %s', entity.status)
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div')
-            entity.extra_info = tags[0].text_content().strip()
+            entity.extra_info = SiteUtil.change_html(tags[0].text_content().strip())
 
             logger.debug('get_show_info_on_home extra_info: %s', entity.extra_info)
 
@@ -147,7 +149,7 @@ class SiteDaumTv(SiteDaum):
     @classmethod 
     def search(cls, keyword, daum_id=None, year=None, image_mode='0'):
         try:
-            from system.logic_site import SystemLogicSite
+            
 
             ret = {}
             if daum_id is None:
@@ -157,7 +159,7 @@ class SiteDaumTv(SiteDaum):
 
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             data = cls.get_show_info_on_home(root)
-            logger.debug(data)
+            #logger.debug(data)
 
             return data
 
