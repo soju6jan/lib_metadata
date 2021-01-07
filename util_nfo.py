@@ -28,7 +28,7 @@ class UtilNfo(object):
 
     @classmethod
     def append_tag(cls, parent, dictionary, key, **kwargs):
-        logger.debug('key:%s, value:%s', key, dictionary[key])
+        #logger.debug('key:%s, value:%s', key, dictionary[key])
         try:
             if key in dictionary and dictionary[key] is not None and dictionary[key] != '':
                 #parent.append(E(key, cls.change_html(str(dictionary[key])), kwargs))

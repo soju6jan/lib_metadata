@@ -52,13 +52,10 @@ class SiteDmm(object):
 
             url = '%s/digital/videoa/-/list/search/=/?searchstr=%s' % (cls.site_base_url, dmm_keyword)
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers)
-
-            logger.debug('2222222222222222222222')
-            logger.debug(tree)
             lists = tree.xpath('//*[@id="list"]/li')
             ret = {'data' : []}
             score = 60
-            logger.debug('len lists2 :%s', len(lists))
+            logger.debug('dmm search len lists2 :%s', len(lists))
             if len(lists) > 10:
                 lists = lists[:10]
             for node in lists:
@@ -155,12 +152,14 @@ class SiteDmm(object):
             entity.mpaa = u'청소년관람불가'
             entity.thumb = []
             basetag = '//*[@id="mu"]/div/table//tr/td[1]'
-            nodes = tree.xpath('{basetag}/div[1]/div'.format(basetag=basetag))
+            nodes = tree.xpath('{basetag}/div[1]/div[2]'.format(basetag=basetag))
             if not nodes:
                 logger.debug('CRITICAL!!!')
                 return entity
             a_nodes = nodes[0].xpath('.//a')
-            
+           
+            logger.debug(url)
+            #logger.debug(html.tostring(tree))
             # 2020-05-31 A태그가 없는 경우가 있음. 확대이미지가 없는 경우
             if a_nodes:
                 nodes = a_nodes

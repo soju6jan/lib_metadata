@@ -5,23 +5,127 @@ import traceback
 
 from lxml import html
 
-from framework import SystemModelSetting
+from framework import SystemModelSetting, py_urllib
 from framework.util import Util
 from system import SystemLogicTrans
 
 from .plugin import P
-from .entity_av import EntityAVSearch
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItem
 from .site_util import SiteUtil
 
 logger = P.logger
 
 
+class SiteDaum(object):
+    @staticmethod
+    def get_show_info_on_home(root):
+        try:
+            tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/span/a')
+            # 2019-05-13
+            #일밤- 미스터리 음악쇼 복면가왕 A 태그 2개
+            if len(tags) < 1:
+                return
+            tag_index = len(tags)-1
+            entity = {}
+            #EntitySearchItem
+            entity['title'] = tags[tag_index].text
+            logger.debug('22222get_show_info_on_home title: %s', entity['title'])
+            match = re.compile(r'q\=(?P<title>.*?)&').search(tags[tag_index].attrib['href'])
+            if match:
+                entity['title'] = py_urllib.unquote(match.group('title'))
+            entity['id'] = re.compile(r'irk\=(?P<id>\d+)').search(tags[tag_index].attrib['href']).group('id')
 
-class SiteDaumTv(object):
+            entity['status'] = 1  
+            tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/span/span')
+            if len(tags) == 1:
+                if tags[0].text == u'방송종료':
+                    entity['status'] = 2
+                elif tags[0].text == u'방송예정':
+                    entity['status'] = 0
+            logger.debug('get_show_info_on_home status: %s', entity['status'])
+            tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div')
+            entity['extra_info'] = tags[0].text_content().strip()
+            logger.debug('get_show_info_on_home extra_info: %s', entity['extra_info'])
+
+            entity['studio'] = ''
+            tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/a')
+            if len(tags) == 1:
+                entity['studio'] = tags[0].text
+            else:
+                tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/span[1]')
+                if len(tags) == 1:
+                    entity['studio'] = tags[0].text
+            logger.debug('get_show_info_on_home studio: %s', entity['studio'])
+
+            tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/span')
+            entity['extra_info_array'] = [tag.text for tag in tags]
+            entity['broadcast_info'] = entity['extra_info_array'][-2].strip()
+            entity['broadcast_term'] = entity['extra_info_array'][-1].split(',')[-1].strip()
+            entity['year'] = re.compile(r'(?P<year>\d{4})').search(entity['extra_info_array'][-1]).group('year')
+            logger.debug('get_show_info_on_home 1: %s', entity['status'])
+            #시리즈
+            entity['series'] = []
+            entity['series'].append({'title':entity['title'], 'id' : entity['id'], 'year' : entity['year']})
+            tags = root.xpath('//*[@id="tv_series"]/div/ul/li')
+
+            if tags:
+                # 2019-03-05 시리즈 더보기 존재시
+                try:
+                    more = root.xpath('//*[@id="tv_series"]/div/div/a')
+                    url = more[0].attrib['href']
+                    if not url.startswith('http'):
+                        url = 'https://search.daum.net/search%s' % url
+                    logger.debug('MORE URL : %s', url)
+                    if more[0].xpath('span')[0].text == u'시리즈 더보기':
+                        more_root = HTML.ElementFromURL(url)
+                        tags = more_root.xpath('//*[@id="series"]/ul/li')
+                except Exception as exception:
+                    logger.debug('Not More!')
+                    logger.debug(traceback.format_exc())
+
+                for tag in tags:
+                    dic = {}
+                    dic['title'] = tag.xpath('a')[0].text
+                    dic['id'] = re.compile(r'irk\=(?P<id>\d+)').search(tag.xpath('a')[0].attrib['href']).group('id')
+                    if tag.xpath('span'):
+                        dic['date'] = tag.xpath('span')[0].text
+                        dic['year'] = re.compile(r'(?P<year>\d{4})').search(dic['date']).group('year')
+                    else:
+                        dic['year'] = None
+                    entity['series'].append(dic)
+                entity['series'] = sorted(entity['series'] , key=lambda k: int(k['id'])) 
+            logger.debug('SERIES : %s', len(entity['series']))
+            #동명
+            entity['equal_name'] = []
+            tags = root.xpath(u'//div[@id="tv_program"]//dt[contains(text(),"동명 콘텐츠")]//following-sibling::dd')
+            if tags:
+                tags = tags[0].xpath('*')
+                for tag in tags:
+                    if tag.tag == 'a':
+                        dic = {}
+                        dic['title'] = tag.text
+                        dic['id'] = re.compile(r'irk\=(?P<id>\d+)').search(tag.attrib['href']).group('id')
+                    elif tag.tag == 'span':
+                        match = re.compile(r'\((?P<studio>.*?),\s*(?P<year>\d{4})?\)').search(tag.text)
+                        if match:
+                            dic['studio'] = match.group('studio')
+                            dic['year'] = match.group('year')
+                        elif tag.text == u'(동명프로그램)':
+                            entity['equal_name'].append(dic)
+                        elif tag.text == u'(동명회차)':
+                            continue
+            logger.debug(entity)
+            return entity
+        except Exception as exception:
+            logger.debug('Exception get_show_info_by_html : %s', exception)
+            logger.debug(traceback.format_exc())
+
+
+
+class SiteDaumTv(SiteDaum):
     site_name = 'daum'
     site_base_url = 'https://search.daum.net'
-    module_char = 'S'
+    module_char = 'K'
     site_char = 'D'
 
     default_headers = {
@@ -31,23 +135,24 @@ class SiteDaumTv(object):
     }
 
     @classmethod 
-    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0'):
+    def search(cls, keyword, daum_id=None, year=None, image_mode='0'):
         try:
+            from system.logic_site import SystemLogicSite
+
             ret = {}
-            keyword = keyword.strip().lower()
-            # 2020-06-24
-            if keyword[-3:-1] == 'cd':
-                keyword = keyword[:-3]
-            keyword = keyword.replace('-', ' ')
-            keyword_tmps = keyword.split(' ')
-            if len(keyword_tmps) == 2:
-                if len(keyword_tmps[1]) <= 5:
-                    dmm_keyword = '%s%s' % (keyword_tmps[0], keyword_tmps[1].zfill(5))
-                elif len(keyword_tmps[1]) > 5:
-                    dmm_keyword = '%s%s' % (keyword_tmps[0], keyword_tmps[1])
+            if daum_id is None:
+                url = 'https://search.daum.net/search?q=%s' % (py_urllib.quote(keyword.encode('utf8')))
             else:
-                dmm_keyword = keyword
-            logger.debug('keyword [%s] -> [%s]', keyword, dmm_keyword)
+                url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(keyword.encode('utf8')), daum_id)
+
+            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            data = cls.get_show_info_on_home(root)
+            logger.debug(data)
+
+            return data
+
+            return DaumTV.get_lxml_by_url(url)
+
 
             url = '%s/digital/videoa/-/list/search/=/?searchstr=%s' % (cls.site_base_url, dmm_keyword)
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.dmm_headers)

@@ -147,3 +147,39 @@ class EntityMovie(object):
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
             'mpaa' : self.mpaa
         }
+
+
+
+
+
+class EntitySearchItem(object):
+    def __init__(self, site):
+        self.site = site
+        self.code = None
+        self.title = None
+        self.year = None        
+        self.image_url = None        
+        self.desc = None
+        self.score = 0
+
+    def __repr__(self):
+        tmp = 'site : %s\n' % self.site
+        tmp += 'code : %s\n' % self.code
+        tmp += 'title : %s\n' % self.title        
+        tmp += 'year : %s\n' % self.year        
+        tmp += 'image_url : %s\n' % self.image_url
+        tmp += 'desc : %s\n' % self.desc
+        tmp += 'score : %s\n' % self.score
+        return tmp
+
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,            
+            'year' : self.year,            
+            'image_url' : self.image_url,
+            'desc' : self.desc,            
+            'score' : self.score,
+        }
