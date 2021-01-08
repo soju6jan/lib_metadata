@@ -1,7 +1,8 @@
 
 # -*- coding: utf-8 -*-
-import requests, re, json
+import requests, re, json, time
 import traceback, unicodedata
+from datetime import datetime
 
 from lxml import html
 
@@ -51,7 +52,8 @@ class SiteDaum(object):
                 elif tags[0].text == u'방송예정':
                     entity.status = 0
 
-            entity.image_url = 'https:' + root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']
+            #entity.image_url = 'https:' + root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']
+            entity.image_url = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
 
 
             logger.debug('get_show_info_on_home status: %s', entity.status)
@@ -135,7 +137,7 @@ class SiteDaum(object):
                             dic['studio'] = match.group('studio')
                             dic['year'] = match.group('year')
                         elif tag.text == u'(동명프로그램)':
-                            entity['equal_name'].append(dic)
+                            entity.equal_name.append(dic)
                         elif tag.text == u'(동명회차)':
                             continue
             logger.debug(entity)
@@ -151,6 +153,56 @@ class SiteDaum(object):
             return py_urllib.unquote(tmps[1])
         else:
             return 'https' + url
+
+    @classmethod 
+    def get_kakao_play_url(cls, url):
+        try:
+            #https://tv.kakao.com/katz/v2/ft/cliplink/385912700/readyNplay?player=monet_html5&profile=HIGH&service=kakao_tv&section=channel&fields=seekUrl,abrVideoLocationList&startPosition=0&tid=&dteType=PC&continuousPlay=false&contentType=&1610102225387
+            content_id = url.split('/')[-1]
+            url = 'https://tv.kakao.com/katz/v2/ft/cliplink/{}/readyNplay?player=monet_html5&profile=HIGH&service=kakao_tv&section=channel&fields=seekUrl,abrVideoLocationList&startPosition=0&tid=&dteType=PC&continuousPlay=false&contentType=&{}'.format(content_id, int(time.time()))
+            data = requests.get(url).json()
+            return data['videoLocation']['url']
+        except Exception as exception:
+            logger.debug('Exception : %s', exception)
+            logger.debug(traceback.format_exc())
+
+    @classmethod 
+    def change_date(cls, text):
+        try:
+            match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})').search(text)
+            if match:
+                return match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
+        except Exception as exception:
+            logger.debug('Exception : %s', exception)
+            logger.debug(traceback.format_exc())
+        return text
+
+    #https://tv.kakao.com/api/v1/ft/channels/3601234/videolinks?sort=PlayCount&fulllevels=clipLinkList%2CliveLinkList&fields=ccuCount%2CisShowCcuCount%2CthumbnailUrl%2C-user%2C-clipChapterThumbnailList%2C-tagList&size=20&page=2&_=1610122871452
+
+    #https://tv.kakao.com/api/v1/ft/channels/3601234/videolinks?sort=CreateTime&fulllevels=clipLinkList%2CliveLinkList&fields=ccuCount%2CisShowCcuCount%2CthumbnailUrl%2C-user%2C-clipChapterThumbnailList%2C-tagList&size=20&page=1&_=1610122871453
+
+    @classmethod
+    def get_kakao_video(cls, kakao_id, sort='CreateTime', size=20):
+        #sort : CreateTime PlayCount
+        try:
+            url = 'https://tv.kakao.com/api/v1/ft/channels/{kakao_id}/videolinks?sort={sort}&fulllevels=clipLinkList%2CliveLinkList&fields=ccuCount%2CisShowCcuCount%2CthumbnailUrl%2C-user%2C-clipChapterThumbnailList%2C-tagList&size=20&page=1&_={timestamp}'.format(kakao_id=kakao_id, sort=sort, timestamp=int(time.time()))
+            data = requests.get(url).json()
+
+            ret = []
+            for item in data['clipLinkList']:
+                ret.append(EntityExtra('Featurette', item['clip']['title'], 'kakao', 'https://tv.kakao.com/v/%s' % item['id'], premiered=item['createTime'].split(' ')[0], thumb=item['clip']['thumbnailUrl']).as_dict())
+            return ret
+        except Exception as exception:
+            logger.debug('Exception : %s', exception)
+            logger.debug(traceback.format_exc())
+        return ret   
+
+
+
+
+
+
+
 
 
 class SiteDaumTv(SiteDaum):
@@ -227,23 +279,72 @@ class SiteDaumTv(SiteDaum):
             show.plot = home_data['desc']
             match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})~').search(home_data['broadcast_term'])
             if match:
-                show.premiered = match.group('year') + '.' + match.group('month').zfill(2) + '.'+ match.group('day').zfill(2)
+                show.premiered = match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
                 show.year = int(match.group('year'))
             show.status = home_data['status']
-            show.genre = home_data['genre']
+            show.genre = [home_data['genre']]
             show.episode = home_data['episode']
 
+            show.extra_info['daum_poster'] = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
+
+
+            """
             tags = root.xpath('//*[@id="tv_program"]/div[4]/div/ul/li')
             for tag in tags:
                 a_tags = tag.xpath('.//a')
                 if len(a_tags) == 2:
                     thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
+                    #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
+                    video_url = a_tags[1].attrib['href']
+                    title = a_tags[1].text_content()
+                    #logger.debug(video_url)
+                    date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
+                    show.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
+            """
 
-                    logger.debug(thumb)
 
-                    #extra = EntityExtra()
+            tags = root.xpath('//*[@id="tv_program"]//div[@class="clipList"]//div[@class="mg_expander"]/a')
+            if tags:
+                tmp = tags[0].attrib['href']
+                show.extra_info['kakao_id'] = re.compile('/(?P<id>\d+)/').search(tmp).group('id')
+                logger.debug(show.extra_info['kakao_id'])
 
 
+            for i in range(1,3):
+                items = root.xpath('//*[@id="tv_casting"]/div[%s]/ul//li' % i)
+                logger.debug('CASTING ITEM LEN : %s' % len(items))
+                for item in items:
+                    actor = EntityActor(None)
+                    cast_img = item.xpath('div/a/img')
+                    if len(cast_img) == 1:
+                        actor.thumb = cls.process_image_url(cast_img[0].attrib['src'])
+                    
+                    span_tag = item.xpath('span')
+                    for span in span_tag:
+                        span_text = span.text_content().strip()
+                        tmp = span.xpath('a')
+                        if len(tmp) == 1:
+                            role_name = tmp[0].text_content().strip()
+                            tail = tmp[0].tail.strip()
+                            if tail == u'역':
+                                actor.type ='actor'
+                                actor.role = role_name
+                            else:
+                                actor.name = role_name
+                        else:
+                            if span_text.endswith(u'역'): actor.role = span_text.replace(u'역', '')
+                            elif actor.name == '': actor.name = span_text
+                            else: actor.role = span_text
+                    if actor.type == 'actor' or actor.role.find(u'출연') != -1:
+                        show.actor.append(actor)
+                    elif actor.role.find(u'감독') != -1 or actor.role.find(u'연출') != -1:
+                        show.director.append(actor)
+                    elif actor.role.find(u'제작') != -1 or actor.role.find(u'기획') != -1 or actor.role.find(u'책임프로듀서') != -1:
+                        show.director.append(actor)
+                    elif actor.role.find(u'극본') != -1 or actor.role.find(u'각본') != -1:
+                        show.credits.append(actor)
+                    elif actor.name != u'인물관계도':
+                        show.actor.append(actor)
 
 
 

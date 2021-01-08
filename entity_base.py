@@ -43,14 +43,15 @@ class EntityThumb(object):
 
 
 class EntityActor(object):
-    def __init__(self, name):
-        self.name = None
-        self.name2 = None
-        self.role = None
-        self.order = None
-        self.thumb = None
+    def __init__(self, name, site=''):
+        self.name = ''
+        self.name2 = ''
+        self.role = ''
+        self.order = ''
+        self.thumb = ''
         self.originalname = name
-        self.site = None
+        self.site = site
+        self.type = ''
 
     def as_dict(self):
         return {
@@ -59,16 +60,19 @@ class EntityActor(object):
             'order' : self.order,
             'thumb' : self.thumb,
             'originalname' : self.originalname,
+            'site' : self.site,
+            'name2' : self.name2,
+            'type' : self.type,
         }
     
 
 class EntityExtra(object):
-    def __init__(self, content_type, title, mode, content_url, premired=None, thumb=None):
-        self.content_type = content_type
+    def __init__(self, content_type, title, mode, content_url, premiered=None, thumb=None):
+        self.content_type = content_type #Trailer, DeletedScene, BehindTheScenes, Interview, SceneOrSample, Featurette, Short, Other
         self.content_url = content_url
         self.title = title
-        self.mode = mode
-        self.premired = premired
+        self.mode = mode #mp4
+        self.premiered = premiered
         self.thumb = thumb
         
 
@@ -78,6 +82,8 @@ class EntityExtra(object):
             'content_url' : self.content_url,
             'title' : self.title,
             'mode' : self.mode,
+            'premiered' : self.premiered,
+            'thumb' : self.thumb,
         }
 
 class EntityMovie(object):
@@ -249,9 +255,11 @@ class EntityShow(object):
 
         # kodi spec에 없음.
         self.country = [] #없음
-        self.credits = [] #에피소드
-        self.director = [] #에피소
+        self.credits = [] #에피소드  #극본
+        self.director = [] #에피소드 #감독
         self.extras = []
+
+        self.extra_info = {}
 
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
@@ -286,8 +294,9 @@ class EntityShow(object):
             'trailer' : self.trailer,
             'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
             'country' : self.country,
-            'credits' : self.credits,
-            'director' : self.director,
+            'credits' : [x.as_dict() for x in self.credits] if self.credits is not None else None,
+            'director' :  [x.as_dict() for x in self.director] if self.director is not None else None,
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
+            'extra_info' : self.extra_info,
         }
 
