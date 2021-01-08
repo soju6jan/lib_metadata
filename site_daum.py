@@ -1,7 +1,7 @@
 
 # -*- coding: utf-8 -*-
 import requests, re, json
-import traceback
+import traceback, unicodedata
 
 from lxml import html
 
@@ -70,7 +70,14 @@ class SiteDaum(object):
             logger.debug('get_show_info_on_home studio: %s', entity.studio)
 
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/span')
-            extra_infos = [tag.text for tag in tags]
+            extra_infos = [tag.text_content() for tag in tags]
+            logger.debug(extra_infos)
+            #tmps = extra_infos[1].strip().split(' ')
+            entity.genre = extra_infos[0]
+            #logger.debug(tmps)
+            #if len(tmps) == 2:
+            try: entity.episode = int(re.compile(r'(?P<epi>\d{1,4})%s' % u'부').search(entity.extra_info).group('epi'))
+            except: entity.episode = -1
             entity.broadcast_info = extra_infos[-2].strip()
             entity.broadcast_term = extra_infos[-1].split(',')[-1].strip()
             entity.year = re.compile(r'(?P<year>\d{4})').search(extra_infos[-1]).group('year')
@@ -137,6 +144,13 @@ class SiteDaum(object):
             logger.debug('Exception get_show_info_by_html : %s', exception)
             logger.debug(traceback.format_exc())
 
+    @classmethod
+    def process_image_url(cls, url):
+        tmps = url.split('fname=')
+        if len(tmps) == 2:
+            return py_urllib.unquote(tmps[1])
+        else:
+            return 'https' + url
 
 
 class SiteDaumTv(SiteDaum):
@@ -178,17 +192,27 @@ class SiteDaumTv(SiteDaum):
             ret = {}
             show = EntityShow(cls.site_name, code)
 
+            # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
+
             url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-            
+
+            home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
+            home_root = SiteUtil.get_tree(home_url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            home_data = cls.get_show_info_on_home(home_root)
+
+            logger.debug('home_datahome_datahome_datahome_datahome_datahome_datahome_datahome_datahome_data')
+            logger.debug(home_data)
 
             tags = root.xpath('//*[@id="tv_program"]/div[1]/div[2]/strong')
             if len(tags) == 1:
                 show.title = tags[0].text_content().strip()
-
+                show.originaltitle = show.title
+                show.sorttitle = unicodedata.normalize('NFKD', show.originaltitle)
+                logger.debug(show.sorttitle)
+            """
             tags = root.xpath('//*[@id="tv_program"]/div[1]/div[3]/span')
-            logger.debug('11111')
-            logger.debug(tags)
+            # 이 정보가 없다면 종영
             if tags:
                 show.studio = tags[0].text_content().strip()
                 summary = ''    
@@ -198,6 +222,28 @@ class SiteDaumTv(SiteDaum):
                 match = re.compile(r'(\d{4}\.\d{1,2}\.\d{1,2})~').search(entity.plot)
                 if match:
                     show.premiered = match.group(1)
+            """
+            show.studio = home_data['studio']
+            show.plot = home_data['desc']
+            match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})~').search(home_data['broadcast_term'])
+            if match:
+                show.premiered = match.group('year') + '.' + match.group('month').zfill(2) + '.'+ match.group('day').zfill(2)
+                show.year = int(match.group('year'))
+            show.status = home_data['status']
+            show.genre = home_data['genre']
+            show.episode = home_data['episode']
+
+            tags = root.xpath('//*[@id="tv_program"]/div[4]/div/ul/li')
+            for tag in tags:
+                a_tags = tag.xpath('.//a')
+                if len(a_tags) == 2:
+                    thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
+
+                    logger.debug(thumb)
+
+                    #extra = EntityExtra()
+
+
 
 
 
@@ -205,6 +251,8 @@ class SiteDaumTv(SiteDaum):
             ret['data'] = show.as_dict()
 
 
+
+            
 
         except Exception as exception: 
             logger.error('Exception:%s', exception)

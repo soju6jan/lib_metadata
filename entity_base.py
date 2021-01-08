@@ -63,11 +63,13 @@ class EntityActor(object):
     
 
 class EntityExtra(object):
-    def __init__(self, content_type, title, mode, content_url):
+    def __init__(self, content_type, title, mode, content_url, premired=None, thumb=None):
         self.content_type = content_type
         self.content_url = content_url
         self.title = title
         self.mode = mode
+        self.premired = premired
+        self.thumb = thumb
         
 
     def as_dict(self):
@@ -161,6 +163,7 @@ class EntitySearchItemTv(object):
         self.image_url = ''        
         self.desc = ''
         self.score = 0
+        
 
         self.status = 1 #1:방송중, 0:방송종료, 2:방송예정
         self.extra_info = ''
@@ -170,6 +173,8 @@ class EntitySearchItemTv(object):
         self.series = []
         self.equal_name = []
 
+        self.genre = ''
+        self.episode = -1
 
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
@@ -206,6 +211,8 @@ class EntitySearchItemTv(object):
             'broadcast_term' : self.broadcast_term,
             'series' : self.series,
             'equal_name' : self.equal_name,
+            'genre' : self.genre,
+            'episode' : self.episode,
 
         }
 
@@ -234,7 +241,7 @@ class EntityShow(object):
         self.tag = [] #colletion
         self.premiered = ''
         self.year = ''
-        self.status = ''
+        self.status = 1 #1:방송중, 2:방송종료, 0:방송예정
         self.studio = ''
         self.trailer = ''
         self.actor = []
