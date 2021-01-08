@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-import os, traceback
+import os, traceback, time
 
 import requests
 from lxml import html
