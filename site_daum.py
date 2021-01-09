@@ -285,8 +285,8 @@ class SiteDaumTv(SiteDaum):
             show.genre = [home_data['genre']]
             show.episode = home_data['episode']
 
-            show.extra_info['daum_poster'] = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
 
+            show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
 
             """
             tags = root.xpath('//*[@id="tv_program"]/div[4]/div/ul/li')

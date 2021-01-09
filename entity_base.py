@@ -30,15 +30,21 @@ class EntityRatings(object):
         }
 
 class EntityThumb(object):
-    def __init__(self, aspect=None, value=None):
+    def __init__(self, aspect='', value='', thumb='', site='', score=0):
         # banner, clearart, clearlogo, discart, landscape, poster
         self.aspect = aspect 
-        self.value = value
+        self.value = value  #원본 url
+        self.thumb = thumb  #썸네일 url
+        self.site = site
+        self.score = score
 
     def as_dict(self):
         return {
             'aspect' : self.aspect,
             'value' : self.value,
+            'thumb' : self.thumb,
+            'site' : self.site,
+            'score' : self.score,
         }
 
 

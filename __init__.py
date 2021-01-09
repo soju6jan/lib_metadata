@@ -9,3 +9,4 @@ plugin_info = P.plugin_info
 
 
 from .site_daum import SiteDaumTv
+from .site_tmdb import SiteTmdbTv
