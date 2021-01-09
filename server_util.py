@@ -28,8 +28,7 @@ class MetadataServerUtil(object):
             if data['ret'] == 'success':
                 return data['data']
         except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
+            logger.error('metaserver connection fail.. get_metadata')
     
     @classmethod
     def search_metadata(cls, keyword):
@@ -40,8 +39,7 @@ class MetadataServerUtil(object):
             if data['ret'] == 'success':
                 return data['data']
         except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc()) 
+            logger.error('metaserver connection fail.. search_metadata')
 
     @classmethod
     def set_metadata(cls, code, data, keyword):
@@ -53,8 +51,7 @@ class MetadataServerUtil(object):
             if data['ret'] == 'success':
                 logger.info('%s Data save success. Thanks!!!!', code)
         except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
+            logger.error('metaserver connection fail.. set_metadata')
 
 
     @classmethod
