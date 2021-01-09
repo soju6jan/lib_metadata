@@ -127,11 +127,7 @@ class SiteTmdbTv(SiteTmdb):
             if votes > 3:
                 show['ratings'].append(EntityRatings(rating, max=10, name='tmdb').as_dict())
 
-            if apply_image:
-
-
-                
-            if 
+            
             #ret['tmdb']['info'] = tmdb.credits()
             return True
         except Exception as exception: 
