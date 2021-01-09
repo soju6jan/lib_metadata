@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-import requests, re, json, time
+import os, requests, re, json, time
 import traceback, unicodedata
 from datetime import datetime
 
@@ -125,7 +125,7 @@ class SiteTmdbTv(SiteTmdb):
             
             votes = tmdb_dict['vote_count']
             rating = tmdb_dict['vote_average']
-            
+
             if votes > 3:
                 show['ratings'].append(EntityRatings(rating, max=10, name='tmdb').as_dict())
 
