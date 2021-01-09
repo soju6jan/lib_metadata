@@ -116,6 +116,7 @@ class SiteTmdbTv(SiteTmdb):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
     @classmethod 
     def apply(cls, tmdb_id, show, apply_image=True, apply_actor_image=True):
         try:
@@ -124,10 +125,13 @@ class SiteTmdbTv(SiteTmdb):
             
             votes = tmdb_dict['vote_count']
             rating = tmdb_dict['vote_average']
+            
             if votes > 3:
                 show['ratings'].append(EntityRatings(rating, max=10, name='tmdb').as_dict())
 
-            
+            if apply_image:
+                cls.apply_image(tmdb, show)
+
             #ret['tmdb']['info'] = tmdb.credits()
             return True
         except Exception as exception: 
