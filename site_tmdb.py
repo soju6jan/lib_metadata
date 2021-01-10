@@ -12,6 +12,7 @@ from framework.util import Util
 from system import SystemLogicTrans
 from system.logic_site import SystemLogicSite
 
+from lib_metadata import MetadataServerUtil
 
 from .plugin import P
 from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow
@@ -52,10 +53,10 @@ class SiteTmdbTv(SiteTmdb):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
-        return ret
+        return
 
     @classmethod
-    def apply_image(cls, tmdb, show):
+    def process_image(cls, tmdb, show):
         try:
             tmdb_images_dict = tmdb.images()
 
@@ -117,6 +118,39 @@ class SiteTmdbTv(SiteTmdb):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
+
+    @classmethod
+    def process_actor_image(cls, tmdb, show):
+        try:
+            tmdb_actor = tmdb.credits()
+            show['tmdb_actor'] = tmdb_actor
+            for tmdb_item in tmdb_actor['cast']:
+                if tmdb_item['profile_path'] is None:
+                    continue
+                kor_name = SystemLogicTrans.trans(tmdb_item['name'], source='en', target='ko').replace(' ', '')
+                #kor_name = MetadataServerUtil.trans_en_to_ko(tmdb_item['name'])
+                flag_find = False
+
+                #logger.debug(tmdb_item)
+                for actor in show['actor']:
+                    if actor['name'] == kor_name:
+                        flag_find = True
+                        actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                        break
+                if flag_find == False:
+                    kor_role_name = MetadataServerUtil.trans_en_to_ko(tmdb_item['character'])
+                    for actor in show['actor']:
+                        if actor['role'] == kor_role_name:
+                            flag_find = True
+                            actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                            break
+                if flag_find == False:
+                    logger.debug(kor_name)
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
     @classmethod 
     def apply(cls, tmdb_id, show, apply_image=True, apply_actor_image=True):
         try:
@@ -130,8 +164,10 @@ class SiteTmdbTv(SiteTmdb):
                 show['ratings'].append(EntityRatings(rating, max=10, name='tmdb').as_dict())
 
             if apply_image:
-                cls.apply_image(tmdb, show)
+                cls.process_image(tmdb, show)
 
+            if apply_actor_image:
+                cls.process_actor_image(tmdb, show)
             #ret['tmdb']['info'] = tmdb.credits()
             return True
         except Exception as exception: 

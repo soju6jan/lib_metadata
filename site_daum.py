@@ -245,7 +245,6 @@ class SiteDaumTv(SiteDaum):
             show = EntityShow(cls.site_name, code)
 
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
-
             url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
@@ -302,14 +301,6 @@ class SiteDaumTv(SiteDaum):
                     show.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
             """
 
-
-            tags = root.xpath('//*[@id="tv_program"]//div[@class="clipList"]//div[@class="mg_expander"]/a')
-            if tags:
-                tmp = tags[0].attrib['href']
-                show.extra_info['kakao_id'] = re.compile('/(?P<id>\d+)/').search(tmp).group('id')
-                logger.debug(show.extra_info['kakao_id'])
-
-
             for i in range(1,3):
                 items = root.xpath('//*[@id="tv_casting"]/div[%s]/ul//li' % i)
                 logger.debug('CASTING ITEM LEN : %s' % len(items))
@@ -328,13 +319,13 @@ class SiteDaumTv(SiteDaum):
                             tail = tmp[0].tail.strip()
                             if tail == u'역':
                                 actor.type ='actor'
-                                actor.role = role_name
+                                actor.role = role_name.strip()
                             else:
-                                actor.name = role_name
+                                actor.name = role_name.strip()
                         else:
                             if span_text.endswith(u'역'): actor.role = span_text.replace(u'역', '')
-                            elif actor.name == '': actor.name = span_text
-                            else: actor.role = span_text
+                            elif actor.name == '': actor.name = span_text.strip()
+                            else: actor.role = span_text.strip()
                     if actor.type == 'actor' or actor.role.find(u'출연') != -1:
                         show.actor.append(actor)
                     elif actor.role.find(u'감독') != -1 or actor.role.find(u'연출') != -1:
@@ -346,14 +337,36 @@ class SiteDaumTv(SiteDaum):
                     elif actor.name != u'인물관계도':
                         show.actor.append(actor)
 
+            # 에피소드
+            items = root.xpath('//*[@id="clipDateList"]/li')
+            show.extra_info['episodes'] = {}
+            for item in items:
+                epi = {}
+                a_tag = item.xpath('a') 
+                if len(a_tag) != 1:
+                    continue
+                epi['url'] = 'https://search.daum.net/search%s' % a_tag[0].attrib['href']
+                tmp = item.attrib['data-clip']
+                epi['premiered'] = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
+                match = re.compile(r'(?P<no>\d+)%s' % u'회').search(a_tag[0].text_content().strip())
+                if match:
+                    epi['no'] = int(match.group('no'))
+                show.extra_info['episodes'][epi['no']] = {'url':epi['url'], 'premiered':epi['premiered']}
 
+            tags = root.xpath('//*[@id="tv_program"]//div[@class="clipList"]//div[@class="mg_expander"]/a')
+            show.extra_info['kakao_id'] = None
+            if tags:
+                tmp = tags[0].attrib['href']
+                show.extra_info['kakao_id'] = re.compile('/(?P<id>\d+)/').search(tmp).group('id')
+                logger.debug(show.extra_info['kakao_id'])
+
+            tags = root.xpath("//a[starts-with(@href, 'http://www.tving.com/vod/player')]")
+            #tags = root.xpath('//a[@contains(@href, "tving.com")')
+            if tags:
+                show.extra_info['tving_episode_id'] = tags[0].attrib['href'].split('/')[-1]
 
             ret['ret'] = 'success'
             ret['data'] = show.as_dict()
-
-
-
-            
 
         except Exception as exception: 
             logger.error('Exception:%s', exception)

@@ -72,3 +72,30 @@ class MetadataServerUtil(object):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
+    
+    @classmethod
+    def get_actor_name_en(cls, name):
+        try:
+            tmp = 'https://sjva-dev.soju6jan.com'
+            from framework import py_urllib
+            url = '{server_plugin_ddns}/server/normal/actor/get?name={name}'.format(server_plugin_ddns=tmp, name=py_urllib.quote(name))
+            data = requests.get(url).json()
+            if data['ret'] == 'success':
+                return data['data']
+        except Exception as exception: 
+            logger.error('metaserver connection fail.. get_actor_name_en')
+
+
+    @classmethod
+    def trans_en_to_ko(cls, name):
+        try:
+            tmp = 'https://sjva-dev.soju6jan.com'
+            from framework import py_urllib
+            url = '{server_plugin_ddns}/server/normal/actor/trans_en_to_ko?name={name}'.format(server_plugin_ddns=tmp, name=py_urllib.quote(name))
+            data = requests.get(url).json()
+            if data['ret'] == 'success':
+                return data['data']
+        except Exception as exception: 
+            logger.error('metaserver connection fail.. get_actor_name_en')
+
