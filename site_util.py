@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-import time, json
+import time, json, re
 
 import requests
 import traceback
@@ -160,3 +160,14 @@ class SiteUtil(object):
     def change_html(cls, text):
         if text is not None:
             return text.replace('&nbsp;', ' ').replace('&nbsp', ' ').replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').replace('&quot;', '"').replace('&#35;', '#').replace('&#39;', "‘")
+
+    @classmethod
+    def remove_special_char(cls, text):
+        return re.sub('[-=+,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》]', '', text)
+    
+
+    @classmethod
+    def compare(cls, a, b):
+        return (cls.remove_special_char(a).replace(' ', '').lower() == cls.remove_special_char(b).replace(' ', '').lower())
+        
+ 

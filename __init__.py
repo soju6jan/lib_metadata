@@ -11,3 +11,4 @@ from .server_util import MetadataServerUtil
 from .site_daum import SiteDaumTv
 from .site_tmdb import SiteTmdbTv
 from .site_tving import SiteTvingTv
+from .site_wavve import SiteWavveTv

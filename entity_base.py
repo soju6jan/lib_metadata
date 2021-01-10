@@ -309,40 +309,25 @@ class EntityShow(object):
 
 class EntityEpisode(object):
 
-    def __init__(self, site, code):
+    def __init__(self, site, parent_code, code):
         self.site = site
+        self.parent_code = parent_code
         self.code = code  # uniqueid
-
+        self.episodedetails = ''
         self.title = ''
         self.originaltitle = ''
-        self.sorttitle = ''
+        self.showtitle = ''
         self.ratings = []
         self.userrating = ''
-
         self.season = 1 # 시즌카운트
         self.episode = 0 # 에피소드 카운트
         self.plot = ''
         self.tagline = ''
+        self.runtime = 0
         self.thumb = []
-        self.fanart = []
-        self.mpaa = ''
-        
-        self.genre = []
-        self.tag = [] #colletion
         self.premiered = ''
         self.year = ''
-        self.status = 1 #1:방송중, 2:방송종료, 0:방송예정
-        self.studio = ''
-        self.trailer = ''
-        self.actor = []
-        self.namedseason = []
-
-        # kodi spec에 없음.
-        self.country = [] #없음
-        self.credits = [] #에피소드  #극본
-        self.director = [] #에피소드 #감독
         self.extras = []
-
         self.extra_info = {}
 
     def __repr__(self):
@@ -356,30 +341,22 @@ class EntityEpisode(object):
     def as_dict(self):
         return {
             'site' : self.site,
+            'parent_code' : self.parent_code,
             'code' : self.code,
+            'episodedetails' : self.episodedetails,
             'title' : self.title,
             'originaltitle' : self.originaltitle,
-            'sorttitle' : self.sorttitle,
+            'showtitle' : self.showtitle,
             'ratings' : [x.as_dict() for x in self.ratings] if self.ratings is not None else None,
             'userrating' : self.userrating,
             'season' : self.season,
             'episode' : self.episode,
             'plot' : self.plot,
             'tagline' : self.tagline,
+            'runtime' : self.runtime,
             'thumb' : [x.as_dict() for x in self.thumb] if self.thumb is not None else None,
-            'fanart' : self.fanart,
-            'mpaa' : self.mpaa,
-            'genre' : self.genre,
-            'tag' : self.tag,
             'premiered' : self.premiered,
             'year' : self.year,
-            'status' : self.status,
-            'studio' : self.studio,
-            'trailer' : self.trailer,
-            'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
-            'country' : self.country,
-            'credits' : [x.as_dict() for x in self.credits] if self.credits is not None else None,
-            'director' :  [x.as_dict() for x in self.director] if self.director is not None else None,
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
             'extra_info' : self.extra_info,
         }

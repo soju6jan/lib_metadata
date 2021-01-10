@@ -13,7 +13,7 @@ from system.logic_site import SystemLogicSite
 
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow, EntityEpisode
 from .site_util import SiteUtil
 
 logger = P.logger
@@ -97,14 +97,15 @@ class SiteDaum(object):
                 # 2019-03-05 시리즈 더보기 존재시
                 try:
                     more = root.xpath('//*[@id="tv_series"]/div/div/a')
-                    url = more[0].attrib['href']
-                    if not url.startswith('http'):
-                        url = 'https://search.daum.net/search%s' % url
-                    logger.debug('MORE URL : %s', url)
-                    if more[0].xpath('span')[0].text == u'시리즈 더보기':
-                        #more_root = HTML.ElementFromURL(url)
-                        more_root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-                        tags = more_root.xpath('//*[@id="series"]/ul/li')
+                    if more:
+                        url = more[0].attrib['href']
+                        if not url.startswith('http'):
+                            url = 'https://search.daum.net/search%s' % url
+                        logger.debug('MORE URL : %s', url)
+                        if more[0].xpath('span')[0].text == u'시리즈 더보기':
+                            #more_root = HTML.ElementFromURL(url)
+                            more_root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+                            tags = more_root.xpath('//*[@id="series"]/ul/li')
                 except Exception as exception:
                     logger.debug('Not More!')
                     logger.debug(traceback.format_exc())
@@ -276,7 +277,7 @@ class SiteDaumTv(SiteDaum):
             """
             show.studio = home_data['studio']
             show.plot = home_data['desc']
-            match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})~').search(home_data['broadcast_term'])
+            match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})').search(home_data['broadcast_term'])
             if match:
                 show.premiered = match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
                 show.year = int(match.group('year'))
@@ -375,3 +376,69 @@ class SiteDaumTv(SiteDaum):
             ret['data'] = str(exception)
         return ret
 
+
+    @classmethod
+    def episode_info(cls, parent_code, epi_no, premiered, daum_param):
+        try:
+            ret = {}
+            root = SiteUtil.get_tree(daum_param, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+
+            items = root.xpath('//div[@class="tit_episode"]')
+            entity = EntityEpisode(cls.site_name, parent_code, daum_param)
+
+            if len(items) == 1:
+                tmp = items[0].xpath('strong')
+                if len(tmp) == 1:
+                    episode_frequency = tmp[0].text_content().strip()
+                    match = re.compile(r'(\d+)').search(episode_frequency)
+                    if match:
+                        entity.episode = int(match.group(1))
+
+                tmp = items[0].xpath('span[@class="txt_date "]')
+                date1 = ''
+                if len(tmp) == 1:
+                    date1 = tmp[0].text_content().strip()
+                    entity.premiered = cls.change_date(date1.split('(')[0])
+                    entity.title = date1
+                tmp = items[0].xpath('span[@class="txt_date"]')
+                if len(tmp) == 1:
+                    date2 = tmp[0].text_content().strip()
+                    entity.title = ('%s %s' % (date1, date2)).strip()
+            items = root.xpath('//p[@class="episode_desc"]')
+            if len(items) == 1:
+                tmp = items[0].xpath('strong')
+                if len(tmp) == 1:
+                    title = tmp[0].text_content().strip()
+                    if title !='None': 
+                        entity.title = '%s %s' % (entity.title, title)
+            summary2 = '\r\n'.join(txt.strip() for txt in root.xpath('//p[@class="episode_desc"]/text()'))
+            entity.plot = '%s\r\n%s' % (entity.title, summary2)
+            
+            items = root.xpath('//*[@id="tv_episode"]/div[2]/div[1]/div/a/img')
+            if len(items) == 1:
+                entity.thumb.append(EntityThumb(aspect='landscape', value=cls.process_image_url(items[0].attrib['src']), site=cls.site_name, score=-10))
+
+            
+            tags = root.xpath('//*[@id="tv_episode"]/div[3]/div/ul/li')
+            for idx, tag in enumerate(tags):
+                if idx > 9:
+                    break
+                a_tags = tag.xpath('.//a')
+                if len(a_tags) == 2:
+                    thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
+                    #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
+                    video_url = a_tags[1].attrib['href']
+                    title = a_tags[1].text_content()
+                    #logger.debug(video_url)
+                    date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
+                    entity.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
+            
+
+            ret['ret'] = 'success'
+            ret['data'] = entity.as_dict()
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
