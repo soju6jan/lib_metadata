@@ -60,13 +60,13 @@ class MetadataServerUtil(object):
             if data['thumb'] is None or len(data['thumb']) < 2:
                 return
             for tmp in data['thumb']:
-                if not tmp['value'].startswith('https://images-ext-'):
+                if tmp['value'] is None or tmp['value'].find('.discordapp.') == -1:
                     return
                 if requests.get(tmp['value']).status_code != 200:
                     return
             if data['fanart'] is not None:
                 for tmp in data['fanart']:
-                    if not tmp.startswith('https://images-ext-'):
+                    if tmp.find('.discordapp.') == -1:
                         return
             cls.set_metadata(code, data, keyword)   
         except Exception as exception: 

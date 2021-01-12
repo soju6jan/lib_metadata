@@ -1,13 +1,13 @@
 
 # -*- coding: utf-8 -*-
-import time, json, re
+import os, time, json, re
 
 import requests
 import traceback
 
 from lxml import html
 
-from framework import SystemModelSetting, py_urllib
+from framework import SystemModelSetting, py_urllib, path_data
 from framework.util import Util
 from system import SystemLogicTrans
 
@@ -79,7 +79,23 @@ class SiteUtil(object):
             ret = '{ddns}/metadata/normal/image_process.jpg?mode=landscape_to_poster&url=' + py_urllib.quote_plus(image_url)
             ret = ret.format(ddns=SystemModelSetting.get('ddns'))
             #ret = Util.make_apikey(tmp)
-
+        elif image_mode == '5':  #로컬에 포스터를 만들고 
+            # image_url : 디스코드에 올라간 표지 url 임.
+            from PIL import Image
+            im = Image.open(requests.get(image_url, stream=True).raw)
+            width, height = im.size
+            left = width/1.895734597
+            top = 0
+            right = width
+            bottom = height
+            filename = 'proxy_%s.jpg' % str(time.time())
+            filepath = os.path.join(path_data, 'tmp', filename)
+            poster = im.crop((left, top, right, bottom))
+            poster.save(filepath)
+            #poster_url = '{ddns}/file/data/tmp/%s' % filename
+            #poster_url = Util.make_apikey(poster_url)
+            #logger.debug('poster_url : %s', poster_url)
+            ret = cls.discord_proxy_image_localfile(filepath)
         return ret
 
     av_genre = {u'巨尻':u'큰엉덩이', u'ギャル':u'갸루', u'着エロ':u'착에로', u'競泳・スクール水着':u'학교수영복', u'日焼け':u'태닝', u'指マン':u'핑거링', u'潮吹き':u'시오후키', u'ごっくん':u'곳쿤', u'パイズリ':u'파이즈리', u'手コキ':u'수음', u'淫語':u'음란한말', u'姉・妹':u'남매', u'お姉さん':u'누님', u'インストラクター':u'트레이너', u'ぶっかけ':u'붓카케', u'シックスナイン':u'69', u'ボディコン':u'타이트원피스', u'電マ':u'전동마사지', u'イタズラ':u'짖궂음', u'足コキ':u'풋잡', u'原作コラボ':u'원작각색', u'看護婦・ナース':u'간호사', u'コンパニオン':u'접객업', u'家庭教師':u'과외', u'キス・接吻':u'딥키스', u'局部アップ':u'음부확대', u'ポルチオ':u'자궁성감자극', u'セーラー服':u'교복', u'イラマチオ':u'격한페라·딥스로트', u'投稿':u'투고', u'キャンギャル':u'도우미걸', u'女優ベスト・総集編':u'베스트총집편', u'クンニ':u'커닐링구스', u'アナル':u'항문노출', u'超乳':u'폭유', u'復刻':u'리마스터', u'投稿':u'투고', u'義母':u'새어머니', u'おもちゃ':u'노리개', u'くノ一':u'여자닌자', u'羞恥' : u'수치심', u'ドラッグ':u'최음제', u'パンチラ':u'판치라', u'巨乳フェチ':u'큰가슴', u'巨乳':u'큰가슴', u'レズキス':u'레즈비언', u'レズ':u'레즈비언', u'スパンキング':u'엉덩이때리기', u'放尿・お漏らし':u'방뇨·오모라시', u'アクメ・オーガズム':u'절정·오르가즘', u'ニューハーフ':u'쉬메일', u'鬼畜':u'색마·양아치', u'辱め':u'능욕', u'フェラ':u'펠라치오'}
@@ -125,6 +141,11 @@ class SiteUtil(object):
     def discord_proxy_image(cls, image_url):
         from tool_expand import ToolExpandDiscord
         return ToolExpandDiscord.discord_proxy_image(image_url)
+    
+    @classmethod
+    def discord_proxy_image_localfile(cls, filepath):
+        from tool_expand import ToolExpandDiscord
+        return ToolExpandDiscord.discord_proxy_image_localfile(filepath)
 
     @classmethod
     def get_image_url(cls, image_url, image_mode, proxy_url=None, with_poster=False):
@@ -133,21 +154,22 @@ class SiteUtil(object):
             #logger.debug(image_url)
             #logger.debug(image_mode)
             ret = {}
-            tmp = cls.discord_proxy_get_target(image_url)
+            #tmp = cls.discord_proxy_get_target(image_url)
 
             #logger.debug('tmp : %s', tmp)
-            if tmp is None:
-                ret['image_url'] = cls.process_image_mode(image_mode, image_url, proxy_url=proxy_url)
-            else:
-                ret['image_url'] = tmp
+            #if tmp is None:
+            ret['image_url'] = cls.process_image_mode(image_mode, image_url, proxy_url=proxy_url)
+            #else:
+            #    ret['image_url'] = tmp
 
             if with_poster:
-                ret['poster_image_url'] = cls.discord_proxy_get_target_poster(image_url)
-                if ret['poster_image_url'] is None:
-                    tmp = cls.process_image_mode('4', ret['image_url']) #포스터이미지 url 본인 sjva
+                logger.debug(ret['image_url'])
+                #ret['poster_image_url'] = cls.discord_proxy_get_target_poster(image_url)
+                #if ret['poster_image_url'] is None:
+                ret['poster_image_url'] = cls.process_image_mode('5', ret['image_url']) #포스터이미지 url 본인 sjva
                     #if image_mode == '3': # 디스코드 url 모드일때만 포스터도 디스코드로
-                    ret['poster_image_url'] = cls.process_image_mode('3', tmp) #디스코드 url / 본인 sjva가 소스이므로 공용으로 등록
-                    cls.discord_proxy_set_target_poster(image_url, ret['poster_image_url'])
+                    #ret['poster_image_url'] = cls.process_image_mode('3', tmp) #디스코드 url / 본인 sjva가 소스이므로 공용으로 등록
+                    #cls.discord_proxy_set_target_poster(image_url, ret['poster_image_url'])
             
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -169,5 +191,5 @@ class SiteUtil(object):
     @classmethod
     def compare(cls, a, b):
         return (cls.remove_special_char(a).replace(' ', '').lower() == cls.remove_special_char(b).replace(' ', '').lower())
-        
+
  
