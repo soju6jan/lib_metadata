@@ -84,14 +84,17 @@ class SiteUtil(object):
             from PIL import Image
             im = Image.open(requests.get(image_url, stream=True).raw)
             width, height = im.size
-            left = width/1.895734597
-            top = 0
-            right = width
-            bottom = height
             filename = 'proxy_%s.jpg' % str(time.time())
             filepath = os.path.join(path_data, 'tmp', filename)
-            poster = im.crop((left, top, right, bottom))
-            poster.save(filepath)
+            if width > height:
+                left = width/1.895734597
+                top = 0
+                right = width
+                bottom = height
+                poster = im.crop((left, top, right, bottom))
+                poster.save(filepath)
+            else:
+                im.save(filepath)
             #poster_url = '{ddns}/file/data/tmp/%s' % filename
             #poster_url = Util.make_apikey(poster_url)
             #logger.debug('poster_url : %s', poster_url)

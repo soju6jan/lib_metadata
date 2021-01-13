@@ -90,7 +90,7 @@ class SiteDaum(object):
             #logger.debug('get_show_info_on_home 1: %s', entity['status'])
             #시리즈
             entity.series = []
-            entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year})
+            entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year, 'status':entity.status})
             tags = root.xpath('//*[@id="tv_series"]/div/ul/li')
 
             if tags:
@@ -260,7 +260,7 @@ class SiteDaumTv(SiteDaum):
             if len(tags) == 1:
                 show.title = tags[0].text_content().strip()
                 show.originaltitle = show.title
-                show.sorttitle = unicodedata.normalize('NFKD', show.originaltitle)
+                show.sorttitle = show.title #unicodedata.normalize('NFKD', show.originaltitle)
                 logger.debug(show.sorttitle)
             """
             tags = root.xpath('//*[@id="tv_program"]/div[1]/div[3]/span')
@@ -352,7 +352,7 @@ class SiteDaumTv(SiteDaum):
                 match = re.compile(r'(?P<no>\d+)%s' % u'회').search(a_tag[0].text_content().strip())
                 if match:
                     epi['no'] = int(match.group('no'))
-                show.extra_info['episodes'][epi['no']] = {'url':epi['url'], 'premiered':epi['premiered']}
+                    show.extra_info['episodes'][epi['no']] = {'daum': {'code' : cls.module_char + cls.site_char + epi['url'], 'premiered':epi['premiered']}}
 
             tags = root.xpath('//*[@id="tv_program"]//div[@class="clipList"]//div[@class="mg_expander"]/a')
             show.extra_info['kakao_id'] = None
@@ -378,13 +378,14 @@ class SiteDaumTv(SiteDaum):
 
 
     @classmethod
-    def episode_info(cls, parent_code, epi_no, premiered, daum_param):
+    def episode_info(cls, episode_code):
         try:
             ret = {}
-            root = SiteUtil.get_tree(daum_param, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            episode_code = episode_code[2:]
+            root = SiteUtil.get_tree(episode_code, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
             items = root.xpath('//div[@class="tit_episode"]')
-            entity = EntityEpisode(cls.site_name, parent_code, daum_param)
+            entity = EntityEpisode(cls.site_name, episode_code)
 
             if len(items) == 1:
                 tmp = items[0].xpath('strong')

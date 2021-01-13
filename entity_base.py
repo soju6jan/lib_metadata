@@ -309,9 +309,9 @@ class EntityShow(object):
 
 class EntityEpisode(object):
 
-    def __init__(self, site, parent_code, code):
+    def __init__(self, site, code):
         self.site = site
-        self.parent_code = parent_code
+        #self.parent_code = parent_code
         self.code = code  # uniqueid
         self.episodedetails = ''
         self.title = ''
@@ -329,6 +329,7 @@ class EntityEpisode(object):
         self.year = ''
         self.extras = []
         self.extra_info = {}
+        self.mpaa = ''
 
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
@@ -341,7 +342,7 @@ class EntityEpisode(object):
     def as_dict(self):
         return {
             'site' : self.site,
-            'parent_code' : self.parent_code,
+            #'parent_code' : self.parent_code,
             'code' : self.code,
             'episodedetails' : self.episodedetails,
             'title' : self.title,
@@ -359,5 +360,6 @@ class EntityEpisode(object):
             'year' : self.year,
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
             'extra_info' : self.extra_info,
+            'mpaa' : self.mpaa,
         }
 

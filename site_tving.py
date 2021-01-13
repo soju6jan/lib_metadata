@@ -21,10 +21,18 @@ from .site_util import SiteUtil
 logger = P.logger
 
 
+tv_mpaa_map = {'CPTG0100' : u'모든 연령 시청가', 'CPTG0200' : u'7세 이상 시청가', 'CPTG0300' : u'12세 이상 시청가', 'CPTG0400' : u'15세 이상 시청가', 'CPTG0500' : u'19세 이상 시청가'}
+
+
+
 class SiteTving(object):
     site_name = 'tving'
+    tving_base_image = 'https://image.tving.com'
 
-
+    @classmethod
+    def change_to_premiered(cls, broadcast_date):
+        tmp = str(broadcast_date)
+        return tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
 
 class SiteTvingTv(SiteTving):
     module_char = 'K'
@@ -49,23 +57,45 @@ class SiteTvingTv(SiteTving):
     def _apply_tv_by_program(cls, show, program_info, apply_plot=True, apply_image=True):
         try:
             show['extra_info']['tving_id'] = program_info['code']
+            show['mpaa'] = tv_mpaa_map[program_info['grade_code']]
+
             if apply_plot:
                 show['plot'] = program_info['synopsis']['ko']
+                show['plot'] = show['plot'].replace(u'[이용권 전용 VOD] 티빙 이용권 전용 프로그램입니다.\r\n모든 방송과 4천여편의 영화를 티빙 이용권으로 즐겨보세요!\r\n\r\n', '').strip()
+            
             if apply_image:
-                tving_base = 'https://image.tving.com'
                 score = 80
                 for idx, img in enumerate(program_info['image']):
                     tmp_score = score - idx
                     if img['code'] in ['CAIP0200', 'CAIP1500', 'CAIP2100', 'CAIP2200']: # land
-                        show['thumb'].append(EntityThumb(aspect='landscape', value=tving_base + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
+                        show['thumb'].append(EntityThumb(aspect='landscape', value=cls.tving_base_image + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
                     elif img['code'] in ['CAIP0900', 'CAIP2300', 'CAIP2400']: #poster
-                        show['thumb'].append(EntityThumb(aspect='poster', value=tving_base + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
+                        show['thumb'].append(EntityThumb(aspect='poster', value=cls.tving_base_image + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
                     elif img['code'] in ['CAIP1800', 'CAIP1900']: #banner
                         if img['code'] == 'CAIP1900':
                             tmp_score += 10
-                        show['thumb'].append(EntityThumb(aspect='banner', value=tving_base + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
+                        show['thumb'].append(EntityThumb(aspect='banner', value=cls.tving_base_image + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
                     elif img['code'] in ['CAIP2000']: #square
-                        show['thumb'].append(EntityThumb(aspect='square', value=tving_base + img['url'], site=cls.site_name, score=tmp_score).as_dict())   
+                        show['thumb'].append(EntityThumb(aspect='square', value=cls.tving_base_image + img['url'], site=cls.site_name, score=tmp_score).as_dict())
+            if True:
+                import framework.tving.api as Tving
+                page = 1
+                while True:
+                    episode_data = Tving.get_frequency_programid(program_info['code'], page=page)
+                    for epi_all in episode_data['body']['result']:
+                        epi = epi_all['episode']
+                        if epi['frequency'] not in show['extra_info']['episodes']:
+                            show['extra_info']['episodes'][epi['frequency']] = {}
+
+                        show['extra_info']['episodes'][epi['frequency']][cls.site_name] = {
+                            'code' : cls.module_char + cls.site_char + epi['code'],
+                            'thumb' : cls.tving_base_image + epi['image'][0]['url'],
+                            'plot' : epi['synopsis']['ko'],
+                            'premiered' : cls.change_to_premiered(epi['broadcast_date'])
+                        }
+                    page += 1
+                    if episode_data['body']['has_more'] == 'N':
+                        break
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -76,7 +106,7 @@ class SiteTvingTv(SiteTving):
             data = Tving.search_tv(show['title'])
             if data:
                 for item in data:
-                    if item['mast_nm'].replace(' ', '').lower() == show['title'].replace(' ', '').lower() and item['ch_nm'].replace(' ', '').lower() == show['studio'].replace(' ', '').lower():
+                    if item['ch_nm'].replace(' ', '').lower() == show['studio'].replace(' ', '').lower() and (item['mast_nm'].replace(' ', '').lower() == show['title'].replace(' ', '').lower() or item['mast_nm'].replace(' ', '').lower().find(show['title'].replace(' ', '').lower()) != -1 or show['title'].replace(' ', '').lower().find(item['mast_nm'].replace(' ', '').lower()) != -1):
                         # 시작일로 체크
                         tving_program = Tving.get_program_programid(item['mast_cd'])['body']
                         logger.debug(tving_program)

@@ -143,7 +143,7 @@ class SiteDmm(object):
 
 
     @classmethod 
-    def info(cls, code, do_trans=True, proxy_url=None, image_mode='0'):
+    def info(cls, code, do_trans=True, proxy_url=None, image_mode='0', small_image_to_poster_list=[]):
         try:
             ret = {}
             url = '%s/digital/videoa/-/detail/=/cid=%s/' % (cls.site_base_url, code[2:])
@@ -163,19 +163,34 @@ class SiteDmm(object):
             #logger.debug('crs-full :%s ', len(a_nodes))
             # 2020-05-31 A태그가 없는 경우가 있음. 확대이미지가 없는 경우  tsds-42464
             #if a_nodes:
+            # svoks stvf - 확대이미지가 포스터. 이미지 크기로 자르지 않고 포스터러 결정됨
+            # stcead - 확대이지미가 랜드스케이프. 축소 이미지를 포스터로 사용
 
+            small_img_to_poster = False
+            for tmp in small_image_to_poster_list: 
+                if code.find(tmp) != -1:
+                    small_img_to_poster = True
+                    break
+            
             try:
                 a_nodes = nodes[0].xpath('.//a')
                 anodes = a_nodes
                 #logger.debug(html.tostring(anodes[0]))
                 img_tag = anodes[0].xpath('.//img')[0]
-                data = SiteUtil.get_image_url(a_nodes[0].attrib['href'], image_mode, proxy_url=proxy_url, with_poster=True)
-                entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
-                entity.thumb.append(EntityThumb(aspect='poster', value=data['poster_image_url']))
+                if small_img_to_poster:
+                    data = SiteUtil.get_image_url(a_nodes[0].attrib['href'], image_mode, proxy_url=proxy_url, with_poster=False)
+                    entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
+                else:
+                    data = SiteUtil.get_image_url(a_nodes[0].attrib['href'], image_mode, proxy_url=proxy_url, with_poster=True)
+                    entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
+                    entity.thumb.append(EntityThumb(aspect='poster', value=data['poster_image_url']))
             except:
+                small_img_to_poster = True
+            
+            if small_img_to_poster:
                 img_tag = nodes[0].xpath('.//img')[0]
                 entity.thumb.append(EntityThumb(aspect='poster', value=SiteUtil.process_image_mode(image_mode, img_tag.attrib['src'], proxy_url=proxy_url)))
-    
+
   
             entity.tagline = SiteUtil.trans(img_tag.attrib['alt'], do_trans=do_trans)
             tags = tree.xpath('{basetag}/table//tr'.format(basetag=basetag))
