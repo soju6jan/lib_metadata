@@ -156,10 +156,11 @@ class SiteWavveTv(SiteWavve):
                 if epi:
                     show['mpaa'] = mpaa_map[epi['targetage']]
                     
-                    for item in epi['episodeactors'].split(','):
-                        actor = EntityActor(item.strip())
-                        actor.name = item.strip()
-                        show['actor'].append(actor.as_dict())
+                    if len(show['actor']) == 0:
+                        for item in epi['episodeactors'].split(','):
+                            actor = EntityActor(item.strip())
+                            actor.name = item.strip()
+                            show['actor'].append(actor.as_dict())
 
         except Exception as exception: 
             logger.error('Exception:%s', exception)
