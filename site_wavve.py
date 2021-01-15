@@ -124,7 +124,7 @@ class SiteWavveTv(SiteWavve):
             
             if True:
                 score = 70
-                #show['thumb'].append(EntityThumb(aspect='landscape', value='https://' + program_info['image'], site=cls.site_name, score=score).as_dict())   
+                show['thumb'].append(EntityThumb(aspect='landscape', value='https://' + program_info['image'], site=cls.site_name, score=0).as_dict())   
                 show['thumb'].append(EntityThumb(aspect='poster', value='https://' + program_info['posterimage'], site=cls.site_name, score=score).as_dict()) 
             
             if True:
