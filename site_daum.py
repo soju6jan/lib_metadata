@@ -13,7 +13,7 @@ from system.logic_site import SystemLogicSite
 
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow, EntityEpisode
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTvDaum, EntityShow, EntityEpisode
 from .site_util import SiteUtil
 
 logger = P.logger
@@ -37,7 +37,7 @@ class SiteDaum(object):
                 return
             tag_index = len(tags)-1
             #entity = {}
-            entity = EntitySearchItemTv(cls.site_name)
+            entity = EntitySearchItemTvDaum(cls.site_name)
 
             entity.title = tags[tag_index].text
             match = re.compile(r'q\=(?P<title>.*?)&').search(tags[tag_index].attrib['href'])
@@ -219,17 +219,19 @@ class SiteDaumTv(SiteDaum):
         try:
             ret = {}
             if daum_id is None:
-                url = 'https://search.daum.net/search?q=%s' % (py_urllib.quote(keyword.encode('utf8')))
+                url = 'https://search.daum.net/search?q=%s' % (py_urllib.quote(str(keyword)))
             else:
-                url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(keyword.encode('utf8')), daum_id)
+                url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(keyword)), daum_id)
 
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             data = cls.get_show_info_on_home(root)
             #logger.debug(data)
-            ret['ret'] = 'success'
-            ret['data'] = data
-
-
+            
+            if data is None:
+                ret['ret'] = 'empty'
+            else:
+                ret['ret'] = 'success'
+                ret['data'] = data
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -246,10 +248,12 @@ class SiteDaumTv(SiteDaum):
             show = EntityShow(cls.site_name, code)
 
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
-            url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
+            url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
-            home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
+            home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
+
+            logger.debug(home_url)
             home_root = SiteUtil.get_tree(home_url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             home_data = cls.get_show_info_on_home(home_root)
 
@@ -285,8 +289,12 @@ class SiteDaumTv(SiteDaum):
             show.genre = [home_data['genre']]
             show.episode = home_data['episode']
 
+            tmp = root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')
+            logger.debug(tmp)
+
 
             show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
+
 
             """
             tags = root.xpath('//*[@id="tv_program"]/div[4]/div/ul/li')
@@ -340,7 +348,7 @@ class SiteDaumTv(SiteDaum):
 
             # 에피소드
             items = root.xpath('//*[@id="clipDateList"]/li')
-            show.extra_info['episodes'] = {}
+            #show.extra_info['episodes'] = {}
             for item in items:
                 epi = {}
                 a_tag = item.xpath('a') 

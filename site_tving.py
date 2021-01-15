@@ -23,6 +23,14 @@ logger = P.logger
 
 tv_mpaa_map = {'CPTG0100' : u'모든 연령 시청가', 'CPTG0200' : u'7세 이상 시청가', 'CPTG0300' : u'12세 이상 시청가', 'CPTG0400' : u'15세 이상 시청가', 'CPTG0500' : u'19세 이상 시청가'}
 
+channel_code_map = {
+    'C00551' : 'tvN',
+    'C00579' : 'Mnet',
+    'C00590' : 'OGN',
+    'C15152' : 'CH.DIA',
+    'C01582' : 'JTBC',
+
+}
 
 
 class SiteTving(object):
@@ -33,6 +41,13 @@ class SiteTving(object):
     def change_to_premiered(cls, broadcast_date):
         tmp = str(broadcast_date)
         return tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
+
+    @classmethod
+    def change_channel_code(cls, channel_code):
+        if channel_code in channel_code_map:
+            return channel_code_map[channel_code]
+        return channel_code
+
 
 class SiteTvingTv(SiteTving):
     module_char = 'K'
@@ -56,6 +71,8 @@ class SiteTvingTv(SiteTving):
     @classmethod
     def _apply_tv_by_program(cls, show, program_info, apply_plot=True, apply_image=True):
         try:
+            #logger.debug(show['extra_info'])
+            #logger.debug(program_info['code'])
             show['extra_info']['tving_id'] = program_info['code']
             show['mpaa'] = tv_mpaa_map[program_info['grade_code']]
 
@@ -85,13 +102,14 @@ class SiteTvingTv(SiteTving):
                     for epi_all in episode_data['body']['result']:
                         epi = epi_all['episode']
                         if epi['frequency'] not in show['extra_info']['episodes']:
-                            show['extra_info']['episodes'][epi['frequency']] = {}
+                            show['extra_info']['episodes'][int(epi['frequency'])] = {}
 
-                        show['extra_info']['episodes'][epi['frequency']][cls.site_name] = {
+                        show['extra_info']['episodes'][int(epi['frequency'])][cls.site_name] = {
                             'code' : cls.module_char + cls.site_char + epi['code'],
                             'thumb' : cls.tving_base_image + epi['image'][0]['url'],
                             'plot' : epi['synopsis']['ko'],
-                            'premiered' : cls.change_to_premiered(epi['broadcast_date'])
+                            'premiered' : cls.change_to_premiered(epi['broadcast_date']), 
+                            'title' : '',
                         }
                     page += 1
                     if episode_data['body']['has_more'] == 'N':
@@ -137,3 +155,85 @@ class SiteTvingTv(SiteTving):
 # CAIP2200 : 1600*795   landscape
 # CAIP2300 : 663*960   poster
 # CAIP2400 : 663*960 - 1.4479   poster
+
+
+    @classmethod 
+    def search(cls, keyword, **kwargs):
+        try:
+            ret = {}
+            search_list = Tving.search_tv(keyword)
+            if search_list:
+                show_list = []
+                for idx, item in enumerate(search_list):
+                    entity = EntitySearchItemTv(cls.site_name)
+                    entity.code = (kwargs['module_char'] if 'module_char' in kwargs else cls.module_char) + cls.site_char + item['mast_cd']
+                    entity.title = item['mast_nm']
+                    entity.image_url = cls.tving_base_image + item['web_url']
+                    entity.studio = item['ch_nm']
+                    entity.genre = item['cate_nm']
+                    if SiteUtil.compare_show_title(entity.title, keyword):
+                        entity.score = 100
+                    else:
+                        entity.score = 60 - idx * 5
+
+                    show_list.append(entity.as_dict())
+                ret['ret'] = 'success'
+                ret['data'] = show_list
+            else:
+                ret['ret'] = 'empty'
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+    @classmethod 
+    def info(cls, code):
+        try:
+            ret = {}
+            tving_program = Tving.get_program_programid(code[2:])['body']
+            #ogger.debug(tving_program)
+            
+            show = EntityShow(cls.site_name, code)
+            show.title = tving_program['name']['ko']
+            show.originaltitle = show.title
+            show.sorttitle = show.title 
+            show.studio = cls.change_channel_code(tving_program['channel_code'])
+            show.plot = tving_program['synopsis']['ko']
+            show.premiered = cls.change_to_premiered(tving_program['broad_dt'])
+            show.year = int(show.premiered.split('-')[0])
+            if tving_program['broad_state'] == 'CPBS0200':
+                show.status = 1
+            elif tving_program['broad_state'] == 'CPBS0300':
+                show.status = 2
+            else:
+                logger.debug('!!!!!!!!!!!!!!!!broad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_state')
+
+            #if tving_program['broad_end_dt'] != '':
+            #    show.status = 2
+            show.genre = [tving_program['category1_name']['ko']]
+            #show.episode = home_data['episode']
+            
+            
+            for item in tving_program['actor']:
+                actor = EntityActor(item)
+                actor.name = item
+                show.actor.append(actor)
+            
+            for item in tving_program['director']:
+                actor = EntityActor(item)
+                actor.name = item
+                show.director.append(actor)
+
+            show = show.as_dict()
+            cls._apply_tv_by_program(show, tving_program)
+            ret['ret'] = 'success'
+            ret['data'] = show
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret

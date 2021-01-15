@@ -195,4 +195,19 @@ class SiteUtil(object):
     def compare(cls, a, b):
         return (cls.remove_special_char(a).replace(' ', '').lower() == cls.remove_special_char(b).replace(' ', '').lower())
 
- 
+    
+    @classmethod
+    def get_show_compare_text(cls, title):
+        title = title.replace(u'일일연속극', '').strip()
+        title = title.replace(u'특별기획드라마', '').strip()
+        title = re.sub(r'\[.*?\]', '', title).strip()
+        title = re.sub(r'\(.*?\)', '', title).strip()
+        title = re.sub(r'^.{2,3}%s' % u'드라마', '', title).strip()
+        title = re.sub(r'^.{1,3}%s' % u'특집', '', title).strip()
+        return title
+
+    @classmethod
+    def compare_show_title(cls, title1, title2):
+        title1 = cls.get_show_compare_text(title1)
+        title2 = cls.get_show_compare_text(title2)
+        return cls.compare(title1, title2)

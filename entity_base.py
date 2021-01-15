@@ -166,7 +166,7 @@ class EntityMovie(object):
 
 
 
-class EntitySearchItemTv(object):
+class EntitySearchItemTvDaum(object):
     def __init__(self, site):
         self.site = site
         self.code = ''
@@ -229,6 +229,58 @@ class EntitySearchItemTv(object):
         }
 
 
+class EntitySearchItemTv(object):
+    def __init__(self, site):
+        self.site = site
+        self.code = ''
+        self.title = ''
+        self.image_url = ''
+        self.studio = ''
+        self.genre = ''
+
+        self.year = ''        
+        self.desc = ''
+        self.score = 0
+        self.status = 1 #1:방송중, 0:방송종료, 2:방송예정
+        self.extra_info = ''
+        self.broadcast_info = ''
+        self.broadcast_term = ''
+        self.series = []
+        self.equal_name = []
+        self.episode = -1
+
+    def __repr__(self):
+        tmp = 'site : %s\n' % self.site
+        tmp += 'code : %s\n' % self.code
+        tmp += 'title : %s\n' % self.title        
+        return tmp
+
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,            
+            'image_url' : self.image_url,
+            'studio' : self.studio,
+            'genre' : self.genre,
+            'score' : self.score,
+        }
+        """
+            'year' : self.year,            
+            'desc' : self.desc,            
+            
+            'status' : self.status,
+            'extra_info' : self.extra_info,
+            'broadcast_info' : self.broadcast_info,
+            'broadcast_term' : self.broadcast_term,
+            'series' : self.series,
+            'equal_name' : self.equal_name,
+            'episode' : self.episode,
+        """
+
+
+
 class EntityShow(object):
     # https://kodi.wiki/view/NFO_files/Movies
     def __init__(self, site, code):
@@ -265,7 +317,7 @@ class EntityShow(object):
         self.director = [] #에피소드 #감독
         self.extras = []
 
-        self.extra_info = {}
+        self.extra_info = {'episodes':{}}
 
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
