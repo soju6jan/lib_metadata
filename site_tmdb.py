@@ -123,7 +123,6 @@ class SiteTmdbTv(SiteTmdb):
     def process_actor_image(cls, tmdb, show):
         try:
             tmdb_actor = tmdb.credits()
-            show['tmdb_actor'] = tmdb_actor
             for tmdb_item in tmdb_actor['cast']:
                 if tmdb_item['profile_path'] is None:
                     continue
