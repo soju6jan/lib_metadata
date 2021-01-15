@@ -386,7 +386,7 @@ class SiteDaumTv(SiteDaum):
 
 
     @classmethod
-    def episode_info(cls, episode_code):
+    def episode_info(cls, episode_code, include_kakao=False):
         try:
             ret = {}
             episode_code = episode_code[2:]
@@ -427,20 +427,20 @@ class SiteDaumTv(SiteDaum):
             if len(items) == 1:
                 entity.thumb.append(EntityThumb(aspect='landscape', value=cls.process_image_url(items[0].attrib['src']), site=cls.site_name, score=-10))
 
-            
-            tags = root.xpath('//*[@id="tv_episode"]/div[3]/div/ul/li')
-            for idx, tag in enumerate(tags):
-                if idx > 9:
-                    break
-                a_tags = tag.xpath('.//a')
-                if len(a_tags) == 2:
-                    thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
-                    #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
-                    video_url = a_tags[1].attrib['href']
-                    title = a_tags[1].text_content()
-                    #logger.debug(video_url)
-                    date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
-                    entity.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
+            if include_kakao:
+                tags = root.xpath('//*[@id="tv_episode"]/div[3]/div/ul/li')
+                for idx, tag in enumerate(tags):
+                    if idx > 9:
+                        break
+                    a_tags = tag.xpath('.//a')
+                    if len(a_tags) == 2:
+                        thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
+                        #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
+                        video_url = a_tags[1].attrib['href']
+                        title = a_tags[1].text_content()
+                        #logger.debug(video_url)
+                        date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
+                        entity.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
             
 
             ret['ret'] = 'success'
