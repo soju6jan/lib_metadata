@@ -4,7 +4,7 @@ from .plugin import P
 logger = P.logger
 
 class EntityRatings(object):
-    def __init__(self, value, max=None, votes=None, name=None, image_url=None):
+    def __init__(self, value, max=10, votes=0, name='', image_url=''):
         self.name = name
         self.max = max
         self.default = True
@@ -319,6 +319,7 @@ class EntityShow(object):
 
         self.extra_info = {'episodes':{}}
 
+
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
         tmp += 'code : %s\n' % self.code
@@ -415,3 +416,130 @@ class EntityEpisode(object):
             'mpaa' : self.mpaa,
         }
 
+
+
+class EntitySearchItemMovie(object):
+    def __init__(self, site):
+        self.site = site
+        self.code = ''
+        self.title = ''
+        self.originaltitle = ''
+        
+        self.image_url = ''
+        self.year = 1900
+        self.desc = ''
+        self.extra_info = {}
+        self.score = 0
+
+    def __repr__(self):
+        tmp = 'site : %s\n' % self.site
+        tmp += 'code : %s\n' % self.code
+        tmp += 'title : %s\n' % self.title        
+        return tmp
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,   
+            'originaltitle' : self.originaltitle,         
+            'image_url' : self.image_url,
+            'year' : self.year,
+            'desc' : self.desc,
+            'extra_info' : self.extra_info,
+            'score' : self.score,
+        }
+        """
+            'year' : self.year,            
+            'desc' : self.desc,            
+            
+            'status' : self.status,
+            'extra_info' : self.extra_info,
+            'broadcast_info' : self.broadcast_info,
+            'broadcast_term' : self.broadcast_term,
+            'series' : self.series,
+            'equal_name' : self.equal_name,
+            'episode' : self.episode,
+        """
+
+class EntityMovie2(object):
+    def __init__(self, site, code):
+        self.site = site
+        self.code = code  # uniqueid
+
+        self.title = ''
+        self.originaltitle = ''
+        self.sorttitle = ''
+        self.title_ko = ''
+        self.title_en = ''
+        self.title_3 = ''
+
+
+        self.ratings = []
+        self.userrating = None
+        self.plot = None
+        self.runtime = None
+        self.thumb = None
+        self.fanart = None
+        self.genre = None
+        self.country = None
+        self.credits = None
+        self.director = None
+        self.premiered = None
+        self.year = None
+        self.studio = None
+        self.trailer = None
+        self.actor = None
+        self.tag = None #colletion
+        self.tagline = None
+        self.extras = None
+        self.mpaa = None
+        """
+        self.top250 = None
+        self.outline = None
+        
+        """
+
+    def __repr__(self):
+        tmp = 'site : %s\n' % self.site
+        tmp += 'code : %s\n' % self.code
+        tmp += 'title : %s\n' % self.title
+        tmp += 'originaltitle : %s\n' % self.originaltitle
+        return tmp
+
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,
+            'originaltitle' : self.originaltitle,
+            'sorttitle' : self.sorttitle,
+            'title_ko' : self.title_ko,
+            'title_en' : self.title_en,
+            'title_3' : self.title_3,
+
+
+            'ratings' : [x.as_dict() for x in self.ratings] if self.ratings is not None else None,
+
+
+
+            'userrating' : self.userrating,
+            'plot' : self.plot,
+            'runtime' : self.runtime,
+            'thumb' : [x.as_dict() for x in self.thumb] if self.thumb is not None else None,
+            'fanart' : self.fanart,
+            'genre' : self.genre,
+            'country' : self.country,
+            'credits' : self.credits,
+            'director' : self.director,
+            'premiered' : self.premiered,
+            'year' : self.year,
+            'studio' : self.studio,
+            'trailer' : self.trailer,
+            'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
+            'tag' : self.tag,
+            'tagline' : self.tagline,
+            'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
+            'mpaa' : self.mpaa
+        }

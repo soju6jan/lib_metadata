@@ -99,3 +99,14 @@ class MetadataServerUtil(object):
         except Exception as exception: 
             logger.error('metaserver connection fail.. get_actor_name_en')
 
+    
+    @classmethod
+    def get_meta_extra(cls, code):
+        try:
+            from framework import py_urllib
+            url = '{server_plugin_ddns}/server/normal/meta_extra/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
+            data = requests.get(url).json()
+            if data['ret'] == 'success':
+                return data['data']
+        except Exception as exception: 
+            logger.error('metaserver connection fail.. get_meta_extra')
