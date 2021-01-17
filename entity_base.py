@@ -47,6 +47,25 @@ class EntityThumb(object):
             'score' : self.score,
         }
 
+"""
+class EntityArt(object):
+    def __init__(self, aspect='', url='', thumb_url='', site='', score=0):
+        # banner, clearart, clearlogo, discart, landscape, poster
+        self.aspect = aspect 
+        self.url = url  #원본 url
+        self.thumb_url = thumb_url  #썸네일 url
+        self.site = site
+        self.score = score
+
+    def as_dict(self):
+        return {
+            'aspect' : self.aspect,
+            'url' : self.value,
+            'thumb_url' : self.thumb,
+            'site' : self.site,
+            'score' : self.score,
+        }
+"""
 
 class EntityActor(object):
     def __init__(self, name, site=''):
@@ -423,7 +442,7 @@ class EntitySearchItemMovie(object):
         self.site = site
         self.code = ''
         self.title = ''
-        self.originaltitle = ''
+        self.title_en = ''
         
         self.image_url = ''
         self.year = 1900
@@ -442,7 +461,7 @@ class EntitySearchItemMovie(object):
             'site' : self.site,
             'code' : self.code,
             'title' : self.title,   
-            'originaltitle' : self.originaltitle,         
+            'title_en' : self.title_en,         
             'image_url' : self.image_url,
             'year' : self.year,
             'desc' : self.desc,
@@ -474,31 +493,30 @@ class EntityMovie2(object):
         self.title_en = ''
         self.title_3 = ''
 
-
         self.ratings = []
-        self.userrating = None
-        self.plot = None
-        self.runtime = None
-        self.thumb = None
-        self.fanart = None
-        self.genre = None
-        self.country = None
-        self.credits = None
-        self.director = None
-        self.premiered = None
-        self.year = None
-        self.studio = None
-        self.trailer = None
-        self.actor = None
-        self.tag = None #colletion
-        self.tagline = None
-        self.extras = None
-        self.mpaa = None
-        """
-        self.top250 = None
-        self.outline = None
+        self.genre = []
+        self.country = []
+        self.runtime = 0
+        self.premiered = ''
+        self.year = 1900
+        self.mpaa = ''
+        self.tagline = ''
+        self.plot = ''
+        self.extra_info = {'title_ko':'', 'title_en':'', 'title_3':''}
+
+        self.actor = []
+        self.credits = []
+        self.director = []
+        self.studio = ''
+
+        self.userrating = ''
+        self.art = []
+        #self.fanart = []
+        #self.trailer = []
+        self.tag = [] #colletion
+        self.extras = []
         
-        """
+        
 
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
@@ -519,27 +537,27 @@ class EntityMovie2(object):
             'title_en' : self.title_en,
             'title_3' : self.title_3,
 
-
             'ratings' : [x.as_dict() for x in self.ratings] if self.ratings is not None else None,
-
-
-
-            'userrating' : self.userrating,
-            'plot' : self.plot,
-            'runtime' : self.runtime,
-            'thumb' : [x.as_dict() for x in self.thumb] if self.thumb is not None else None,
-            'fanart' : self.fanart,
             'genre' : self.genre,
             'country' : self.country,
-            'credits' : self.credits,
-            'director' : self.director,
+            'runtime' : self.runtime,
             'premiered' : self.premiered,
             'year' : self.year,
-            'studio' : self.studio,
-            'trailer' : self.trailer,
-            'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
-            'tag' : self.tag,
+            'mpaa' : self.mpaa,
             'tagline' : self.tagline,
+            'plot' : self.plot,
+            'extra_info' : self.extra_info,
+            'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
+            'credits' : self.credits,
+            'director' : self.director,
+            'studio' : self.studio,
+
+            'art' : [x.as_dict() for x in self.art] if self.art is not None else None,
+            #'fanart' : self.fanart,
+            
+            #'trailer' : self.trailer,
+            
+            'tag' : self.tag,
+            'userrating' : self.userrating,
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
-            'mpaa' : self.mpaa
         }

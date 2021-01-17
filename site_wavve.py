@@ -65,6 +65,7 @@ class SiteWavveTv(SiteWavve):
                     #entity.premiered = item['releasedate']
                     data['list'].append(entity.as_dict())
                 """
+                count_100 = 0
                 for idx, item in enumerate(search_list):
                     entity = EntitySearchItemTv(cls.site_name)
                     entity.title = item['title_list'][0]['text']
@@ -76,7 +77,8 @@ class SiteWavveTv(SiteWavve):
                     #entity.genre = cls.tving_base_image + item['cate_nm']
                     #entity.premiered = item['releasedate']
                     if SiteUtil.compare_show_title(entity.title, keyword):
-                        entity.score = 100
+                        entity.score = 100 - count_100
+                        count_100 += 1
                     else:
                         entity.score = 60 - idx * 5
                     show_list.append(entity.as_dict())
@@ -129,6 +131,7 @@ class SiteWavveTv(SiteWavve):
             
             if True:
                 page = 1
+                epi = None
                 while True:
                     episode_data = Wavve.vod_program_contents_programid(program_info['programid'], page=page)
                     for epi in episode_data['list']:

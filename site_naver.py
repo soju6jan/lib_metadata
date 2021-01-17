@@ -31,6 +31,8 @@ class SiteNaver(object):
     }
 
 
+# https://developers.naver.com/docs/search/movie/
+
 class SiteNaverMovie(SiteNaver):
     site_base_url = 'https://movie.naver.com'
     module_char = 'M'
@@ -63,6 +65,11 @@ class SiteNaverMovie(SiteNaver):
                 entity.extra_info['actor'] = item['actor']
                 entity.extra_info['director'] = item['director']
                 entity.extra_info['userRating'] = item['userRating']
+
+                logger.debug(year)
+                logger.debug(entity.year)
+                logger.debug(keyword)
+                logger.debug(entity.title)
 
                 if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
                     if year != 1900:
@@ -124,8 +131,137 @@ class SiteNaverMovie(SiteNaver):
         try:
             ret = {}
             entity = EntityMovie2(cls.site_name, code)
-            url = 'https://movie.naver.com/movie/bi/mi/basic.nhn?code=%s' % code[2:]
+            
+            cls.info_basic(code, entity)
+            cls.info_detail(code, entity)
+            cls.info_photo(code, entity)
 
+            ret['ret'] = 'success'
+            ret['data'] = entity.as_dict()
+            return ret
+
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+
+
+
+    @classmethod 
+    def info_photo(cls, code, entity):
+        try:
+            page = 1
+            while True:
+                url = 'https://movie.naver.com/movie/bi/mi/photoListJson.nhn?movieCode=%s&size=100&offset=%s' % (code[2:], (page-1)*100)
+                data = requests.get(url).json()['lists']
+                
+                poster_count = 0
+                art_count = 0
+                max_poster_count = 5
+                max_art_count = 10
+                base_score  = 60
+                for item in data:
+                    art = EntityThumb()
+                    if item['imageType'] == 'STILLCUT':
+                        if art_count >= max_art_count:
+                            continue
+                        art.aspect = 'landscape'
+                        art.score = base_score - 10 - art_count
+                        art_count += 1
+                    elif item['imageType'] == 'POSTER':
+                        if poster_count >= max_art_count:
+                            continue
+                        if item['width'] > item['height']:
+                            art.aspect = 'landscape'
+                            art.score = base_score + max_art_count - art_count
+                            art_count += 1
+                        else:
+                            art.aspect = 'poster'
+                            art.score = base_score - poster_count
+                            poster_count += 1
+                    else:
+                        continue
+                    art.value = item['fullImageUrl']
+                    art.thumb = item['fullImageUrl221px']
+                    entity.art.append(art)
+                page += 1
+                if len(data) != 100 or page > 3:
+                    break
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+            #https://search.pstatic.net/common/?src=https%3A%2F%2Fssl.pstatic.net%2Fsstatic%2Fpeople%2Fportrait%2F201701%2F20170112145759747-9836275.jpg&type=u111_139&quality=95
+
+            # https://ssl.pstatic.net/sstatic/people/portrait/201701/20170112145759747-9836275.jpg
+
+
+
+    @classmethod 
+    def info_detail(cls, code, entity):
+        try:
+            #https://movie.naver.com/movie/bi/mi/detail.nhn?code=182205
+
+            url = 'https://movie.naver.com/movie/bi/mi/detail.nhn?code=%s' % code[2:]
+            logger.debug(url)
+            root = html.fromstring(requests.get(url).text)
+
+            tags = root.xpath('//ul[@class="lst_people"]/li')
+            if tags:
+                for tag in tags:
+                    actor = EntityActor('', site=cls.site_name)
+                    tmp = tag.xpath('.//img')[0].attrib['src']
+                    
+                    match = re.search(r'src\=(?P<url>.*?)\&', tmp) 
+                    if match:
+                        actor.thumb = py_urllib.unquote(match.group('url'))
+                    
+                    actor.name = tag.xpath('.//div[@class="p_info"]/a')[0].attrib['title']
+                    actor.role = tag.xpath('.//div[@class="p_info"]//p[@class="pe_cmt"]/span')[0].text_content().replace(u'역', '').strip()
+                    entity.actor.append(actor)
+            
+            tags = root.xpath('//div[@class="director"]//div[@class="dir_obj"]')
+            if tags:
+                for tag in tags:
+                    tmp = tag.xpath('.//div[@class="dir_product"]/a')[0].attrib['title']
+                    entity.director.append(tmp)
+
+            tags = root.xpath('//div[@class="staff"]//tr[1]//span')
+            if tags:
+                for tag in tags:
+                    tmp = tag.xpath('.//a')[0].text_content()
+                    entity.credits.append(tmp) 
+            
+            tags = root.xpath('//div[@class="agency"]/dl')
+            if tags:
+                tmp1 = tags[0].xpath('.//dt')
+                tmp2 = tags[0].xpath('.//dd')
+                for idx, tag in enumerate(tmp1):
+                    if tag.text_content().strip() == u'제작':
+                        entity.studio = tmp2[idx].text_content().strip()
+                        break
+                    
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+            #https://search.pstatic.net/common/?src=https%3A%2F%2Fssl.pstatic.net%2Fsstatic%2Fpeople%2Fportrait%2F201701%2F20170112145759747-9836275.jpg&type=u111_139&quality=95
+
+            # https://ssl.pstatic.net/sstatic/people/portrait/201701/20170112145759747-9836275.jpg
+
+
+
+    @classmethod 
+    def info_basic(cls, code, entity):
+        try:
+            url = 'https://movie.naver.com/movie/bi/mi/basic.nhn?code=%s' % code[2:]
             logger.debug(url)
             root = html.fromstring(requests.get(url).text)
 
@@ -133,19 +269,18 @@ class SiteNaverMovie(SiteNaver):
             #logger.debug(html.tostring(tags[0]))
             if tags:
                 entity.title = tags[0].xpath('.//h3/a')[0].text_content()
-                entity.title_ko = entity.title
+                entity.extra_info['title_ko'] = entity.title
                 tmp = tags[0].xpath('.//strong')[0].text_content()
                 tmps = [x.strip() for x in tmp.split(',')]
                 if len(tmps) == 2:# 영문제목, 년도
-                    entity.title_en = tmps[0]
+                    entity.extra_info['title_en'] = tmps[0]
                     entity.year = int(tmps[1])
                 elif len(tmps) == 3: # 일문,한문 / 영문 / 년도
-                    entity.title_3 = tmps[0]
+                    entity.extra_info['title_3'] = tmps[0]
                     entity.title_en = tmps[1]
                     entity.year = int(tmps[2])
                 else:
                     logger.debug('TTTTTOOOOOODDDDOOO')
-
 
             tags = root.xpath('//div[@class="main_score"]')
             if tags:
@@ -159,139 +294,52 @@ class SiteNaverMovie(SiteNaver):
             tags = root.xpath('//p[@class="info_spec"]')
             if tags:
                 tags = tags[0].xpath('.//span')
-                info_list = []
+
                 for tag in tags:
-                    tmp_tag = tag.xpath('.//a')
-                    if tmp_tag:
-                        info_list.append(tmp_tag[0].text_content().strip())
-                    else:
-                        logger.debug(tag.text)
-                        info_list.append(tag.text)
-
-                logger.debug(info_list)
-            
-            for x in info_list:
-                logger.debug(x)
-
-
-            ret['ret'] = 'success'
-            ret['data'] = entity.as_dict()
-            return ret
-
-            show = EntityShow(cls.site_name, code)
-
-            # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
-            url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
-            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-
-            home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
-
-            logger.debug(home_url)
-            home_root = SiteUtil.get_tree(home_url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-            home_data = cls.get_show_info_on_home(home_root)
-
-            logger.debug('home_datahome_datahome_datahome_datahome_datahome_datahome_datahome_datahome_data')
-            logger.debug(home_data)
-
-            tags = root.xpath('//*[@id="tv_program"]/div[1]/div[2]/strong')
-            if len(tags) == 1:
-                show.title = tags[0].text_content().strip()
-                show.originaltitle = show.title
-                show.sorttitle = show.title #unicodedata.normalize('NFKD', show.originaltitle)
-                logger.debug(show.sorttitle)
-            
-            show.studio = home_data['studio']
-            show.plot = home_data['desc']
-            match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})').search(home_data['broadcast_term'])
-            if match:
-                show.premiered = match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
-                show.year = int(match.group('year'))
-            show.status = home_data['status']
-            show.genre = [home_data['genre']]
-            show.episode = home_data['episode']
-
-            tmp = root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')
-            logger.debug(tmp)
-
-
-            show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
-
-
-            
-
-            for i in range(1,3):
-                items = root.xpath('//*[@id="tv_casting"]/div[%s]/ul//li' % i)
-                logger.debug('CASTING ITEM LEN : %s' % len(items))
-                for item in items:
-                    actor = EntityActor(None)
-                    cast_img = item.xpath('div/a/img')
-                    if len(cast_img) == 1:
-                        actor.thumb = cls.process_image_url(cast_img[0].attrib['src'])
-                    
-                    span_tag = item.xpath('span')
-                    for span in span_tag:
-                        span_text = span.text_content().strip()
-                        tmp = span.xpath('a')
-                        if len(tmp) == 1:
-                            role_name = tmp[0].text_content().strip()
-                            tail = tmp[0].tail.strip()
-                            if tail == u'역':
-                                actor.type ='actor'
-                                actor.role = role_name.strip()
+                    a_tag = tag.xpath('.//a')
+                    if a_tag:
+                        href = a_tag[0].attrib['href']
+                        if href.find('genre=') != -1:
+                            for tmp in a_tag:
+                                entity.genre.append(tmp.text_content().strip())
+                        elif href.find('nation=') != -1:
+                            tmp = a_tag[0].text_content().strip()
+                            entity.country.append(tmp)
+                            if tmp == u'한국':
+                                entity.originaltitle = entity.extra_info['title_ko']
                             else:
-                                actor.name = role_name.strip()
-                        else:
-                            if span_text.endswith(u'역'): actor.role = span_text.replace(u'역', '')
-                            elif actor.name == '': actor.name = span_text.strip()
-                            else: actor.role = span_text.strip()
-                    if actor.type == 'actor' or actor.role.find(u'출연') != -1:
-                        show.actor.append(actor)
-                    elif actor.role.find(u'감독') != -1 or actor.role.find(u'연출') != -1:
-                        show.director.append(actor)
-                    elif actor.role.find(u'제작') != -1 or actor.role.find(u'기획') != -1 or actor.role.find(u'책임프로듀서') != -1:
-                        show.director.append(actor)
-                    elif actor.role.find(u'극본') != -1 or actor.role.find(u'각본') != -1:
-                        show.credits.append(actor)
-                    elif actor.name != u'인물관계도':
-                        show.actor.append(actor)
+                                entity.originaltitle = entity.extra_info['title_3'] if entity.title_3 != '' else entity.extra_info['title_en'] 
 
-            # 에피소드
-            items = root.xpath('//*[@id="clipDateList"]/li')
-            #show.extra_info['episodes'] = {}
-            for item in items:
-                epi = {}
-                a_tag = item.xpath('a') 
-                if len(a_tag) != 1:
-                    continue
-                epi['url'] = 'https://search.daum.net/search%s' % a_tag[0].attrib['href']
-                tmp = item.attrib['data-clip']
-                epi['premiered'] = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
-                match = re.compile(r'(?P<no>\d+)%s' % u'회').search(a_tag[0].text_content().strip())
-                if match:
-                    epi['no'] = int(match.group('no'))
-                    show.extra_info['episodes'][epi['no']] = {'daum': {'code' : cls.module_char + cls.site_char + epi['url'], 'premiered':epi['premiered']}}
+                        elif href.find('open=') != -1:
+                            entity.premiered = (a_tag[0].text_content().strip() + a_tag[1].text_content().strip()).replace('.', '-')
+                            entity.year = int(entity.premiered.split('-')[0])
+                        elif href.find('grade=') != -1:
+                            entity.mpaa = a_tag[0].text_content().strip()
+                    else:
+                        if tag.text_content().find(u'분') != -1:
+                            entity.runtime = int(tag.text_content().replace(u'분', '').strip())
 
-            tags = root.xpath('//*[@id="tv_program"]//div[@class="clipList"]//div[@class="mg_expander"]/a')
-            show.extra_info['kakao_id'] = None
+            tags = root.xpath('//div[@class="story_area"]//h5[@class="h_tx_story"]')
             if tags:
-                tmp = tags[0].attrib['href']
-                show.extra_info['kakao_id'] = re.compile('/(?P<id>\d+)/').search(tmp).group('id')
-                logger.debug(show.extra_info['kakao_id'])
-
-            tags = root.xpath("//a[starts-with(@href, 'http://www.tving.com/vod/player')]")
-            #tags = root.xpath('//a[@contains(@href, "tving.com")')
+                entity.tagline = tags[0].text_content().strip()
+            
+            tags = root.xpath('//div[@class="story_area"]//p[@class="con_tx"]/text()')
             if tags:
-                show.extra_info['tving_episode_id'] = tags[0].attrib['href'].split('/')[-1]
-
-            ret['ret'] = 'success'
-            ret['data'] = show.as_dict()
-
+                entity.plot = '\r\n'.join([tag.strip().replace('&nbsp;', '') for tag in tags])
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
-            ret['ret'] = 'exception'
-            ret['data'] = str(exception)
-        return ret
+
+
+
+
+
+
+
+
+
+
+
 
 
 """
@@ -341,5 +389,11 @@ class SiteNaverMovie(SiteNaver):
                 });
 			}
 
+EFY7W9W6T70TM13GKUGZ
+https://www.kmdb.or.kr/mypage/api/1034
+https://www.kmdb.or.kr/info/api/apiDetail/6
+
+기본 요청 URL : http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_xml2(또는 search_json2).jsp?collection=kmdb_new2
+예시) http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_xml2.jsp?collection=kmdb_new2&detail=N&director=%EB%B0%95%EC%B0%AC%EC%9A%B1&ServiceKey=인증키값
 
 """

@@ -82,7 +82,8 @@ class SiteDaum(object):
             except: entity.episode = -1
             entity.broadcast_info = extra_infos[-2].strip()
             entity.broadcast_term = extra_infos[-1].split(',')[-1].strip()
-            entity.year = re.compile(r'(?P<year>\d{4})').search(extra_infos[-1]).group('year')
+            try: entity.year = re.compile(r'(?P<year>\d{4})').search(extra_infos[-1]).group('year')
+            except: entity.year = 0
             
             entity.desc = root.xpath('//*[@id="tv_program"]/div[1]/dl[1]/dd/text()')[0]
             
