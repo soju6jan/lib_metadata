@@ -116,8 +116,13 @@ class SiteDaum(object):
                     dic['title'] = tag.xpath('a')[0].text
                     dic['code'] = cls.module_char + cls.site_char + re.compile(r'irk\=(?P<id>\d+)').search(tag.xpath('a')[0].attrib['href']).group('id')
                     if tag.xpath('span'):
+                        # 년도 없을 수 있음
                         dic['date'] = tag.xpath('span')[0].text
-                        dic['year'] = re.compile(r'(?P<year>\d{4})').search(dic['date']).group('year')
+                        if dic['date'] is None:
+                            dic['date'] = '1900-01-01'
+                            dic['date'] = '1900'
+                        else:
+                            dic['year'] = re.compile(r'(?P<year>\d{4})').search(dic['date']).group('year')
                     else:
                         dic['year'] = None
                     entity.series.append(dic)
