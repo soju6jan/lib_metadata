@@ -286,6 +286,7 @@ class SiteDaumTv(SiteDaum):
             if match:
                 show.premiered = match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
                 show.year = int(match.group('year'))
+            
             show.status = home_data['status']
             show.genre = [home_data['genre']]
             show.episode = home_data['episode']

@@ -16,7 +16,7 @@ from system.logic_site import SystemLogicSite
 
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemMovie, EntityMovie2
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemMovie, EntityMovie2, EntityExtra2
 from .site_util import SiteUtil
 
 logger = P.logger
@@ -135,6 +135,7 @@ class SiteNaverMovie(SiteNaver):
             cls.info_basic(code, entity)
             cls.info_detail(code, entity)
             cls.info_photo(code, entity)
+            cls.info_video(code, entity)
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
@@ -147,6 +148,40 @@ class SiteNaverMovie(SiteNaver):
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
         return ret
+
+
+    @classmethod 
+    def info_video(cls, code, entity):
+        try:
+            url = 'https://movie.naver.com/movie/bi/mi/media.nhn?code=%s' % code[2:]
+            logger.debug(url)
+            root = html.fromstring(requests.get(url).text)
+
+            tags = root.xpath('//div[@class="video"]')
+            if not tags:
+                return
+
+            video_map = [['ifr_trailer','Trailer'], ['ifr_making','BehindTheScenes'], ['ifr_interview','Interview'], ['ifr_movie_talk','Featurette']]
+            for video in video_map:
+                li_tags = tags[0].xpath('.//div[@class="%s"]//ul[@class="video_thumb"]/li' % video[0])
+
+                logger.debug(li_tags)
+
+                for tag in li_tags:
+                    extra = EntityExtra2()
+                    extra.content_type = video[1]
+                    extra.mode = cls.site_name
+                    extra.content_url = '%s,%s' % (code, tag.xpath('.//a')[0].attrib['href'].split('#')[0].split('mid=')[1])
+                    extra.thumb = tag.xpath('.//a/img')[0].attrib['src']
+                    extra.title = tag.xpath('.//a/img')[0].attrib['alt']
+                    extra.premiered = tag.xpath('.//p[@class="video_date"]')[0].text_content().replace('.', '-')
+                    entity.extras.append(extra)
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+
 
 
 
@@ -228,14 +263,19 @@ class SiteNaverMovie(SiteNaver):
             tags = root.xpath('//div[@class="director"]//div[@class="dir_obj"]')
             if tags:
                 for tag in tags:
-                    tmp = tag.xpath('.//div[@class="dir_product"]/a')[0].attrib['title']
-                    entity.director.append(tmp)
+                    tmp = tag.xpath('.//div[@class="dir_product"]/a')
+                    if tmp:
+                        entity.director.append(tmp[0].attrib['title'])
 
+            #
             tags = root.xpath('//div[@class="staff"]//tr[1]//span')
             if tags:
                 for tag in tags:
-                    tmp = tag.xpath('.//a')[0].text_content()
-                    entity.credits.append(tmp) 
+                    tmp = tag.xpath('.//a')
+                    if tmp:
+                        entity.credits.append(tmp[0].text_content().strip()) 
+                    else:
+                        entity.credits.append(tag.text.strip()) 
             
             tags = root.xpath('//div[@class="agency"]/dl')
             if tags:
@@ -284,7 +324,15 @@ class SiteNaverMovie(SiteNaver):
 
             tags = root.xpath('//div[@class="main_score"]')
             if tags:
+                """
                 tmp_tag = tags[0].xpath('.//*[@id="actualPointPersentWide"]//em')
+                if tmp_tag:
+                    tmp = ''.join([x.text for x in tmp_tag])
+                    logger.debug(tmp)
+                    try: entity.ratings.append(EntityRatings(float(tmp), name='naver'))
+                    except: pass
+                """
+                tmp_tag = tags[0].xpath('.//*[@id="pointNetizenPersentWide"]//em')
                 if tmp_tag:
                     tmp = ''.join([x.text for x in tmp_tag])
                     logger.debug(tmp)
@@ -326,6 +374,47 @@ class SiteNaverMovie(SiteNaver):
             tags = root.xpath('//div[@class="story_area"]//p[@class="con_tx"]/text()')
             if tags:
                 entity.plot = '\r\n'.join([tag.strip().replace('&nbsp;', '') for tag in tags])
+            
+            tags = root.xpath('//div[@class="making_note"]/p/text()')
+            if tags:
+                logger.debug('1111111111111111')
+                entity.extra_info['making_note'] = '\r\n'.join([tag.strip().replace('&nbsp;', '') for tag in tags])
+            logger.debug('2222222222222222222')
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod 
+    def get_video_url(cls, param):
+        try:
+            tmps = param.split(',')
+            #tab
+            url = 'https://movie.naver.com/movie/bi/mi/mediaView.nhn?code=%s&mid=%s' % (tmps[0][2:], tmps[1])
+            root = html.fromstring(requests.get(url).text)
+            tmp = root.xpath('//iframe[@class="_videoPlayer"]')[0].attrib['src']
+
+            #logger.debug(tmp)
+
+            match = re.search(r'&videoId=(.*?)&videoInKey=(.*?)&', tmp)
+            #logger.debug(match.group(0))
+            #logger.debug(match.group(1))
+            #logger.debug(match.group(2))
+            
+            if match:
+                url = 'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/%s?key=%s' % (match.group(1), match.group(2))
+
+                #logger.debug(url)
+                data = requests.get(url).json()
+                #logger.debug(data)
+                ret = data['videos']['list'][0]['source']
+                return ret
+            #https://movie.naver.com/movie/bi/mi/videoPlayer.nhn?code=178544&type=movie&videoId=90A76F8E51A5983F599D4F3D181E67D1BF1E&videoInKey=V1215256d6ef321c91abd57707f7ce007402b199379c36ed70f7cf563abf4d47a7af557707f7ce007402b&coverImage=/multimedia/MOVIECLIP/TRAILER/43106_cover_20190723100158.jpg&mid=43106&autoPlay=true&playerSize=665x480
+
+
+            #https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/90A76F8E51A5983F599D4F3D181E67D1BF1E?key=V124678127e443a0598d257707f7ce007402b199379c36ed70f7cf563abf4d47a7af557707f7ce007402b
+
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -335,20 +424,14 @@ class SiteNaverMovie(SiteNaver):
 
 
 
-
-
-
-
-
-
-
 """
 
 # 검색어 인코딩 모르겠음            
-            #url = 'https://movie.naver.com/movie/search/result.nhn?section=movie&query=%s' % (py_urllib.quote(str(keyword)))
-            # 검색어 입력시 쿼리
-            #url = 'https://auto-movie.naver.com/ac?q_enc=UTF-8&st=1&r_lt=1&n_ext=1&t_koreng=1&r_format=json&r_enc=UTF-8&r_unicode=0&r_escape=1&q=%s' % (py_urllib.quote(str(keyword)))
-           
+#url = 'https://movie.naver.com/movie/search/result.nhn?section=movie&query=%s' % (py_urllib.quote(str(keyword)))
+
+# 검색어 입력시 쿼리
+#url = 'https://auto-movie.naver.com/ac?q_enc=UTF-8&st=1&r_lt=1&n_ext=1&t_koreng=1&r_format=json&r_enc=UTF-8&r_unicode=0&r_escape=1&q=%s' % (py_urllib.quote(str(keyword)))
+
 
 
     https://movie.naver.com/movie/bi/mi/photoListJson.nhn?movieCode=163834
@@ -357,6 +440,8 @@ class SiteNaverMovie(SiteNaver):
 
     https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/51B0F09D48A30832A07852CAE57980AD4B0E?key=V128838cfd0a24b85045ee02f448c29271f6049df361acf3aeebbe45e3bcba02885c7e02f448c29271f60&pid=rmcPlayer_16107273668922215&sid=2003&ver=2.0&devt=html5_pc&doct=json&ptc=https&sptc=https&cpt=vtt&ctls=%7B%22visible%22%3A%7B%22fullscreen%22%3Atrue%2C%22logo%22%3Atrue%2C%22playbackRate%22%3Afalse%2C%22scrap%22%3Afalse%2C%22playCount%22%3Atrue%2C%22commentCount%22%3Atrue%2C%22title%22%3Atrue%2C%22writer%22%3Atrue%2C%22expand%22%3Afalse%2C%22subtitles%22%3Atrue%2C%22thumbnails%22%3Atrue%2C%22quality%22%3Atrue%2C%22setting%22%3Atrue%2C%22script%22%3Afalse%2C%22logoDimmed%22%3Atrue%2C%22badge%22%3Atrue%2C%22seekingTime%22%3Atrue%2C%22muted%22%3Atrue%2C%22muteButton%22%3Afalse%2C%22viewerNotice%22%3Afalse%2C%22linkCount%22%3Afalse%2C%22createTime%22%3Afalse%2C%22thumbnail%22%3Atrue%7D%2C%22clicked%22%3A%7B%22expand%22%3Afalse%2C%22subtitles%22%3Afalse%7D%7D&pv=4.17.48&dr=3072x1728&lc=ko_KR
 
+
+https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/90A76F8E51A5983F599D4F3D181E67D1BF1E?key=V124678127e443a0598d257707f7ce007402b199379c36ed70f7cf563abf4d47a7af557707f7ce007402b
 
     https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/51B0F09D48A30832A07852CAE57980AD4B0E?key=V128838cfd0a24b85045ee02f448c29271f6049df361acf3aeebbe45e3bcba02885c7e02f448c29271f60
 

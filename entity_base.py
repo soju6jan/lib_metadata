@@ -93,7 +93,7 @@ class EntityActor(object):
 
 class EntityExtra(object):
     def __init__(self, content_type, title, mode, content_url, premiered=None, thumb=None):
-        self.content_type = content_type #Trailer, DeletedScene, BehindTheScenes, Interview, SceneOrSample, Featurette, Short, Other
+        self.content_type = content_type #PrimaryTrailer Trailer, DeletedScene, BehindTheScenes, Interview, SceneOrSample, Featurette, Short, Other
         self.content_url = content_url
         self.title = title
         self.mode = mode #mp4
@@ -110,6 +110,28 @@ class EntityExtra(object):
             'premiered' : self.premiered,
             'thumb' : self.thumb,
         }
+
+
+class EntityExtra2(object):
+    def __init__(self):
+        self.content_type = 'Trailer' #PrimaryTrailer Trailer, DeletedScene, BehindTheScenes, Interview, SceneOrSample, Featurette, Short, Other
+        self.content_url = ''
+        self.title = ''
+        self.mode = ''
+        self.premiered = '1900-01-01'
+        self.thumb = ''
+        
+
+    def as_dict(self):
+        return {
+            'content_type' : self.content_type,
+            'content_url' : self.content_url,
+            'title' : self.title,
+            'mode' : self.mode,
+            'premiered' : self.premiered,
+            'thumb' : self.thumb,
+        }
+
 
 class EntityMovie(object):
     # https://kodi.wiki/view/NFO_files/Movies
