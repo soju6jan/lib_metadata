@@ -74,15 +74,17 @@ class SiteNaverMovie(SiteNaver):
                 if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
                     if year != 1900:
                         if year == entity.year:
-                            entity.score = 100
+                            entity.score = 100 - idx
                         elif abs(entity.year-year) == 1:
-                            entity.scroe = 90
+                            entity.score = 90 - idx
                         else:
-                            entity.score = 80
+                            entity.score = 80 - idx
                     else:
-                        entity.score = 95
+                        entity.score = 95 - idx
                 else:
                     entity.score = 80 - (idx*5)
+                
+                logger.debug(entity.score)
                 result_list.append(entity.as_dict())
 
             if result_list is None:
@@ -257,7 +259,12 @@ class SiteNaverMovie(SiteNaver):
                         actor.thumb = py_urllib.unquote(match.group('url'))
                     
                     actor.name = tag.xpath('.//div[@class="p_info"]/a')[0].attrib['title']
-                    actor.role = tag.xpath('.//div[@class="p_info"]//p[@class="pe_cmt"]/span')[0].text_content().replace(u'역', '').strip()
+                    tmp = tag.xpath('.//div[@class="p_info"]/em')
+                    if tmp:
+                        actor.originalname = tmp[0].text_content()
+                    tmp = tag.xpath('.//div[@class="p_info"]//p[@class="pe_cmt"]/span')
+                    if tmp:
+                        actor.role = tmp[0].text_content().replace(u'역', '').strip()
                     entity.actor.append(actor)
             
             tags = root.xpath('//div[@class="director"]//div[@class="dir_obj"]')
