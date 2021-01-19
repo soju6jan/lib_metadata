@@ -511,9 +511,6 @@ class EntityMovie2(object):
         self.title = ''
         self.originaltitle = ''
         self.sorttitle = ''
-        self.title_ko = ''
-        self.title_en = ''
-        self.title_3 = ''
 
         self.ratings = []
         self.genre = []
@@ -555,9 +552,6 @@ class EntityMovie2(object):
             'title' : self.title,
             'originaltitle' : self.originaltitle,
             'sorttitle' : self.sorttitle,
-            'title_ko' : self.title_ko,
-            'title_en' : self.title_en,
-            'title_3' : self.title_3,
 
             'ratings' : [x.as_dict() for x in self.ratings] if self.ratings is not None else None,
             'genre' : self.genre,

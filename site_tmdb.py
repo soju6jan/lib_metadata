@@ -15,7 +15,7 @@ from system.logic_site import SystemLogicSite
 from lib_metadata import MetadataServerUtil
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow, EntitySearchItemMovie, EntityMovie2
 from .site_util import SiteUtil
 logger = P.logger
 
@@ -35,28 +35,12 @@ BACKDROP_SCORE_RATIO = .3
 class SiteTmdb(object):
     site_name = 'tmdb'
 
-
-class SiteTmdbTv(SiteTmdb):
-    
-    #site_base_url = 'https://search.daum.net'
-    module_char = 'K'
-    site_char = 'T'
-
-
-    @classmethod 
-    def search_tv(cls, title, premiered):
-        try:
-            tmdb_search = tmdbsimple.Search().tv(query=title, language='ko')
-            for t in tmdb_search['results']:
-                if premiered == t['first_air_date']:
-                    return t['id']
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
-        return
+    @classmethod
+    def get_poster_path(cls, path):
+        return 'https://www.themoviedb.org/t/p/'+ 'original' + path
 
     @classmethod
-    def process_image(cls, tmdb, show):
+    def _process_image(cls, tmdb, data):
         try:
             tmdb_images_dict = tmdb.images()
 
@@ -84,7 +68,7 @@ class SiteTmdbTv(SiteTmdb):
                     else:
                         poster_url = 'https://www.themoviedb.org/t/p/'+ 'original' + poster['file_path']
                         thumb_url = 'https://www.themoviedb.org/t/p/' + 'w154' + poster['file_path']
-                        show['thumb'].append(EntityThumb(aspect='poster', value=poster_url, thumb=thumb_url, site='tmdb', score=poster['score']).as_dict())
+                        data.append(EntityThumb(aspect='poster', value=poster_url, thumb=thumb_url, site='tmdb', score=poster['score']).as_dict())
 
             if tmdb_images_dict['backdrops']:
                 max_average = max([(lambda p: p['vote_average'] or 5)(p) for p in tmdb_images_dict['backdrops']])
@@ -113,10 +97,35 @@ class SiteTmdbTv(SiteTmdb):
                     else:
                         backdrop_url = 'https://www.themoviedb.org/t/p/' + 'original' + backdrop['file_path']
                         thumb_url = 'https://www.themoviedb.org/t/p/' + 'w300' + backdrop['file_path']
-                        show['thumb'].append(EntityThumb(aspect='landscape', value=backdrop_url, thumb=thumb_url, site='tmdb', score=backdrop['score']).as_dict())
+                        data.append(EntityThumb(aspect='landscape', value=backdrop_url, thumb=thumb_url, site='tmdb', score=backdrop['score']).as_dict())
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
+
+
+class SiteTmdbTv(SiteTmdb):
+    
+    #site_base_url = 'https://search.daum.net'
+    module_char = 'K'
+    site_char = 'T'
+
+
+    @classmethod 
+    def search_tv(cls, title, premiered):
+        try:
+            tmdb_search = tmdbsimple.Search().tv(query=title, language='ko')
+            for t in tmdb_search['results']:
+                if premiered == t['first_air_date']:
+                    return t['id']
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+        return
+
+    @classmethod
+    def process_image(cls, tmdb, show):
+        cls._process_image(tmdb, show['thumb'])
 
 
     @classmethod
@@ -178,123 +187,84 @@ class SiteTmdbTv(SiteTmdb):
 
 
 
+
+
+
+
+class SiteTmdbMovie(SiteTmdb):
+    
+    #site_base_url = 'https://search.daum.net'
+    module_char = 'M'
+    site_char = 'T'
+
+    @classmethod
+    def search_api(cls, keyword):
+
+        logger.debug(keyword)
+        try:
+            tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko')
+            return tmdb_search
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+    @classmethod
+    def info_api(cls, code):
+        try:
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
+            tmdb = tmdbsimple.Movies(code)
+            info = tmdb.info(language='ko')
+            return info
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
     @classmethod 
-    def info(cls, code, title):
+    def search(cls, keyword, year=1900):
         try:
             ret = {}
-            show = EntityShow(cls.site_name, code)
+            tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko')
+            logger.debug('TMDB MOVIE SEARCh [%s] [%s]', keyword, year)
+            result_list = []
+            for idx, item in enumerate(tmdb_search['results']):
+                entity = EntitySearchItemMovie(cls.site_name)
+                entity.code = '%s%s%s' % (cls.module_char, cls.site_char, item['id'])
+                entity.title = item['title'].strip()
+                entity.originaltitle = item['original_title'].strip()
+                entity.image_url = cls.get_poster_path(item['poster_path'])
+                try: entity.year = int(item['release_date'].split('-')[0])
+                except: entity.year = 1900
+                #if item['actor'] != '':
+                #    entity.desc += u'배우 : %s\r\n' % ', '.join(item['actor'].rstrip('|').split('|'))
+                #if item['director'] != '':
+                #    entity.desc += u'감독 : %s\r\n' % ', '.join(item['director'].rstrip('|').split('|'))
+                #if item['userRating'] != '0.00':
+                #    entity.desc += u'평점 : %s\r\n' % item['userRating']
+                entity.desc = item['overview']
 
-            # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
-
-            url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
-            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-
-            home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (title, code[2:])
-            home_root = SiteUtil.get_tree(home_url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-            home_data = cls.get_show_info_on_home(home_root)
-
-            logger.debug('home_datahome_datahome_datahome_datahome_datahome_datahome_datahome_datahome_data')
-            logger.debug(home_data)
-
-            tags = root.xpath('//*[@id="tv_program"]/div[1]/div[2]/strong')
-            if len(tags) == 1:
-                show.title = tags[0].text_content().strip()
-                show.originaltitle = show.title
-                show.sorttitle = unicodedata.normalize('NFKD', show.originaltitle)
-                logger.debug(show.sorttitle)
-            """
-            tags = root.xpath('//*[@id="tv_program"]/div[1]/div[3]/span')
-            # 이 정보가 없다면 종영
-            if tags:
-                show.studio = tags[0].text_content().strip()
-                summary = ''    
-                for tag in tags:
-                    entity.plot += tag.text.strip()
-                    entity.plot += ' '
-                match = re.compile(r'(\d{4}\.\d{1,2}\.\d{1,2})~').search(entity.plot)
-                if match:
-                    show.premiered = match.group(1)
-            """
-            show.studio = home_data['studio']
-            show.plot = home_data['desc']
-            match = re.compile(r'(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})~').search(home_data['broadcast_term'])
-            if match:
-                show.premiered = match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
-                show.year = int(match.group('year'))
-            show.status = home_data['status']
-            show.genre = [home_data['genre']]
-            show.episode = home_data['episode']
-
-            show.extra_info['daum_poster'] = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
-
-
-            """
-            tags = root.xpath('//*[@id="tv_program"]/div[4]/div/ul/li')
-            for tag in tags:
-                a_tags = tag.xpath('.//a')
-                if len(a_tags) == 2:
-                    thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
-                    #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
-                    video_url = a_tags[1].attrib['href']
-                    title = a_tags[1].text_content()
-                    #logger.debug(video_url)
-                    date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
-                    show.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
-            """
-
-
-            tags = root.xpath('//*[@id="tv_program"]//div[@class="clipList"]//div[@class="mg_expander"]/a')
-            if tags:
-                tmp = tags[0].attrib['href']
-                show.extra_info['kakao_id'] = re.compile('/(?P<id>\d+)/').search(tmp).group('id')
-                logger.debug(show.extra_info['kakao_id'])
-
-
-            for i in range(1,3):
-                items = root.xpath('//*[@id="tv_casting"]/div[%s]/ul//li' % i)
-                logger.debug('CASTING ITEM LEN : %s' % len(items))
-                for item in items:
-                    actor = EntityActor(None)
-                    cast_img = item.xpath('div/a/img')
-                    if len(cast_img) == 1:
-                        actor.thumb = cls.process_image_url(cast_img[0].attrib['src'])
-                    
-                    span_tag = item.xpath('span')
-                    for span in span_tag:
-                        span_text = span.text_content().strip()
-                        tmp = span.xpath('a')
-                        if len(tmp) == 1:
-                            role_name = tmp[0].text_content().strip()
-                            tail = tmp[0].tail.strip()
-                            if tail == u'역':
-                                actor.type ='actor'
-                                actor.role = role_name
-                            else:
-                                actor.name = role_name
+                if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
+                    if year != 1900:
+                        if year == entity.year:
+                            entity.score = 100 - idx
+                        elif abs(entity.year-year) == 1:
+                            entity.score = 90 - idx
                         else:
-                            if span_text.endswith(u'역'): actor.role = span_text.replace(u'역', '')
-                            elif actor.name == '': actor.name = span_text
-                            else: actor.role = span_text
-                    if actor.type == 'actor' or actor.role.find(u'출연') != -1:
-                        show.actor.append(actor)
-                    elif actor.role.find(u'감독') != -1 or actor.role.find(u'연출') != -1:
-                        show.director.append(actor)
-                    elif actor.role.find(u'제작') != -1 or actor.role.find(u'기획') != -1 or actor.role.find(u'책임프로듀서') != -1:
-                        show.director.append(actor)
-                    elif actor.role.find(u'극본') != -1 or actor.role.find(u'각본') != -1:
-                        show.credits.append(actor)
-                    elif actor.name != u'인물관계도':
-                        show.actor.append(actor)
-
-
-
-            ret['ret'] = 'success'
-            ret['data'] = show.as_dict()
-
-
-
-            
-
+                            entity.score = 80 - idx
+                    else:
+                        entity.score = 95 - idx
+                else:
+                    entity.score = 80 - (idx*5)
+                
+                logger.debug(entity.score)
+                result_list.append(entity.as_dict())
+            if result_list is None:
+                ret['ret'] = 'empty'
+            else:
+                ret['ret'] = 'success'
+                ret['data'] = result_list
+            return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -302,3 +272,56 @@ class SiteTmdbTv(SiteTmdb):
             ret['data'] = str(exception)
         return ret
 
+
+    @classmethod 
+    def info(cls, code):
+        try:
+            ret = {}
+            entity = EntityMovie2(cls.site_name, code)
+            
+            tmdb = tmdbsimple.Movies(code[2:])
+            info = tmdb.info(language='ko')
+
+            entity.title = info['title']
+            entity.originaltitle = info['original_title']
+            entity.plot = info['overview']
+
+            for tmp in info['genres']:
+                entity.genre.append(tmp['name'])
+
+            if len(info['production_companies']) > 0:
+                entity.studio = info['production_companies'][0]['name']
+
+            for tmp in info['production_countries']:
+                entity.country.append(tmp['name'])
+            
+            entity.premiered = info['release_date']
+            try: entity.year = int(info['release_date'].split('-')[0])
+            except: entity.year = 1900
+
+            entity.runtime = info['runtime']
+            entity.tagline = info['tagline']
+
+            entity.extra_info['homepage'] = info['homepage']
+            entity.extra_info['imdb_id'] = info['imdb_id']
+            entity.extra_info['original_language'] = info['original_language']
+            entity.extra_info['spoken_languages'] = info['spoken_languages']
+            entity.extra_info['status'] = info['status']
+
+            try: entity.ratings.append(EntityRatings(info['vote_average'], name='tmdb', votes=info['vote_count']))
+            except: pass
+
+            entity = entity.as_dict()
+            cls._process_image(tmdb, entity['art'])
+
+            ret['ret'] = 'success'
+            ret['data'] = entity #entity.as_dict() #tmdb_dict
+            
+
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret

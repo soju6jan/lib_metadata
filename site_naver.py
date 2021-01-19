@@ -53,7 +53,8 @@ class SiteNaverMovie(SiteNaver):
                 entity.title = re.sub(r'\<.*?\>', '', item['title']).strip()
                 entity.originaltitle = re.sub(r'\<.*?\>', '', item['subtitle']).strip()
                 entity.image_url = item['image']
-                entity.year = int(item['pubDate'])
+                try: entity.year = int(item['pubDate'])
+                except: entity.year = 1900
                 if item['actor'] != '':
                     entity.desc += u'배우 : %s\r\n' % ', '.join(item['actor'].rstrip('|').split('|'))
                 if item['director'] != '':
@@ -66,15 +67,10 @@ class SiteNaverMovie(SiteNaver):
                 entity.extra_info['director'] = item['director']
                 entity.extra_info['userRating'] = item['userRating']
 
-                logger.debug(year)
-                logger.debug(entity.year)
-                logger.debug(keyword)
-                logger.debug(entity.title)
-
                 if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
                     if year != 1900:
                         if year == entity.year:
-                            entity.score = 100 - idx
+                            entity.score = 100
                         elif abs(entity.year-year) == 1:
                             entity.score = 90 - idx
                         else:
@@ -166,9 +162,6 @@ class SiteNaverMovie(SiteNaver):
             video_map = [['ifr_trailer','Trailer'], ['ifr_making','BehindTheScenes'], ['ifr_interview','Interview'], ['ifr_movie_talk','Featurette']]
             for video in video_map:
                 li_tags = tags[0].xpath('.//div[@class="%s"]//ul[@class="video_thumb"]/li' % video[0])
-
-                logger.debug(li_tags)
-
                 for tag in li_tags:
                     extra = EntityExtra2()
                     extra.content_type = video[1]
@@ -363,7 +356,7 @@ class SiteNaverMovie(SiteNaver):
                             if tmp == u'한국':
                                 entity.originaltitle = entity.extra_info['title_ko']
                             else:
-                                entity.originaltitle = entity.extra_info['title_3'] if entity.title_3 != '' else entity.extra_info['title_en'] 
+                                entity.originaltitle = entity.extra_info['title_3'] if 'title_3' in entity.extra_info else entity.extra_info['title_en'] 
 
                         elif href.find('open=') != -1:
                             entity.premiered = (a_tag[0].text_content().strip() + a_tag[1].text_content().strip()).replace('.', '-')
@@ -382,12 +375,11 @@ class SiteNaverMovie(SiteNaver):
             if tags:
                 entity.plot = '\r\n'.join([tag.strip().replace('&nbsp;', '') for tag in tags])
             
+            """
             tags = root.xpath('//div[@class="making_note"]/p/text()')
             if tags:
-                logger.debug('1111111111111111')
                 entity.extra_info['making_note'] = '\r\n'.join([tag.strip().replace('&nbsp;', '') for tag in tags])
-            logger.debug('2222222222222222222')
-
+            """
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())

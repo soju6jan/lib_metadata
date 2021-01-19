@@ -153,7 +153,7 @@ class SiteWavveTv(SiteWavve):
                             'title' : epi['episodetitle'],
                         }
                     page += 1
-                    if episode_data['pagecount'] == episode_data['count']:# or page == 6:
+                    if episode_data['pagecount'] == episode_data['count'] or page == 10:
                         break
                 # 방송정보에 없는 데이터 에피소드에서 빼서 입력
                 if epi:

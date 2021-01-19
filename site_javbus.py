@@ -154,7 +154,7 @@ class SiteJavbus(object):
                         if tmp.strip() == '':
                             continue
                         entity.actor.append(EntityActor(tmp.strip()))
-            entity.tagline = SiteUtil.trans(tree.xpath('/html/body/div[5]/h3/text()')[0].strip(), do_trans=do_trans).replace(entity.title, '').strip()
+            entity.tagline = SiteUtil.trans(tree.xpath('/html/body/div[5]/h3/text()')[0].strip(), do_trans=do_trans).replace(entity.title, '').replace(u'[배달 전용]', '').strip()
             entity.plot = entity.tagline
 
             tags = tree.xpath('//*[@id="sample-waterfall"]/a')

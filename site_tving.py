@@ -112,7 +112,7 @@ class SiteTvingTv(SiteTving):
                             'title' : '',
                         }
                     page += 1
-                    if episode_data['body']['has_more'] == 'N':
+                    if episode_data['body']['has_more'] == 'N' or page == 10:
                         break
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -202,7 +202,8 @@ class SiteTvingTv(SiteTving):
             show.studio = cls.change_channel_code(tving_program['channel_code'])
             show.plot = tving_program['synopsis']['ko']
             show.premiered = cls.change_to_premiered(tving_program['broad_dt'])
-            show.year = int(show.premiered.split('-')[0])
+            try: show.year = int(show.premiered.split('-')[0])
+            except: show.year = 1900
             if tving_program['broad_state'] == 'CPBS0200':
                 show.status = 1
             elif tving_program['broad_state'] == 'CPBS0300':

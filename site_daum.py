@@ -80,7 +80,7 @@ class SiteDaum(object):
             #if len(tmps) == 2:
             try: entity.episode = int(re.compile(r'(?P<epi>\d{1,4})%s' % u'부').search(entity.extra_info).group('epi'))
             except: entity.episode = -1
-            entity.broadcast_info = extra_infos[-2].strip()
+            entity.broadcast_info = extra_infos[-2].strip().replace('&nbsp;', ' ').replace('&nbsp', ' ')
             entity.broadcast_term = extra_infos[-1].split(',')[-1].strip()
             try: entity.year = re.compile(r'(?P<year>\d{4})').search(extra_infos[-1]).group('year')
             except: entity.year = 0
