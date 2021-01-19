@@ -521,11 +521,12 @@ class EntityMovie2(object):
         self.mpaa = ''
         self.tagline = ''
         self.plot = ''
-        self.extra_info = {'title_ko':'', 'title_en':'', 'title_3':''}
+        self.extra_info = {}
 
         self.actor = []
         self.credits = []
         self.director = []
+        self.producers = []
         self.studio = ''
 
         self.userrating = ''

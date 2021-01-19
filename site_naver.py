@@ -283,8 +283,8 @@ class SiteNaverMovie(SiteNaver):
                 tmp2 = tags[0].xpath('.//dd')
                 for idx, tag in enumerate(tmp1):
                     if tag.text_content().strip() == u'제작':
-                        entity.studio = tmp2[idx].text_content().strip()
-                        break
+                        tmp = tmp2[idx].xpath('.//a')
+                        entity.studio = tmp[0].text_content().strip() if tmp else tmp2[idx].text_content().strip()
                     
 
         except Exception as exception: 

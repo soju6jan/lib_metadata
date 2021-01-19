@@ -268,8 +268,9 @@ class SiteDmm(object):
                         tmp = match.group('rating')
                         entity.ratings = [EntityRatings(float(tmp.replace('_', '.')), max=5, name='dmm', image_url=tag[0].attrib['src'])]
             except Exception as exception: 
-                logger.error('Exception:%s', exception)
-                logger.error(traceback.format_exc())
+                #logger.error('Exception:%s', exception)
+                #logger.error(traceback.format_exc())
+                logger.error('point exception')
 
             tmp = tree.xpath('{basetag}/div[4]/text()'.format(basetag=basetag))[0]
             tmp = tmp.split('※')[0].strip()
