@@ -471,6 +471,7 @@ class EntitySearchItemMovie(object):
         self.desc = ''
         self.extra_info = {}
         self.score = 0
+        self.originaltitle = ''
 
     def __repr__(self):
         tmp = 'site : %s\n' % self.site
@@ -489,6 +490,7 @@ class EntitySearchItemMovie(object):
             'desc' : self.desc,
             'extra_info' : self.extra_info,
             'score' : self.score,
+            'originaltitle': self.originaltitle,
         }
         """
             'year' : self.year,            
@@ -535,6 +537,8 @@ class EntityMovie2(object):
         #self.trailer = []
         self.tag = [] #colletion
         self.extras = []
+        self.review = []
+        self.code_list = []
         
         
 
@@ -570,11 +574,34 @@ class EntityMovie2(object):
             'studio' : self.studio,
 
             'art' : [x.as_dict() for x in self.art] if self.art is not None else None,
-            #'fanart' : self.fanart,
             
+            #'fanart' : self.fanart,
             #'trailer' : self.trailer,
             
             'tag' : self.tag,
             'userrating' : self.userrating,
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
+            'review' : [x.as_dict() for x in self.review] if self.review is not None else None,
+            'code_list' : self.code_list,
         }
+
+class EntityReview(object):
+    def __init__(self, site):
+        self.site = site
+        self.author = ''
+        self.source = ''
+        self.link = ''
+        self.text = ''
+        self.rating = 0
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'author' : self.author,
+            'source' : self.source,
+            'link' : self.link,
+            'text' : self.text,
+            'rating' : self.rating,
+        }
+
+        

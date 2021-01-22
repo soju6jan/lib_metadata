@@ -16,58 +16,113 @@ from system.logic_site import SystemLogicSite
 
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemMovie, EntityMovie2, EntityExtra2
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemMovie, EntityMovie2, EntityExtra2, EntityReview
 from .site_util import SiteUtil
 
 logger = P.logger
 
 
-class SiteNaver(object):
-    site_name = 'naver'
+class SiteWatcha(object):
+    site_name = 'watcha'
+    
     default_headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
-        'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language' : 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
+        #'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        #'Accept-Language' : 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'x-watchaplay-client': 'WatchaPlay-WebApp',
+        'x-watchaplay-client-language': 'ko',
+        'x-watchaplay-client-region' : 'KR',
+        'x-watchaplay-client-version' : '1.0.0',
+        'referer': 'https://pedia.watcha.com/',
+        'origin': 'https://pedia.watcha.com',
+        'x-watcha-client': 'watcha-WebApp',
+        'x-watcha-client-language': 'ko',
+        'x-watcha-client-region': 'KR',
+        'x-watcha-client-version': '2.0.0',
     }
 
+    """
+    default_headers = {
+        #'accept': 'application/vnd.frograms+json;version=20',
+        #'accept-encoding': 'gzip, deflate, br',
+        #'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        #'cookie': 'G_ENABLED_IDPS=google; _s_guit=2c38af244878e5e28e3193052db5d0d396eb2229ed394bf9a87e2eeb406a; _c_pm=false; wp_attcn:ZBm5R18Y7vd46=[{"audio":"","subtitle":"none"},{"audio":"ko","subtitle":"none"}]; _c_pv=0.9; _c_lattpp=1611199449215; _gid=GA1.2.1565107000.1611199454; _ga_1PYHGTCRYW=GS1.1.1611221002.5.1.1611221606.0; _guinness_session=ZQgDghUno%2BqpfsWIdAa8Vofq0k0V5H5XB%2BEUzGI4dBg83pl2YEAzGMFh5WOHGONl%2F37WMOpeU%2Bc%2FS8dDmKuHo%2FWn--xPj6Wi7WxVa5tyAF--tTqhPEh2A7dA8oUXNlm4aQ%3D%3D; _ga_1PF16G1LBX=GS1.1.1611220995.15.1.1611221695.0; _ga_KJMWF42C8H=GS1.1.1611220995.16.1.1611221695.0; _ga=GA1.1.1062148787.1610196018',
+        #'origin': 'https://pedia.watcha.com',
+        #'referer': 'https://pedia.watcha.com/',
+        #'sec-ch-ua': '"Google Chrome";v="87", " Not;A Brand";v="99", "Chromium";v="87"',
+        #'sec-ch-ua-mobile': '?0',
+        #'sec-fetch-dest': 'empty',
+        #'sec-fetch-mode': 'cors',
+        #'sec-fetch-site': 'same-site',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
+        'x-watcha-client': 'watcha-WebApp',
+        'x-watcha-client-language': 'ko',
+        'x-watcha-client-region': 'KR',
+        'x-watcha-client-version': '2.0.0',
+        #'x-watcha-remote-addr': '',
+    }
+    cookies = {'G_ENABLED_IDPS':'google', '_s_guit':'2c38af244878e5e28e3193052db5d0d396eb2229ed394bf9a87e2eeb406a', '_c_pm':'false', 'wp_attcn:ZBm5R18Y7vd46':'[{"audio":"","subtitle":"none"},{"audio":"ko","subtitle":"none"}]', '_c_pv':'0.9', '_c_lattpp':'1611199449215', '_gid':'GA1.2.1565107000.1611199454', '_ga_1PF16G1LBX':'GS1.1.1611199453.14.1.1611199559.0', '_ga_KJMWF42C8H':'GS1.1.1611199453.15.1.1611199559.0', '_ga':'GA1.1.1062148787.1610196018', '_ga_1PYHGTCRYW':'GS1.1.1611203000.4.1.1611203338.0', '_guinness_session':'S17q5ecj6sVxMS4rvFpLxvoQFJSqRCFp5rKRtTVhM4%2Bjtiq1cEsPF01OBXjK%2FxLzb0Zqn4SuQMDR0FXt9J4oZb8%2B--n9fzFfU61x6mtrh6--IBwOAYjjYYLki%2FDy4aHTfA%3D%3D'}
+    """
 
 # https://developers.naver.com/docs/search/movie/
 
-class SiteNaverMovie(SiteNaver):
-    site_base_url = 'https://movie.naver.com'
+class SiteWatchaMovie(SiteWatcha):
+    #site_base_url = 'https://movie.naver.com'
     module_char = 'M'
-    site_char = 'N'
+    site_char = 'W'
+
+    @classmethod
+    def search_api(cls, keyword):
+        try:
+            url = 'https://api-pedia.watcha.com/api/searches?query=%s' % keyword
+            data = SiteUtil.get_response(url, headers=cls.default_headers).json()
+            return data
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def info_api(cls, code):
+        try:
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
+            ret = {}
+            ret['review'] = cls.info_review(code, None, api_return=True)
+            ret['collection'] = cls.info_collection(code, None, api_return=True)
+            return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
 
 
     @classmethod 
     def search(cls, keyword, year=1900):
         try:
             ret = {}
-            #logger.debug(keyword)
-            data = cls.naver_api_search(keyword)
-            #logger.debug(json.dumps(data, indent=4))
+            #url = 'https://api-mars.watcha.com/api/search.json?query=%s&page=1&per=30&exclude=limited' % keyword
+            
+            data = cls.search_api(keyword)
+            
+            
             result_list = []
-            for idx, item in enumerate(data['items']):
+            for idx, item in enumerate(data['result']['top_results']):
+                if item['content_type'] != 'movies':
+                    continue
+                #logger.debug(json.dumps(item, indent=4))
                 entity = EntitySearchItemMovie(cls.site_name)
-                entity.code = cls.module_char + cls.site_char + item['link'].split('=')[1]
-                entity.title = re.sub(r'\<.*?\>', '', item['title']).strip()
-                entity.originaltitle = re.sub(r'\<.*?\>', '', item['subtitle']).strip()
-                entity.image_url = item['image']
-                try: entity.year = int(item['pubDate'])
-                except: entity.year = 1900
-                if item['actor'] != '':
-                    entity.desc += u'배우 : %s\r\n' % ', '.join(item['actor'].rstrip('|').split('|'))
-                if item['director'] != '':
-                    entity.desc += u'감독 : %s\r\n' % ', '.join(item['director'].rstrip('|').split('|'))
-                if item['userRating'] != '0.00':
-                    entity.desc += u'평점 : %s\r\n' % item['userRating']
+                entity.code = cls.module_char + cls.site_char + item['code']
+                entity.title = item['title']
+                #logger.debug(entity.title)
+                #entity.originaltitle = re.sub(r'\<.*?\>', '', item['subtitle']).strip()
+                #entity.extra_info['title_en'] = item['eng_title']
+                if 'poster' in item and item['poster'] is not None:
+                    entity.image_url = item['poster']['original']
+                entity.year = item['year']
+                #except: entity.year = 1900
+                entity.desc = item['nations'][0]['name']
 
-                # etc
-                entity.extra_info['actor'] = item['actor']
-                entity.extra_info['director'] = item['director']
-                entity.extra_info['userRating'] = item['userRating']
-
-                if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
+                if SiteUtil.compare(keyword, entity.title):
                     if year != 1900:
                         if year == entity.year:
                             entity.score = 100
@@ -79,8 +134,6 @@ class SiteNaverMovie(SiteNaver):
                         entity.score = 95 - idx
                 else:
                     entity.score = 80 - (idx*5)
-                
-                logger.debug(entity.score)
                 result_list.append(entity.as_dict())
 
             if result_list is None:
@@ -95,46 +148,29 @@ class SiteNaverMovie(SiteNaver):
             ret['data'] = str(exception)
         return ret
 
-        
-
-    @classmethod
-    def naver_api_search(cls, keyword, source='ja', target='ko'):
-        trans_papago_key = SystemModelSetting.get_list('trans_papago_key')
-        for tmp in trans_papago_key:
-            client_id, client_secret = tmp.split(',')
-            try:
-                if client_id == '' or client_id is None or client_secret == '' or client_secret is None: 
-                    return text
-                url = "https://openapi.naver.com/v1/search/movie.json?query=%s" % py_urllib.quote(str(keyword))
-                requesturl = py_urllib2.Request(url)
-                requesturl.add_header("X-Naver-Client-Id", client_id)
-                requesturl.add_header("X-Naver-Client-Secret", client_secret)
-                #response = py_urllib2.urlopen(requesturl, data = data.encode("utf-8"))
-                response = py_urllib2.urlopen(requesturl)
-                data = json.load(response, encoding="utf-8")
-                rescode = response.getcode()
-                if rescode == 200:
-                    return data
-                else:
-                    continue
-            except Exception as exception:
-                logger.error('Exception:%s', exception)
-                logger.error(traceback.format_exc())                
-        
 
 
 
     @classmethod 
     def info(cls, code):
         try:
+            #https://api-mars.watcha.com/api/contents/mdMgQaX.json
             ret = {}
             entity = EntityMovie2(cls.site_name, code)
             
-            cls.info_basic(code, entity)
-            cls.info_detail(code, entity)
-            cls.info_photo(code, entity)
-            cls.info_video(code, entity)
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
+            entity.code_list.append(['watcha_id', code])
+            #url = 'https://api-pedia.watcha.com/api/contents/%s/comments?filter=all&order=popular&page=1&size=5' % code
+            #url = 'https://api-mars.watcha.com/api/contents/%s.json' % code
+            #data = SiteUtil.get_response(url, headers=cls.default_headers).json()
+            #if 'msg' in data:
+            #    logger.debug(data['msg'])
 
+            #logger.debug(json.dumps(data, indent=4))
+            cls.info_review(code, entity)
+            cls.info_collection(code, entity)
+            
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
             return ret
@@ -148,47 +184,49 @@ class SiteNaverMovie(SiteNaver):
         return ret
 
 
+
     @classmethod 
-    def info_video(cls, code, entity):
+    def info_review(cls, code, entity, api_return=False):
         try:
-            url = 'https://movie.naver.com/movie/bi/mi/media.nhn?code=%s' % code[2:]
-            logger.debug(url)
-            root = html.fromstring(requests.get(url).text)
+            url = 'https://api-pedia.watcha.com/api/contents/%s/comments?filter=all&order=popular&page=1&size=8' % code
+            data = SiteUtil.get_response(url, headers=cls.default_headers).json()
+            if api_return:
+                return data
 
-            tags = root.xpath('//div[@class="video"]')
-            if not tags:
-                return
-
-            video_map = [['ifr_trailer','Trailer'], ['ifr_making','BehindTheScenes'], ['ifr_interview','Interview'], ['ifr_movie_talk','Featurette']]
-            for video in video_map:
-                li_tags = tags[0].xpath('.//div[@class="%s"]//ul[@class="video_thumb"]/li' % video[0])
-                for tag in li_tags:
-                    extra = EntityExtra2()
-                    extra.content_type = video[1]
-                    extra.mode = cls.site_name
-                    extra.content_url = '%s,%s' % (code, tag.xpath('.//a')[0].attrib['href'].split('#')[0].split('mid=')[1])
-                    #extra.thumb = tag.xpath('.//a/img')[0].attrib['src']
-                    tmp = tag.xpath('.//a/img')[0].attrib['src'].split('_')
-                    if len(tmp) == 2:
-                        tmp2 = tmp[1].split('.')
-                        try:
-                            for i in range(10):
-                                cover = '%s_cover_%s.%s' % (tmp[0], (int(tmp2[0])+i), tmp2[1])
-                                if requests.get(cover).status_code != 200:
-                                    continue
-                                else:
-                                    extra.thumb = cover
-                                    break
-                        except Exception as exception: 
-                            logger.error('Exception:%s', exception)
-                            logger.error(traceback.format_exc())
-                            extra.thumb = ''
-                    extra.title = tag.xpath('.//a/img')[0].attrib['alt']
-                    extra.premiered = tag.xpath('.//p[@class="video_date"]')[0].text_content().replace('.', '-')
-                    entity.extras.append(extra)
+            for item in data['result']['result']:
+                review = EntityReview(cls.site_name)
+                review.text = u'[좋아요 : %s' % item['likes_count']
+                review.source = ''
+                review.author = item['user']['name']
+                if item['user_content_action']['rating'] is not None:
+                    review.text += ' / 평점 : %s' % (item['user_content_action']['rating']/2.0)
+                    review.rating = item['user_content_action']['rating']
+                review.link = ''
+                review.text += ']   ' + item['text'].replace('\n', '\r\n')
+                entity.review.append(review)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
+
+    @classmethod 
+    def info_collection(cls, code, entity, api_return=False):
+        try:
+            url = 'https://api-pedia.watcha.com/api/contents/%s/decks?page=1&size=10' % code
+            data = SiteUtil.get_response(url, headers=cls.default_headers).json()
+            if api_return:
+                return data
+
+            #logger.debug(json.dumps(data, indent=4))
+            for item in data['result']['result']:
+                #logger.debug(item['likes_count'])
+                if item['likes_count'] > 100:
+                    entity.tag.append(item['title'])
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
 
 
 
@@ -317,8 +355,7 @@ class SiteNaverMovie(SiteNaver):
     def info_basic(cls, code, entity):
         try:
             url = 'https://movie.naver.com/movie/bi/mi/basic.nhn?code=%s' % code[2:]
-            #logger.debug(url)
-            entity.code_list.append(['naver_id', code[2:]])
+            logger.debug(url)
             root = html.fromstring(requests.get(url).text)
 
             tags = root.xpath('//div[@class="mv_info"]')
@@ -333,7 +370,7 @@ class SiteNaverMovie(SiteNaver):
                     entity.year = int(tmps[1])
                 elif len(tmps) == 3: # 일문,한문 / 영문 / 년도
                     entity.extra_info['title_3'] = tmps[0]
-                    entity.extra_info['title_en'] = tmps[1]
+                    entity.title_en = tmps[1]
                     entity.year = int(tmps[2])
                 else:
                     logger.debug('TTTTTOOOOOODDDDOOO')

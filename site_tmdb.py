@@ -87,7 +87,7 @@ class SiteTmdb(object):
 
                     # Boost the score for localized art (according to the preference).
                     if backdrop['iso_639_1'] == 'ko':
-                        tmdb_images_dict['backdrops'][i]['score'] = float(backdrop['score']) + 1
+                        tmdb_images_dict['backdrops'][i]['score'] = float(backdrop['score']) + 3
 
                     # Discount score for foreign art.
                     if backdrop['iso_639_1'] != 'ko' and backdrop['iso_639_1'] is not None and backdrop['iso_639_1'] != 'en':
@@ -273,6 +273,9 @@ class SiteTmdbMovie(SiteTmdb):
                 else:
                     entity.score = 80 - (idx*5)
                 result_list.append(entity.as_dict())
+            
+            result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)
+
             if result_list is None:
                 ret['ret'] = 'empty'
             else:
@@ -294,6 +297,7 @@ class SiteTmdbMovie(SiteTmdb):
             entity = EntityMovie2(cls.site_name, code)
             
             tmdb = tmdbsimple.Movies(code[2:])
+            entity.code_list.append(['tmdb_id', code[2:]])
             cls.info_basic(tmdb, entity)
             cls.info_actor(tmdb, entity)
             cls.info_videos(tmdb, entity)
@@ -323,9 +327,12 @@ class SiteTmdbMovie(SiteTmdb):
                     extra = EntityExtra2()
                     if tmdb_item['type'] == 'Teaser':
                         tmdb_item['type'] = 'Trailer'
-                    if tmdb_item['type'] == 'Clip':
+                    elif tmdb_item['type'] == 'Clip':
                         tmdb_item['type'] = 'Short'
-                    if tmdb_item['type'] not in ['Trailer', 'Featurette', 'Short']:
+                    elif tmdb_item['type'] == 'Behind the Scenes':
+                        tmdb_item['type'] = 'BehindTheScenes'
+                    
+                    if tmdb_item['type'] not in ['Trailer', 'Featurette', 'Short', 'BehindTheScenes']:
                         logger.debug(u'소스 확인 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
                         logger.debug(tmdb_item['type'])
                         continue
@@ -380,6 +387,10 @@ class SiteTmdbMovie(SiteTmdb):
     def info_basic(cls, tmdb, entity):
         try:
             info = tmdb.info(language='ko')
+            
+            if 'imdb_id' in info:
+                entity.code_list.append(['imdb_id', info['imdb_id']])
+
             entity.title = info['title']
             entity.originaltitle = info['original_title']
             entity.plot = info['overview']
