@@ -58,7 +58,7 @@ class SiteTmdb(object):
 
                     # Boost the score for localized posters (according to the preference).
                     if poster['iso_639_1'] == 'ko':
-                        tmdb_images_dict['posters'][i]['score'] = poster['score'] + 1
+                        tmdb_images_dict['posters'][i]['score'] = poster['score'] + 3
 
                     # Discount score for foreign posters.
                     if poster['iso_639_1'] != 'ko' and poster['iso_639_1'] is not None and poster['iso_639_1'] != 'en':

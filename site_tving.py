@@ -29,6 +29,8 @@ channel_code_map = {
     'C00590' : 'OGN',
     'C15152' : 'CH.DIA',
     'C01582' : 'JTBC',
+    'C07381' : 'OCN',
+    'C06941' : 'tooniverse',
 
 }
 

@@ -193,7 +193,11 @@ class SiteWavveTv(SiteWavve):
             if program_info['tags']['list']:
                 show.genre = [program_info['tags']['list'][0]['text']]
             #show.episode = home_data['episode']
-            
+            for item in program_info['programactors']['list']:
+                actor = EntityActor(None)
+                actor.name = item['text']
+                show.actor.append(actor)
+
             show = show.as_dict()
             cls._apply_tv_by_program(show, program_info)
             ret['ret'] = 'success'

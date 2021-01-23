@@ -120,7 +120,8 @@ class SiteWatchaMovie(SiteWatcha):
                     entity.image_url = item['poster']['original']
                 entity.year = item['year']
                 #except: entity.year = 1900
-                entity.desc = item['nations'][0]['name']
+                try: entity.desc = item['nations'][0]['name']
+                except: pass
 
                 if SiteUtil.compare(keyword, entity.title):
                     if year != 1900:

@@ -211,3 +211,67 @@ class SiteUtil(object):
         title1 = cls.get_show_compare_text(title1)
         title2 = cls.get_show_compare_text(title2)
         return cls.compare(title1, title2)
+
+    @classmethod
+    def info_to_kodi(cls, data):
+        data['info'] = {}
+        data['info']['title'] = data['title']
+        data['info']['studio'] = data['studio']
+        data['info']['premiered'] = data['premiered']
+        data['info']['genre'] = data['genre']
+        data['info']['plot'] = data['plot']
+        data['info']['tagline'] = data['tagline']
+        data['info']['mpaa'] = data['mpaa']
+        if 'director' in data and len(data['director']) > 0:
+            if type(data['director'][0]) == type({}):
+                tmp_list = []
+                for tmp in data['director']:
+                    tmp_list.append(tmp['name'])
+                data['info']['director'] = ', '.join(tmp_list).strip()
+            else:
+                data['info']['director'] = data['director']
+        if 'credits' in data and len(data['credits']) > 0:
+            logger.debug('11111111111111111')
+            logger.debug(type(data['credits']))
+            data['info']['writer'] = []
+            if type(data['credits'][0]) == type({}):
+                for tmp in data['credits']:
+                    data['info']['writer'].append(tmp['name'])
+            else:
+                data['info']['writer'] = data['credits']
+
+        if 'extras' in data and data['extras'] is not None and len(data['extras']) > 0:
+            if data['extras'][0]['mode'] in ['naver', 'youtube']:
+                url = '{ddns}/metadata/api/video?site={site}&param={param}&apikey={apikey}'.format(
+                    ddns=SystemModelSetting.get('ddns'),
+                    site=data['extras'][0]['mode'],
+                    param=data['extras'][0]['content_url'],
+                    apikey=SystemModelSetting.get('auth_apikey')
+                )
+                data['info']['trailer'] = url
+            elif data['extras'][0]['mode'] == 'mp4':
+                data['info']['trailer'] = data['extras'][0]['content_url']
+
+        data['cast'] = []
+
+        if 'actor' in data and data['actor'] is not None:
+            for item in data['actor']:
+                entity = {}
+                entity['type'] = 'actor'
+                entity['role'] = item['role']
+                entity['name'] = item['name']
+                entity['thumbnail'] = item['thumb']
+                data['cast'].append(entity)
+        
+        if 'art' in data and data['art'] is not None:
+            for item in data['art']:
+                if item['aspect'] == 'landscape':
+                    item['aspect'] = 'fanart'
+        elif 'thumb' in data and data['thumb'] is not None:
+            for item in data['thumb']:
+                if item['aspect'] == 'landscape':
+                    item['aspect'] = 'fanart'
+            data['art'] = data['thumb']
+        if 'art' in data:
+            data['art'] = sorted(data['art'], key=lambda k: k['score'], reverse=True)
+        return data
