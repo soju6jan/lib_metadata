@@ -16,7 +16,7 @@ import  framework.wavve.api as Wavve
 from lib_metadata import MetadataServerUtil
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow, EntitySearchItemMovie, EntityMovie2, EntityExtra2, EntityReview
 from .site_util import SiteUtil
 logger = P.logger
 
@@ -28,6 +28,7 @@ channelname_map = {
 }
 mpaa_map = {'0' : u'모든 연령 시청가', '7' : u'7세 이상 시청가', '12' : u'12세 이상 시청가', '15' : u'15세 이상 시청가', '19' : u'19세 이상 시청가'}
 
+movie_mpaa_map = {'0' : u'전체 관람가', '12': u'12세 관람가', '12': u'15세 관람가', '18' : u'청소년 관람불가', '21' : u'청소년 관람불가'}
 
 class SiteWavve(object):
     site_name = 'wavve'
@@ -209,3 +210,116 @@ class SiteWavveTv(SiteWavve):
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
         return ret            
+
+                    
+
+
+
+class SiteWavveMovie(SiteWavve):
+    module_char = 'M'
+    site_char = 'W'
+
+
+    @classmethod
+    def search_api(cls, keyword):
+        return Wavve.search_movie(keyword)
+       
+    @classmethod
+    def info_api(cls, code):
+        if code.startswith(cls.module_char + cls.site_char):
+            code = code[2:]
+        return Wavve.movie_contents_movieid(code)
+
+    @classmethod 
+    def search(cls, keyword, year=1900):
+        try:
+            ret = {}
+            search_list = cls.search_api(keyword)
+            result_list = []
+            for idx, item in enumerate(search_list):
+                entity = EntitySearchItemMovie(cls.site_name)
+                entity.code = cls.module_char + cls.site_char + item['event_list'][1]['url'].split('=')[1]
+                entity.title = item['title_list'][0]['text']
+                entity.image_url = 'https://' + item['thumbnail']
+                entity.desc = u'Age: %s' % (item['age'])
+
+                if SiteUtil.compare(keyword, entity.title):
+                    entity.score = 100
+                else:
+                    entity.score = 80 - (idx*5)
+                result_list.append(entity.as_dict())
+            if result_list is None:
+                ret['ret'] = 'empty'
+            else:
+                ret['ret'] = 'success'
+                ret['data'] = result_list
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+
+    @classmethod 
+    def info(cls, code):
+        try:
+            ret = {}
+            entity = EntityMovie2(cls.site_name, code)
+            wavve_data = cls.info_api(code)
+
+            entity.title = wavve_data['title']
+            try:
+                tmp = wavve_data['origintitle'].split(',') 
+                entity.extra_info['title_en'] = tmp[0].strip()
+                entity.year = int(tmp[1].strip())
+            except: pass
+
+            entity.country.append(wavve_data['country'])
+            if wavve_data['country'] == u'한국':
+                entity.originaltitle = entity.title
+            else:
+                entity.originaltitle = entity.extra_info['title_en']
+
+            for item in wavve_data['genre']['list']:
+                entity.genre.append(item['text'])
+
+            try: entity.runtime = int(int(wavve_data['playtime']) / 60)
+            except: pass
+            for item in wavve_data['actors']['list']:
+                actor = EntityActor('', site=cls.site_name)
+                actor.name = item['text']
+                entity.actor.append(actor)
+
+            for item in wavve_data['directors']['list']:
+                entity.director.append(item['text'])
+            
+            poster = EntityThumb()
+            poster.aspect = 'poster'
+            poster.value = 'https' + wavve_data['image']
+            poster.score = 80
+            entity.art.append(poster)
+
+            try: entity.ratings.append(EntityRatings(float(wavve_data['rating']), name=self.site_name))
+            except: pass
+            entity.premiered = wavve_data['releasedate']
+            entity.plot = wavve_data['synopsis']
+            try: entity.mpaa = movie_mpaa_map[wavve_data['targetage']]
+            except: entity.mpaa = wavve_data['targetage']
+
+            entity.extra_info['drm'] = (wavve_data['drms'] != '')
+
+            if entity.extra_info['drm']:
+                entity.extra_info['request_streaming_url'] = Wavve.streaming2('movie', code[2:], 'FHD', return_url=True)
+            else:
+                entity.extra_info['request_streaming_url'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+            
+            ret['ret'] = 'success'
+            ret['data'] = entity.as_dict()
+            return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret

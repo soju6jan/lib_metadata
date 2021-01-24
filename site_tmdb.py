@@ -262,14 +262,12 @@ class SiteTmdbMovie(SiteTmdb):
 
                 if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
                     if year != 1900:
-                        if year == entity.year:
-                            entity.score = 100 - idx
-                        elif abs(entity.year-year) == 1:
-                            entity.score = 90 - idx
+                        if abs(entity.year-year) < 2:
+                            entity.score = 100
                         else:
-                            entity.score = 80 - idx
+                            entity.score = 80
                     else:
-                        entity.score = 95 - idx
+                        entity.score = 95
                 else:
                     entity.score = 80 - (idx*5)
                 result_list.append(entity.as_dict())

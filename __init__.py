@@ -12,7 +12,7 @@ from .site_util import SiteUtil
 from .site_daum import SiteDaumTv
 from .site_daum_movie import SiteDaumMovie
 from .site_tmdb import SiteTmdbTv, SiteTmdbMovie
-from .site_tving import SiteTvingTv
-from .site_wavve import SiteWavveTv
+from .site_tving import SiteTvingTv, SiteTvingMovie
+from .site_wavve import SiteWavveTv, SiteWavveMovie
 from .site_naver import SiteNaverMovie
 from .site_watcha import SiteWatchaMovie

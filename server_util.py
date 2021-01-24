@@ -57,7 +57,7 @@ class MetadataServerUtil(object):
     @classmethod
     def set_metadata_jav_censored(cls, code, data, keyword):
         try:
-            if data['thumb'] is None or len(data['thumb']) < 2:
+            if data['thumb'] is None or (code.startswith('C') and len(data['thumb']) < 2) or (code.startswith('D') and len(data['thumb']) < 1):
                 return
             for tmp in data['thumb']:
                 if tmp['value'] is None or tmp['value'].find('.discordapp.') == -1:

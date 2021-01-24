@@ -43,8 +43,11 @@ class SiteNaverMovie(SiteNaver):
     def search(cls, keyword, year=1900):
         try:
             ret = {}
-            #logger.debug(keyword)
-            data = cls.naver_api_search(keyword)
+            logger.debug(keyword)
+            logger.debug(year)
+            logger.debug(type(year))
+             
+            data = cls.search_api(keyword)
             #logger.debug(json.dumps(data, indent=4))
             result_list = []
             for idx, item in enumerate(data['items']):
@@ -66,28 +69,29 @@ class SiteNaverMovie(SiteNaver):
                 entity.extra_info['actor'] = item['actor']
                 entity.extra_info['director'] = item['director']
                 entity.extra_info['userRating'] = item['userRating']
-
+               
                 if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
+                    logger.debug('11')
                     if year != 1900:
-                        if year == entity.year:
+                        if abs(entity.year-year) < 2:
                             entity.score = 100
-                        elif abs(entity.year-year) == 1:
-                            entity.score = 90 - idx
                         else:
-                            entity.score = 80 - idx
+                            entity.score = 80
                     else:
-                        entity.score = 95 - idx
+                        entity.score = 95
                 else:
                     entity.score = 80 - (idx*5)
-                
-                logger.debug(entity.score)
+                    if entity.score < 0:
+                        entity.socre = 10
                 result_list.append(entity.as_dict())
 
+            result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
             if result_list is None:
                 ret['ret'] = 'empty'
             else:
                 ret['ret'] = 'success'
                 ret['data'] = result_list
+            
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -98,14 +102,14 @@ class SiteNaverMovie(SiteNaver):
         
 
     @classmethod
-    def naver_api_search(cls, keyword, source='ja', target='ko'):
+    def search_api(cls, keyword):
         trans_papago_key = SystemModelSetting.get_list('trans_papago_key')
         for tmp in trans_papago_key:
             client_id, client_secret = tmp.split(',')
             try:
                 if client_id == '' or client_id is None or client_secret == '' or client_secret is None: 
                     return text
-                url = "https://openapi.naver.com/v1/search/movie.json?query=%s" % py_urllib.quote(str(keyword))
+                url = "https://openapi.naver.com/v1/search/movie.json?query=%s&display=100" % py_urllib.quote(str(keyword))
                 requesturl = py_urllib2.Request(url)
                 requesturl.add_header("X-Naver-Client-Id", client_id)
                 requesturl.add_header("X-Naver-Client-Secret", client_secret)

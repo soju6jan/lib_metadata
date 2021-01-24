@@ -240,3 +240,95 @@ class SiteTvingTv(SiteTving):
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
         return ret
+
+
+
+
+class SiteTvingMovie(SiteTving):
+    module_char = 'M'
+    site_char = 'V'
+
+
+    @classmethod 
+    def search(cls, keyword, year=1900):
+        try:
+            ret = {}
+            search_list = Tving.search_tv(keyword)
+            if search_list:
+                show_list = []
+                for idx, item in enumerate(search_list):
+                    entity = EntitySearchItemTv(cls.site_name)
+                    entity.code = (kwargs['module_char'] if 'module_char' in kwargs else cls.module_char) + cls.site_char + item['mast_cd']
+                    entity.title = item['mast_nm']
+                    entity.image_url = cls.tving_base_image + item['web_url']
+                    entity.studio = item['ch_nm']
+                    entity.genre = item['cate_nm']
+                    if SiteUtil.compare_show_title(entity.title, keyword):
+                        entity.score = 100
+                    else:
+                        entity.score = 60 - idx * 5
+
+                    show_list.append(entity.as_dict())
+                ret['ret'] = 'success'
+                ret['data'] = show_list
+            else:
+                ret['ret'] = 'empty'
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+    @classmethod 
+    def info(cls, code):
+        try:
+            ret = {}
+            tving_program = Tving.get_program_programid(code[2:])['body']
+            #ogger.debug(tving_program)
+            
+            show = EntityShow(cls.site_name, code)
+            show.title = tving_program['name']['ko']
+            show.originaltitle = show.title
+            show.sorttitle = show.title 
+            show.studio = cls.change_channel_code(tving_program['channel_code'])
+            show.plot = tving_program['synopsis']['ko']
+            show.premiered = cls.change_to_premiered(tving_program['broad_dt'])
+            try: show.year = int(show.premiered.split('-')[0])
+            except: show.year = 1900
+            if tving_program['broad_state'] == 'CPBS0200':
+                show.status = 1
+            elif tving_program['broad_state'] == 'CPBS0300':
+                show.status = 2
+            else:
+                logger.debug('!!!!!!!!!!!!!!!!broad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_state')
+
+            #if tving_program['broad_end_dt'] != '':
+            #    show.status = 2
+            show.genre = [tving_program['category1_name']['ko']]
+            #show.episode = home_data['episode']
+            
+            
+            for item in tving_program['actor']:
+                actor = EntityActor(item)
+                actor.name = item
+                show.actor.append(actor)
+            
+            for item in tving_program['director']:
+                actor = EntityActor(item)
+                actor.name = item
+                show.director.append(actor)
+
+            show = show.as_dict()
+            cls._apply_tv_by_program(show, tving_program)
+            ret['ret'] = 'success'
+            ret['data'] = show
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+        

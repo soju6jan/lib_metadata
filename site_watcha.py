@@ -125,14 +125,12 @@ class SiteWatchaMovie(SiteWatcha):
 
                 if SiteUtil.compare(keyword, entity.title):
                     if year != 1900:
-                        if year == entity.year:
+                        if abs(entity.year-year) <= 1:
                             entity.score = 100
-                        elif abs(entity.year-year) == 1:
-                            entity.score = 90 - idx
                         else:
-                            entity.score = 80 - idx
+                            entity.score = 80
                     else:
-                        entity.score = 95 - idx
+                        entity.score = 95
                 else:
                     entity.score = 80 - (idx*5)
                 result_list.append(entity.as_dict())

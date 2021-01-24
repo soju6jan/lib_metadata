@@ -126,11 +126,13 @@ class SiteJav321(object):
             entity.thumb.append(EntityThumb(aspect='poster', value=tmp['image_url']))
 
 
-            nodes = tree.xpath('//*[@id="vjs_sample_player"]')  
+            nodes = tree.xpath('//*[@id="vjs_sample_player"]')
+            first_art_append_to_landscape = True
             if nodes:
                 node = nodes[0]
                 tmp = SiteUtil.get_image_url(node.attrib['poster'], image_mode, proxy_url=proxy_url)
                 entity.thumb.append(EntityThumb(aspect='landscape', value=tmp['image_url']))
+                first_art_append_to_landscape = False
                 entity.extras = [EntityExtra('trailer', entity.title, 'mp4', node.xpath('.//source')[0].attrib['src'])]
             #entity.plot = SiteUtil.trans(tree.xpath('/html/body/div[2]/div[1]/div[1]/div[1]/h3/text()')[0], do_trans=do_trans)
             tmp = tree.xpath('/html/body/div[2]/div[1]/div[1]/div[2]/div[3]/div/text()')
@@ -138,7 +140,7 @@ class SiteJav321(object):
                 entity.plot = SiteUtil.trans(tmp[0], do_trans=do_trans)
 
             tmp = tree.xpath('/html/body/div[2]/div[1]/div[1]/div[1]/h3/text()')[0].strip()
-            logger.debug(tmp)
+            #logger.debug(tmp)
 
             flag_is_plot = False
             if entity.actor is None or len(entity.actor) == 0:
@@ -153,7 +155,7 @@ class SiteJav321(object):
                     entity.plot = SiteUtil.trans(tmp, do_trans=do_trans)
                 else:
                     entity.plot += SiteUtil.trans(tmp, do_trans=do_trans)
-            logger.debug(entity.plot)
+            #logger.debug(entity.plot)
 
             nodes = tree.xpath('/html/body/div[2]/div[2]/div')
             entity.fanart = []
@@ -162,7 +164,12 @@ class SiteJav321(object):
                     break
                 img_tag = node.xpath('.//img')
                 if img_tag:
-                    entity.fanart.append(SiteUtil.process_image_mode(image_mode, img_tag[0].attrib['src'], proxy_url=proxy_url))
+                    value = SiteUtil.process_image_mode(image_mode, img_tag[0].attrib['src'], proxy_url=proxy_url)
+                    if first_art_append_to_landscape:
+                        entity.thumb.append(EntityThumb(aspect='landscape', value=value))
+                        first_art_append_to_landscape = False
+                    else:
+                        entity.fanart.append(value)
                
             entity.tagline = entity.plot   
             #/html/body/div[2]/div[2]/div[1]/p/a/img
