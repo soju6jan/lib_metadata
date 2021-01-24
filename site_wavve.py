@@ -296,7 +296,7 @@ class SiteWavveMovie(SiteWavve):
             
             poster = EntityThumb()
             poster.aspect = 'poster'
-            poster.value = 'https' + wavve_data['image']
+            poster.value = 'https://' + wavve_data['image']
             poster.score = 80
             entity.art.append(poster)
 
@@ -307,12 +307,14 @@ class SiteWavveMovie(SiteWavve):
             try: entity.mpaa = movie_mpaa_map[wavve_data['targetage']]
             except: entity.mpaa = wavve_data['targetage']
 
-            entity.extra_info['drm'] = (wavve_data['drms'] != '')
+            entity.extra_info['wavve_stream'] = {}
+            entity.extra_info['wavve_stream']['drm'] = (wavve_data['drms'] != '')
 
-            if entity.extra_info['drm']:
-                entity.extra_info['request_streaming_url'] = Wavve.streaming2('movie', code[2:], 'FHD', return_url=True)
+            if entity.extra_info['wavve_stream']['drm']:
+                entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming2('movie', code[2:], 'FHD', return_url=True)
             else:
-                entity.extra_info['request_streaming_url'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+                entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+            entity.extra_info['wavve_stream']['price'] = wavve_data['price']
             
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()

@@ -380,7 +380,7 @@ class SiteNaverMovie(SiteNaver):
 
                         elif href.find('open=') != -1:
                             entity.premiered = (a_tag[0].text_content().strip() + a_tag[1].text_content().strip()).replace('.', '-')
-                            entity.year = int(entity.premiered.split('-')[0])
+                            #entity.year = int(entity.premiered.split('-')[0])
                         elif href.find('grade=') != -1:
                             entity.mpaa = a_tag[0].text_content().strip()
                     else:
