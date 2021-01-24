@@ -170,8 +170,10 @@ class SiteNaverMovie(SiteNaver):
                     extra = EntityExtra2()
                     extra.content_type = video[1]
                     extra.mode = cls.site_name
-                    extra.content_url = '%s,%s' % (code, tag.xpath('.//a')[0].attrib['href'].split('#')[0].split('mid=')[1])
+                    video_page_url = tag.xpath('.//a')[0].attrib['href']
+                    extra.content_url = '%s,%s' % (code, video_page_url.split('#')[0].split('mid=')[1])
                     #extra.thumb = tag.xpath('.//a/img')[0].attrib['src']
+                    """
                     tmp = tag.xpath('.//a/img')[0].attrib['src'].split('_')
                     if len(tmp) == 2:
                         tmp2 = tmp[1].split('.')
@@ -187,6 +189,18 @@ class SiteNaverMovie(SiteNaver):
                             logger.error('Exception:%s', exception)
                             logger.error(traceback.format_exc())
                             extra.thumb = ''
+                    """
+                    try:
+                        tmp_root = SiteUtil.get_tree('https://movie.naver.com' + video_page_url)
+                        tmp = tmp_root.xpath('//iframe[@class="_videoPlayer"]')
+                        if tmp:
+                            tmp2 = tmp[0].attrib['src']
+                            extra.thumb = 'https://ssl.pstatic.net/imgmovie' + tmp2.split('coverImage=')[1].split('&')[0]
+                        
+                    except Exception as exception: 
+                        logger.error('Exception:%s', exception)
+                        logger.error(traceback.format_exc())
+                        
                     extra.title = tag.xpath('.//a/img')[0].attrib['alt']
                     extra.premiered = tag.xpath('.//p[@class="video_date"]')[0].text_content().replace('.', '-')
                     entity.extras.append(extra)

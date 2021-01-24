@@ -28,7 +28,7 @@ channelname_map = {
 }
 mpaa_map = {'0' : u'모든 연령 시청가', '7' : u'7세 이상 시청가', '12' : u'12세 이상 시청가', '15' : u'15세 이상 시청가', '19' : u'19세 이상 시청가'}
 
-movie_mpaa_map = {'0' : u'전체 관람가', '12': u'12세 관람가', '12': u'15세 관람가', '18' : u'청소년 관람불가', '21' : u'청소년 관람불가'}
+movie_mpaa_map = {'0' : u'전체 관람가', '12': u'12세 관람가', '15': u'15세 관람가', '18' : u'청소년 관람불가', '21' : u'청소년 관람불가'}
 
 class SiteWavve(object):
     site_name = 'wavve'
@@ -308,7 +308,7 @@ class SiteWavveMovie(SiteWavve):
             except: entity.mpaa = wavve_data['targetage']
 
             permission = Wavve.getpermissionforcontent(code[2:])
-            logger.debug(permission)
+            #logger.debug(permission)
             if permission['action'] == 'stream':
                 entity.extra_info['wavve_stream'] = {}
                 entity.extra_info['wavve_stream']['drm'] = (wavve_data['drms'] != '')
