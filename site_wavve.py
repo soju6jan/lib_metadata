@@ -244,7 +244,7 @@ class SiteWavveMovie(SiteWavve):
                 entity.desc = u'Age: %s' % (item['age'])
 
                 if SiteUtil.compare(keyword, entity.title):
-                    entity.score = 100
+                    entity.score = 94
                 else:
                     entity.score = 80 - (idx*5)
                 result_list.append(entity.as_dict())
@@ -307,15 +307,16 @@ class SiteWavveMovie(SiteWavve):
             try: entity.mpaa = movie_mpaa_map[wavve_data['targetage']]
             except: entity.mpaa = wavve_data['targetage']
 
-            entity.extra_info['wavve_stream'] = {}
-            entity.extra_info['wavve_stream']['drm'] = (wavve_data['drms'] != '')
-
-            if entity.extra_info['wavve_stream']['drm']:
-                entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming2('movie', code[2:], 'FHD', return_url=True)
-            else:
-                entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
-            entity.extra_info['wavve_stream']['price'] = wavve_data['price']
-            
+            permission = Wavve.getpermissionforcontent(code[2:])
+            logger.debug(permission)
+            if permission['action'] == 'stream':
+                entity.extra_info['wavve_stream'] = {}
+                entity.extra_info['wavve_stream']['drm'] = (wavve_data['drms'] != '')
+                if entity.extra_info['wavve_stream']['drm']:
+                    entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming2('movie', code[2:], 'FHD', return_url=True)
+                else:
+                    entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+                #entity.extra_info['wavve_stream']['price'] = wavve_data['price']
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
             return ret
