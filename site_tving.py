@@ -128,9 +128,11 @@ class SiteTvingTv(SiteTving):
     @classmethod 
     def apply_tv_by_search(cls, show, apply_plot=True, apply_image=True):
         try:
-            data = Tving.search_tv(show['title'])
+            data = cls.search_api(show['title'])
             if data:
                 for item in data:
+                    if item['gubun'] != 'VODBC':
+                        continue
                     if item['ch_nm'].replace(' ', '').lower() == show['studio'].replace(' ', '').lower() and (item['mast_nm'].replace(' ', '').lower() == show['title'].replace(' ', '').lower() or item['mast_nm'].replace(' ', '').lower().find(show['title'].replace(' ', '').lower()) != -1 or show['title'].replace(' ', '').lower().find(item['mast_nm'].replace(' ', '').lower()) != -1):
                         # 시작일로 체크
                         tving_program = Tving.get_program_programid(item['mast_cd'])['body']
