@@ -263,25 +263,25 @@ class SiteTvingMovie(SiteTving):
             search_list = cls.search_api(keyword)
             #logger.debug(json.dumps(search_list, indent=4))
             result_list = []
-             
-            for idx, item in enumerate(search_list):
-                if item['gubun'] == 'VODMV':
-                    entity = EntitySearchItemMovie(cls.site_name)
-                    entity.code = cls.module_char + cls.site_char + item['mast_cd']
-                    entity.title = item['mast_nm']
-                    entity.image_url = cls.tving_base_image + item['web_url']
-                    entity.desc = u'%s' % (item['cate_cd'])
-                    if SiteUtil.compare(keyword, entity.title):
-                        entity.score = 94
-                    else:
-                        entity.score = 80 - (idx*5)
-                    result_list.append(entity.as_dict())
-            result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
-            if result_list is None:
-                ret['ret'] = 'empty'
-            else:
+            if search_list:
+                for idx, item in enumerate(search_list):
+                    if item['gubun'] == 'VODMV':
+                        entity = EntitySearchItemMovie(cls.site_name)
+                        entity.code = cls.module_char + cls.site_char + item['mast_cd']
+                        entity.title = item['mast_nm']
+                        entity.image_url = cls.tving_base_image + item['web_url']
+                        entity.desc = u'%s' % (item['cate_cd'])
+                        if SiteUtil.compare(keyword, entity.title):
+                            entity.score = 94
+                        else:
+                            entity.score = 80 - (idx*5)
+                        result_list.append(entity.as_dict())
+                result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
+            if result_list:
                 ret['ret'] = 'success'
                 ret['data'] = result_list
+            else:
+                ret['ret'] = 'empty'
 
         except Exception as exception: 
             logger.error('Exception:%s', exception)

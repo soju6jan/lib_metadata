@@ -235,24 +235,25 @@ class SiteWavveMovie(SiteWavve):
             ret = {}
             search_list = cls.search_api(keyword)
             result_list = []
-            for idx, item in enumerate(search_list):
-                entity = EntitySearchItemMovie(cls.site_name)
-                entity.code = cls.module_char + cls.site_char + item['event_list'][1]['url'].split('=')[1]
-                entity.title = item['title_list'][0]['text']
-                entity.image_url = 'https://' + item['thumbnail']
-                entity.desc = u'Age: %s' % (item['age'])
+            if search_list:
+                for idx, item in enumerate(search_list):
+                    entity = EntitySearchItemMovie(cls.site_name)
+                    entity.code = cls.module_char + cls.site_char + item['event_list'][1]['url'].split('=')[1]
+                    entity.title = item['title_list'][0]['text']
+                    entity.image_url = 'https://' + item['thumbnail']
+                    entity.desc = u'Age: %s' % (item['age'])
 
-                if SiteUtil.compare(keyword, entity.title):
-                    entity.score = 94
-                else:
-                    entity.score = 80 - (idx*5)
-                result_list.append(entity.as_dict())
-            result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
-            if result_list is None:
-                ret['ret'] = 'empty'
-            else:
+                    if SiteUtil.compare(keyword, entity.title):
+                        entity.score = 94
+                    else:
+                        entity.score = 80 - (idx*5)
+                    result_list.append(entity.as_dict())
+                result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
+            if result_list:
                 ret['ret'] = 'success'
                 ret['data'] = result_list
+            else:
+                ret['ret'] = 'empty'
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())

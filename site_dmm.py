@@ -192,7 +192,7 @@ class SiteDmm(object):
                 entity.thumb.append(EntityThumb(aspect='poster', value=SiteUtil.process_image_mode(image_mode, img_tag.attrib['src'], proxy_url=proxy_url)))
 
   
-            entity.tagline = SiteUtil.trans(img_tag.attrib['alt'], do_trans=do_trans).replace(u'[배달 전용]', '').strip()
+            entity.tagline = SiteUtil.trans(img_tag.attrib['alt'], do_trans=do_trans).replace(u'[배달 전용]', '').replace(u'[특가]', '').strip()
             tags = tree.xpath('{basetag}/table//tr'.format(basetag=basetag))
             tmp_premiered = None
             for tag in tags:

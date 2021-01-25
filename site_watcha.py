@@ -103,8 +103,7 @@ class SiteWatchaMovie(SiteWatcha):
             #url = 'https://api-mars.watcha.com/api/search.json?query=%s&page=1&per=30&exclude=limited' % keyword
             
             data = cls.search_api(keyword)
-            
-            
+         
             result_list = []
             for idx, item in enumerate(data['result']['top_results']):
                 if item['content_type'] != 'movies':
@@ -135,11 +134,11 @@ class SiteWatchaMovie(SiteWatcha):
                     entity.score = 80 - (idx*5)
                 result_list.append(entity.as_dict())
 
-            if result_list is None:
-                ret['ret'] = 'empty'
-            else:
+            if result_list:
                 ret['ret'] = 'success'
                 ret['data'] = result_list
+            else:
+                ret['ret'] = 'empty'
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
