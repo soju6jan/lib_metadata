@@ -274,8 +274,10 @@ class SiteWavveMovie(SiteWavve):
             try:
                 tmp = wavve_data['origintitle'].split(',') 
                 entity.extra_info['title_en'] = tmp[0].strip()
-                entity.year = int(tmp[1].strip())
+                
             except: pass
+
+            
 
             entity.country.append(wavve_data['country'])
             if wavve_data['country'] == u'한국':
@@ -301,6 +303,8 @@ class SiteWavveMovie(SiteWavve):
             try: entity.ratings.append(EntityRatings(float(wavve_data['rating']), name=cls.site_name))
             except: pass
             entity.premiered = wavve_data['releasedate']
+            try: entity.year = int(entity.premiered.split('-')[0])
+            except: pass
             entity.plot = wavve_data['synopsis']
             try: entity.mpaa = movie_mpaa_map[wavve_data['targetage']]
             except: entity.mpaa = wavve_data['targetage']
