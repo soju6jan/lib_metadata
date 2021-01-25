@@ -340,14 +340,14 @@ class SiteTvingMovie(SiteTving):
                 entity.art.append(EntityThumb(aspect=aspect, value=cls.tving_base_image + item['url'], site=cls.site_name, score=50))
             try: entity.ratings.append(EntityRatings(float(tving_data['movie']['rating']), name=self.site_name))
             except: pass
-           
-            entity.extra_info['tving_stream'] = {}
-            entity.extra_info['tving_stream']['drm'] = (tving_data['movie']['drm_yn'] == 'Y')
-            if entity.extra_info['tving_stream']['drm'] == False:
-                entity.extra_info['tving_stream']['plex'] = '{}/metadata/api/movie/stream?apikey={}&mode=redirect&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
-            url_for_kodi = '{}/metadata/api/movie/stream?apikey={}&mode=json&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
-            entity.extra_info['tving_stream']['kodi'] = 'plugin://metadata.sjva.movie/?action=play&url=%s' % py_urllib.quote(url_for_kodi)
-
+            
+            if tving_data['movie']['billing_package_tag'] == '':
+                entity.extra_info['tving_stream'] = {}
+                entity.extra_info['tving_stream']['drm'] = (tving_data['movie']['drm_yn'] == 'Y')
+                if entity.extra_info['tving_stream']['drm'] == False:
+                    entity.extra_info['tving_stream']['plex'] = '{}/metadata/api/movie/stream?apikey={}&mode=redirect&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
+                url_for_kodi = '{}/metadata/api/movie/stream?apikey={}&mode=json&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
+                entity.extra_info['tving_stream']['kodi'] = 'plugin://metadata.sjva.movie/?action=play&url=%s' % py_urllib.quote(url_for_kodi)
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
