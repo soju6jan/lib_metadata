@@ -85,7 +85,7 @@ class SiteJavbus(object):
 
             entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
-            entity.mpaa = u'청소년관람불가'
+            entity.mpaa = u'청소년 관람불가'
             entity.thumb = []
             tag = tree.xpath('/html/body/div[5]/div[1]/div[1]/a/img')[0]
             

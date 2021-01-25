@@ -43,9 +43,7 @@ class SiteNaverMovie(SiteNaver):
     def search(cls, keyword, year=1900):
         try:
             ret = {}
-            logger.debug(keyword)
-            logger.debug(year)
-            logger.debug(type(year))
+            logger.debug('NAVER search : [%s] [%s]', keyword, year)
              
             data = cls.search_api(keyword)
             #logger.debug(json.dumps(data, indent=4))
@@ -71,7 +69,6 @@ class SiteNaverMovie(SiteNaver):
                 entity.extra_info['userRating'] = item['userRating']
                
                 if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
-                    logger.debug('11')
                     if year != 1900:
                         if abs(entity.year-year) < 2:
                             entity.score = 100
@@ -156,7 +153,7 @@ class SiteNaverMovie(SiteNaver):
     def info_video(cls, code, entity):
         try:
             url = 'https://movie.naver.com/movie/bi/mi/media.nhn?code=%s' % code[2:]
-            logger.debug(url)
+            #logger.debug(url)
             root = html.fromstring(requests.get(url).text)
 
             tags = root.xpath('//div[@class="video"]')
@@ -271,7 +268,7 @@ class SiteNaverMovie(SiteNaver):
             #https://movie.naver.com/movie/bi/mi/detail.nhn?code=182205
 
             url = 'https://movie.naver.com/movie/bi/mi/detail.nhn?code=%s' % code[2:]
-            logger.debug(url)
+            #logger.debug(url)
             root = html.fromstring(requests.get(url).text)
 
             tags = root.xpath('//ul[@class="lst_people"]/li')
@@ -369,8 +366,7 @@ class SiteNaverMovie(SiteNaver):
                 tmp_tag = tags[0].xpath('.//*[@id="pointNetizenPersentWide"]//em')
                 if tmp_tag:
                     tmp = ''.join([x.text for x in tmp_tag])
-                    logger.debug(tmp)
-                    try: entity.ratings.append(EntityRatings(float(tmp), name='naver'))
+                    try: entity.ratings.append(EntityRatings(float(tmp), name=self.site_name))
                     except: pass
 
             tags = root.xpath('//p[@class="info_spec"]')
@@ -427,91 +423,13 @@ class SiteNaverMovie(SiteNaver):
             url = 'https://movie.naver.com/movie/bi/mi/mediaView.nhn?code=%s&mid=%s' % (tmps[0][2:], tmps[1])
             root = html.fromstring(requests.get(url).text)
             tmp = root.xpath('//iframe[@class="_videoPlayer"]')[0].attrib['src']
-
-            #logger.debug(tmp)
-
             match = re.search(r'&videoId=(.*?)&videoInKey=(.*?)&', tmp)
-            #logger.debug(match.group(0))
-            #logger.debug(match.group(1))
-            #logger.debug(match.group(2))
-            
             if match:
                 url = 'https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/%s?key=%s' % (match.group(1), match.group(2))
-
-                #logger.debug(url)
                 data = requests.get(url).json()
-                #logger.debug(data)
                 ret = data['videos']['list'][0]['source']
                 return ret
-            #https://movie.naver.com/movie/bi/mi/videoPlayer.nhn?code=178544&type=movie&videoId=90A76F8E51A5983F599D4F3D181E67D1BF1E&videoInKey=V1215256d6ef321c91abd57707f7ce007402b199379c36ed70f7cf563abf4d47a7af557707f7ce007402b&coverImage=/multimedia/MOVIECLIP/TRAILER/43106_cover_20190723100158.jpg&mid=43106&autoPlay=true&playerSize=665x480
-
-
-            #https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/90A76F8E51A5983F599D4F3D181E67D1BF1E?key=V124678127e443a0598d257707f7ce007402b199379c36ed70f7cf563abf4d47a7af557707f7ce007402b
-
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
-
-
-
-
-
-"""
-
-# 검색어 인코딩 모르겠음            
-#url = 'https://movie.naver.com/movie/search/result.nhn?section=movie&query=%s' % (py_urllib.quote(str(keyword)))
-
-# 검색어 입력시 쿼리
-#url = 'https://auto-movie.naver.com/ac?q_enc=UTF-8&st=1&r_lt=1&n_ext=1&t_koreng=1&r_format=json&r_enc=UTF-8&r_unicode=0&r_escape=1&q=%s' % (py_urllib.quote(str(keyword)))
-
-
-
-    https://movie.naver.com/movie/bi/mi/photoListJson.nhn?movieCode=163834
-
-    /movie/bi/mi/photoListJson.nhn?movieCode=163834
-
-    https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/51B0F09D48A30832A07852CAE57980AD4B0E?key=V128838cfd0a24b85045ee02f448c29271f6049df361acf3aeebbe45e3bcba02885c7e02f448c29271f60&pid=rmcPlayer_16107273668922215&sid=2003&ver=2.0&devt=html5_pc&doct=json&ptc=https&sptc=https&cpt=vtt&ctls=%7B%22visible%22%3A%7B%22fullscreen%22%3Atrue%2C%22logo%22%3Atrue%2C%22playbackRate%22%3Afalse%2C%22scrap%22%3Afalse%2C%22playCount%22%3Atrue%2C%22commentCount%22%3Atrue%2C%22title%22%3Atrue%2C%22writer%22%3Atrue%2C%22expand%22%3Afalse%2C%22subtitles%22%3Atrue%2C%22thumbnails%22%3Atrue%2C%22quality%22%3Atrue%2C%22setting%22%3Atrue%2C%22script%22%3Afalse%2C%22logoDimmed%22%3Atrue%2C%22badge%22%3Atrue%2C%22seekingTime%22%3Atrue%2C%22muted%22%3Atrue%2C%22muteButton%22%3Afalse%2C%22viewerNotice%22%3Afalse%2C%22linkCount%22%3Afalse%2C%22createTime%22%3Afalse%2C%22thumbnail%22%3Atrue%7D%2C%22clicked%22%3A%7B%22expand%22%3Afalse%2C%22subtitles%22%3Afalse%7D%7D&pv=4.17.48&dr=3072x1728&lc=ko_KR
-
-
-https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/90A76F8E51A5983F599D4F3D181E67D1BF1E?key=V124678127e443a0598d257707f7ce007402b199379c36ed70f7cf563abf4d47a7af557707f7ce007402b
-
-    https://apis.naver.com/rmcnmv/rmcnmv/vod/play/v2.0/51B0F09D48A30832A07852CAE57980AD4B0E?key=V128838cfd0a24b85045ee02f448c29271f6049df361acf3aeebbe45e3bcba02885c7e02f448c29271f60
-
-
-    https://movie.naver.com/movie/bi/mi/videoPlayer.nhn?code=163834&type=movie&videoId=51B0F09D48A30832A07852CAE57980AD4B0E&videoInKey=V127b9107ee229f6ce232e02f448c29271f6049df361acf3aeebbe45e3bcba02885c7e02f448c29271f60
-
-
-    
-        
-        	
-			if(location.pathname == "/movie/bi/mi/mediaView.nhn"){
-                var oMediaView = new nhn.movie.end.MediaView(jindo.$('_MediaView'), {
-                    nListDisplaySize: oViewMode.is('basic') ? 4 : 8,
-                    sListApiUrl: '/movie/bi/mi/videoListJson.nhn?movieCode=163834',
-                    sVideoInfoApiUrl: '/movie/bi/mi/videoInfoJson.nhn',
-                    sVideoUrlTpl: '/movie/bi/mi/videoPlayer.nhn?code=163834&type=movie&videoId={=videoId}&videoInKey={=videoInKey}&coverImage={=coverImage}&mid={=multimediaId}&autoPlay=true&playerSize=665x480'
-                }).attach('itemshow', function (oEvent) {
-                    // NDS
-                    try {
-                        lcs_do();
-                    } catch(e){}
-                });
-                oViewMode.attach('change', function (oEvent) {
-                    if (oEvent.sStyle === 'basic') {
-                        oMediaView.option('nListDisplaySize', 4);
-                    } else {
-                        oMediaView.option('nListDisplaySize', 8);
-                    }
-                    oMediaView.update();
-                });
-			}
-
-EFY7W9W6T70TM13GKUGZ
-https://www.kmdb.or.kr/mypage/api/1034
-https://www.kmdb.or.kr/info/api/apiDetail/6
-
-기본 요청 URL : http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_xml2(또는 search_json2).jsp?collection=kmdb_new2
-예시) http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_xml2.jsp?collection=kmdb_new2&detail=N&director=%EB%B0%95%EC%B0%AC%EC%9A%B1&ServiceKey=인증키값
-
-"""

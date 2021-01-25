@@ -16,13 +16,14 @@ import  framework.tving.api as Tving
 from lib_metadata import MetadataServerUtil
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemTv, EntityShow, EntitySearchItemMovie, EntityMovie2, EntityExtra2
 from .site_util import SiteUtil
 logger = P.logger
 
 
 tv_mpaa_map = {'CPTG0100' : u'모든 연령 시청가', 'CPTG0200' : u'7세 이상 시청가', 'CPTG0300' : u'12세 이상 시청가', 'CPTG0400' : u'15세 이상 시청가', 'CPTG0500' : u'19세 이상 시청가'}
 
+movie_mpaa_map = {'CMMG0300', u'15세 관람가'}
 channel_code_map = {
     'C00551' : 'tvN',
     'C00579' : 'Mnet',
@@ -33,6 +34,7 @@ channel_code_map = {
     'C06941' : 'tooniverse',
 
 }
+product_country_map = {'CACT1001':u'한국'}
 
 
 class SiteTving(object):
@@ -50,6 +52,9 @@ class SiteTving(object):
             return channel_code_map[channel_code]
         return channel_code
 
+    @classmethod
+    def search_api(cls, keyword):
+        return Tving.search(keyword)
 
 class SiteTvingTv(SiteTving):
     module_char = 'K'
@@ -163,22 +168,23 @@ class SiteTvingTv(SiteTving):
     def search(cls, keyword, **kwargs):
         try:
             ret = {}
-            search_list = Tving.search_tv(keyword)
+            search_list = cls.search_api(keyword)
             if search_list:
                 show_list = []
                 for idx, item in enumerate(search_list):
-                    entity = EntitySearchItemTv(cls.site_name)
-                    entity.code = (kwargs['module_char'] if 'module_char' in kwargs else cls.module_char) + cls.site_char + item['mast_cd']
-                    entity.title = item['mast_nm']
-                    entity.image_url = cls.tving_base_image + item['web_url']
-                    entity.studio = item['ch_nm']
-                    entity.genre = item['cate_nm']
-                    if SiteUtil.compare_show_title(entity.title, keyword):
-                        entity.score = 100
-                    else:
-                        entity.score = 60 - idx * 5
+                    if item['gubun'] == 'VODBC':
+                        entity = EntitySearchItemTv(cls.site_name)
+                        entity.code = (kwargs['module_char'] if 'module_char' in kwargs else cls.module_char) + cls.site_char + item['mast_cd']
+                        entity.title = item['mast_nm']
+                        entity.image_url = cls.tving_base_image + item['web_url']
+                        entity.studio = item['ch_nm']
+                        entity.genre = item['cate_nm']
+                        if SiteUtil.compare_show_title(entity.title, keyword):
+                            entity.score = 100
+                        else:
+                            entity.score = 60 - idx * 5
 
-                    show_list.append(entity.as_dict())
+                        show_list.append(entity.as_dict())
                 ret['ret'] = 'success'
                 ret['data'] = show_list
             else:
@@ -248,87 +254,107 @@ class SiteTvingMovie(SiteTving):
     module_char = 'M'
     site_char = 'V'
 
+    
 
     @classmethod 
     def search(cls, keyword, year=1900):
         try:
             ret = {}
-            search_list = Tving.search_tv(keyword)
-            if search_list:
-                show_list = []
-                for idx, item in enumerate(search_list):
-                    entity = EntitySearchItemTv(cls.site_name)
-                    entity.code = (kwargs['module_char'] if 'module_char' in kwargs else cls.module_char) + cls.site_char + item['mast_cd']
+            search_list = cls.search_api(keyword)
+            #logger.debug(json.dumps(search_list, indent=4))
+            result_list = []
+             
+            for idx, item in enumerate(search_list):
+                if item['gubun'] == 'VODMV':
+                    entity = EntitySearchItemMovie(cls.site_name)
+                    entity.code = cls.module_char + cls.site_char + item['mast_cd']
                     entity.title = item['mast_nm']
                     entity.image_url = cls.tving_base_image + item['web_url']
-                    entity.studio = item['ch_nm']
-                    entity.genre = item['cate_nm']
-                    if SiteUtil.compare_show_title(entity.title, keyword):
-                        entity.score = 100
+                    entity.desc = u'%s' % (item['cate_cd'])
+                    if SiteUtil.compare(keyword, entity.title):
+                        entity.score = 94
                     else:
-                        entity.score = 60 - idx * 5
-
-                    show_list.append(entity.as_dict())
-                ret['ret'] = 'success'
-                ret['data'] = show_list
-            else:
+                        entity.score = 80 - (idx*5)
+                    result_list.append(entity.as_dict())
+            result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
+            if result_list is None:
                 ret['ret'] = 'empty'
+            else:
+                ret['ret'] = 'success'
+                ret['data'] = result_list
+
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
         return ret
+
+
 
     @classmethod 
     def info(cls, code):
         try:
             ret = {}
-            tving_program = Tving.get_program_programid(code[2:])['body']
-            #ogger.debug(tving_program)
             
-            show = EntityShow(cls.site_name, code)
-            show.title = tving_program['name']['ko']
-            show.originaltitle = show.title
-            show.sorttitle = show.title 
-            show.studio = cls.change_channel_code(tving_program['channel_code'])
-            show.plot = tving_program['synopsis']['ko']
-            show.premiered = cls.change_to_premiered(tving_program['broad_dt'])
-            try: show.year = int(show.premiered.split('-')[0])
-            except: show.year = 1900
-            if tving_program['broad_state'] == 'CPBS0200':
-                show.status = 1
-            elif tving_program['broad_state'] == 'CPBS0300':
-                show.status = 2
+            entity = EntityMovie2(cls.site_name, code)
+            entity.code_list.append(['tving_id', code[2:]])
+            #wavve_data = cls.info_api(code)
+
+            tving_data_all = Tving.get_movie_json2(code[2:])
+            tving_data = tving_data_all['body']['content']['info']
+
+            
+            entity.title = tving_data['movie']['name']['ko']
+            entity.extra_info['title_en'] = tving_data['movie']['name']['en']
+            for item in tving_data['movie']['actor']:
+                actor = EntityActor('', site=cls.site_name)
+                actor.name = item
+                entity.actor.append(actor)
+            entity.genre.append(tving_data['movie']['category1_name']['ko'])
+            entity.director = tving_data['movie']['director']
+            try: entity.runtime = int(int(tving_data['duration']) / 60)
+            except: pass
+            try: entity.mpaa = movie_mpaa_map[tving_data['movie']['grade_code']]
+            except: entity.mpaa = tving_data['movie']['grade_code']
+            try: 
+                entity.country.append(product_country_map[tving_data['movie']['product_country']])
+            except: entity.country.append(tving_data['movie']['product_country'])
+            if len(entity.country)>0 and entity.country[0] == u'한국':
+                entity.originaltitle = entity.title
             else:
-                logger.debug('!!!!!!!!!!!!!!!!broad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_state')
+                entity.originaltitle = entity.extra_info['title_en']
+            entity.year = tving_data['movie']['product_year']
+            entity.plot = tving_data['movie']['story']['ko']
+            try: entity.premiered = '%s-%s-%s' % (tving_data['movie']['release_date'][0:4],tving_data['movie']['release_date'][4:6], tving_data['movie']['release_date'][6:8])
+            except: pass
 
-            #if tving_program['broad_end_dt'] != '':
-            #    show.status = 2
-            show.genre = [tving_program['category1_name']['ko']]
-            #show.episode = home_data['episode']
-            
-            
-            for item in tving_program['actor']:
-                actor = EntityActor(item)
-                actor.name = item
-                show.actor.append(actor)
-            
-            for item in tving_program['director']:
-                actor = EntityActor(item)
-                actor.name = item
-                show.director.append(actor)
+            for item in tving_data['movie']['image']:
+                aspect = 'landscape'
+                if item['code'] in ['CAIM0400']: # land
+                    pass
+                elif item['code'] in ['CAIM2100']: #poster
+                    aspect = 'poster'
+                elif item['code'] in ['CAIM1800', 'CAIM1900']: #banner
+                    aspect = 'banner'
+                entity.art.append(EntityThumb(aspect=aspect, value=cls.tving_base_image + item['url'], site=cls.site_name, score=50))
+            try: entity.ratings.append(EntityRatings(float(tving_data['movie']['rating']), name=self.site_name))
+            except: pass
+           
+            entity.extra_info['tving_stream'] = {}
+            entity.extra_info['tving_stream']['drm'] = (tving_data['movie']['drm_yn'] == 'Y')
+            if entity.extra_info['tving_stream']['drm'] == False:
+                entity.extra_info['tving_stream']['plex'] = '{}/metadata/api/movie/stream?apikey={}&mode=redirect&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
+            url_for_kodi = '{}/metadata/api/movie/stream?apikey={}&mode=json&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
+            entity.extra_info['tving_stream']['kodi'] = 'plugin://metadata.sjva.movie/?action=play&url=%s' % py_urllib.quote(url_for_kodi)
 
-            show = show.as_dict()
-            cls._apply_tv_by_program(show, tving_program)
+
             ret['ret'] = 'success'
-            ret['data'] = show
-
+            ret['data'] = entity.as_dict()
+            return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
         return ret
-
-        

@@ -571,8 +571,8 @@ class EntityMovie2(object):
             'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
             'credits' : self.credits,
             'director' : self.director,
+            'producers' : self.producers,
             'studio' : self.studio,
-
             'art' : [x.as_dict() for x in self.art] if self.art is not None else None,
             
             #'fanart' : self.fanart,

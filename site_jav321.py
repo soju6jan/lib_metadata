@@ -60,7 +60,7 @@ class SiteJav321(object):
             
             entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
-            entity.mpaa = u'청소년관람불가'
+            entity.mpaa = u'청소년 관람불가'
             
             nodes = tree.xpath('/html/body/div[2]/div[1]/div[1]/div[2]/div[1]/div[2]/b')
             for node in nodes:
@@ -77,9 +77,8 @@ class SiteJav321(object):
                             else:
                                 break
                     if len(entity.actor) == 0:
-                        logger.debug(value.split(' ')[0].strip('/')[0].strip())
-                        logger.debug(value)
-                        entity.actor = [EntityActor(value.split(' ')[0].split('/')[0].strip())]
+                        try: entity.actor = [EntityActor(value.split(' ')[0].split('/')[0].strip())]
+                        except: pass
                 elif key == u'标签':
                     entity.genre = []
                     a_tags = node.xpath('.//following-sibling::a')

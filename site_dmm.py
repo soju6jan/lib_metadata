@@ -151,7 +151,7 @@ class SiteDmm(object):
             
             entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
-            entity.mpaa = u'청소년관람불가'
+            entity.mpaa = u'청소년 관람불가'
             entity.thumb = []
             basetag = '//*[@id="mu"]/div/table//tr/td[1]'
             nodes = tree.xpath('{basetag}/div[1]/div[2]'.format(basetag=basetag))

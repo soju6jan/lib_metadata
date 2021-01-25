@@ -33,7 +33,6 @@ movie_mpaa_map = {'0' : u'전체 관람가', '12': u'12세 관람가', '15': u'1
 class SiteWavve(object):
     site_name = 'wavve'
 
-
     @classmethod 
     def change_daum_channelname(cls, channelname):
         if channelname in channelname_map:
@@ -248,6 +247,7 @@ class SiteWavveMovie(SiteWavve):
                 else:
                     entity.score = 80 - (idx*5)
                 result_list.append(entity.as_dict())
+            result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
             if result_list is None:
                 ret['ret'] = 'empty'
             else:
@@ -266,6 +266,7 @@ class SiteWavveMovie(SiteWavve):
         try:
             ret = {}
             entity = EntityMovie2(cls.site_name, code)
+            entity.code_list.append(['wavve_id', code[2:]])
             wavve_data = cls.info_api(code)
 
             entity.title = wavve_data['title']
@@ -294,11 +295,7 @@ class SiteWavveMovie(SiteWavve):
             for item in wavve_data['directors']['list']:
                 entity.director.append(item['text'])
             
-            poster = EntityThumb()
-            poster.aspect = 'poster'
-            poster.value = 'https://' + wavve_data['image']
-            poster.score = 80
-            entity.art.append(poster)
+            entity.art.append(EntityThumb(aspect='poster', value='https://' + wavve_data['image'], site=cls.site_name, score=50))
 
             try: entity.ratings.append(EntityRatings(float(wavve_data['rating']), name=self.site_name))
             except: pass
@@ -312,11 +309,12 @@ class SiteWavveMovie(SiteWavve):
             if permission['action'] == 'stream':
                 entity.extra_info['wavve_stream'] = {}
                 entity.extra_info['wavve_stream']['drm'] = (wavve_data['drms'] != '')
-                if entity.extra_info['wavve_stream']['drm']:
-                    entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming2('movie', code[2:], 'FHD', return_url=True)
-                else:
-                    entity.extra_info['wavve_stream']['request_streaming_url'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+                if entity.extra_info['wavve_stream']['drm'] == False:
+                    entity.extra_info['wavve_stream']['plex'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+                url_for_kodi = '{}/metadata/api/movie/stream?apikey={}&mode=json&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
+                entity.extra_info['wavve_stream']['kodi'] = 'plugin://metadata.sjva.movie/?action=play&url=%s' % py_urllib.quote(url_for_kodi)
                 #entity.extra_info['wavve_stream']['price'] = wavve_data['price']
+
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
             return ret
