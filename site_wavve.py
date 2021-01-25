@@ -298,7 +298,7 @@ class SiteWavveMovie(SiteWavve):
             
             entity.art.append(EntityThumb(aspect='poster', value='https://' + wavve_data['image'], site=cls.site_name, score=50))
 
-            try: entity.ratings.append(EntityRatings(float(wavve_data['rating']), name=self.site_name))
+            try: entity.ratings.append(EntityRatings(float(wavve_data['rating']), name=cls.site_name))
             except: pass
             entity.premiered = wavve_data['releasedate']
             entity.plot = wavve_data['synopsis']

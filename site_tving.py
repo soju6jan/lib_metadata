@@ -338,7 +338,7 @@ class SiteTvingMovie(SiteTving):
                 elif item['code'] in ['CAIM1800', 'CAIM1900']: #banner
                     aspect = 'banner'
                 entity.art.append(EntityThumb(aspect=aspect, value=cls.tving_base_image + item['url'], site=cls.site_name, score=50))
-            try: entity.ratings.append(EntityRatings(float(tving_data['movie']['rating']), name=self.site_name))
+            try: entity.ratings.append(EntityRatings(float(tving_data['movie']['rating']), name=cls.site_name))
             except: pass
             
             if tving_data['movie']['billing_package_tag'] == '':

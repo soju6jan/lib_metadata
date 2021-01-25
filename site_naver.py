@@ -366,7 +366,7 @@ class SiteNaverMovie(SiteNaver):
                 tmp_tag = tags[0].xpath('.//*[@id="pointNetizenPersentWide"]//em')
                 if tmp_tag:
                     tmp = ''.join([x.text for x in tmp_tag])
-                    try: entity.ratings.append(EntityRatings(float(tmp), name=self.site_name))
+                    try: entity.ratings.append(EntityRatings(float(tmp), name=cls.site_name))
                     except: pass
 
             tags = root.xpath('//p[@class="info_spec"]')
