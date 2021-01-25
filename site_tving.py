@@ -23,7 +23,7 @@ logger = P.logger
 
 tv_mpaa_map = {'CPTG0100' : u'모든 연령 시청가', 'CPTG0200' : u'7세 이상 시청가', 'CPTG0300' : u'12세 이상 시청가', 'CPTG0400' : u'15세 이상 시청가', 'CPTG0500' : u'19세 이상 시청가'}
 
-movie_mpaa_map = {'CMMG0100', u'전체 관람가', 'CMMG0200', u'12세 관람가', 'CMMG0300', u'15세 관람가', 'CMMG0400', u'청소년 관람불가'}
+movie_mpaa_map = {'CMMG0100': u'전체 관람가', 'CMMG0200': u'12세 관람가', 'CMMG0300': u'15세 관람가', 'CMMG0400':u'청소년 관람불가'}
 channel_code_map = {
     'C00551' : 'tvN',
     'C00579' : 'Mnet',
@@ -32,9 +32,8 @@ channel_code_map = {
     'C01582' : 'JTBC',
     'C07381' : 'OCN',
     'C06941' : 'tooniverse',
-
 }
-product_country_map = {'CACT1001':u'한국'}
+product_country_map = {'CACT1001':u'한국', 'CACT4017':u'룩셈부르크'}
 
 
 class SiteTving(object):
