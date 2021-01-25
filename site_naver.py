@@ -350,6 +350,8 @@ class SiteNaverMovie(SiteNaver):
                     entity.extra_info['title_3'] = tmps[0]
                     entity.extra_info['title_en'] = tmps[1]
                     entity.year = int(tmps[2])
+                elif len(tmps) == 1:
+                    entity.year = int(tmps[0])
                 else:
                     logger.debug('TTTTTOOOOOODDDDOOO')
 
