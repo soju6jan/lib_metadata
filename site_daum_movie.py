@@ -234,16 +234,14 @@ class SiteDaumMovie(SiteDaum):
                 new_item.extra_info['title_en'] = tmp.split(',')[0].strip()
             
             idx = 0
-            if SiteUtil.compare(keyword, new_item.title):
+            if SiteUtil.compare(keyword, new_item.title) or ('title_en' in new_item.extra_info and SiteUtil.compare(keyword, new_item.extra_info['title_en'])):
                 if year != 1900:
-                    if year == new_item.year:
+                    if abs(new_item.year-year) <= 1:
                         new_item.score = 100
-                    elif abs(new_item.year-year) == 1:
-                        new_item.score = 95 - idx
                     else:
-                        new_item.score = 80 - idx
+                        new_item.score = 80
                 else:
-                    new_item.score = 95 - idx
+                    new_item.score = 95
             else:
                 new_item.score = 80 - (idx*5)
 

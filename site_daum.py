@@ -252,7 +252,7 @@ class SiteDaumTv(SiteDaum):
         try:
             ret = {}
             show = EntityShow(cls.site_name, code)
-
+            entity.code_list.append(['daum_id', code[2:]])
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
             url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
