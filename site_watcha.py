@@ -225,7 +225,11 @@ class SiteWatchaMovie(SiteWatcha):
                     review.text += ' / 평점 : %s' % (item['user_content_action']['rating']/2.0)
                     review.rating = item['user_content_action']['rating']
                 review.link = ''
-                review.text += ']   ' + item['text'].replace('\n', '\r\n')
+                tmp = item['text'].replace('\n', '\r\n')
+                logger.debug(tmp)
+                tmp = re.sub(r'[^ %s-=+,#/\?:^$.@*\"~&%%!\\|\(\)\[\]\<\>`\'A-Za-z]' % u'ㄱ-ㅣ가-힣', '', tmp)
+                logger.debug(tmp)
+                review.text += ']   ' + tmp
                 entity.review.append(review)
         except Exception as exception: 
             logger.error('Exception:%s', exception)

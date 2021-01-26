@@ -312,6 +312,8 @@ class SiteDaumMovie(SiteDaum):
                 url = 'https://movie.daum.net/moviedb/videolist.json?id=%s&page=%s' % (code[2:], i)
                 data = requests.get(url).json()
                 for item in data['vclipList']:
+                    if item['adultFlag'] == 'T':
+                        continue
                     extra = EntityExtra2()
                     extra.content_type = 'Trailer' if item['vclipCategory'] == '9' else 'Featurette'
                     extra.mode = 'kakao'
