@@ -197,7 +197,7 @@ class SiteDaum(object):
 
             ret = []
             for item in data['clipLinkList']:
-                ret.append(EntityExtra('Featurette', item['clip']['title'], 'kakao', 'https://tv.kakao.com/v/%s' % item['id'], premiered=item['createTime'].split(' ')[0], thumb=item['clip']['thumbnailUrl']).as_dict())
+                ret.append(EntityExtra('Featurette', item['clip']['title'], 'kakao', item['id'], premiered=item['createTime'].split(' ')[0], thumb=item['clip']['thumbnailUrl']).as_dict())
             return ret
         except Exception as exception:
             logger.debug('Exception : %s', exception)
@@ -252,7 +252,6 @@ class SiteDaumTv(SiteDaum):
         try:
             ret = {}
             show = EntityShow(cls.site_name, code)
-            entity.code_list.append(['daum_id', code[2:]])
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
             url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
@@ -443,7 +442,7 @@ class SiteDaumTv(SiteDaum):
                     if len(a_tags) == 2:
                         thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
                         #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
-                        video_url = a_tags[1].attrib['href']
+                        video_url = a_tags[1].attrib['href'].split('/')[-1]
                         title = a_tags[1].text_content()
                         #logger.debug(video_url)
                         date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())

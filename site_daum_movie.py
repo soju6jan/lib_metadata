@@ -257,10 +257,30 @@ class SiteDaumMovie(SiteDaum):
 
 
 
+    @classmethod 
+    def info_api(cls, code):
+        try:
+            ret = {'ret':'success', 'data':{}}
+            url = "https://movie.daum.net/data/movie/movie_info/detail.json?movieId=%s" % code[2:]
+            ret['data']['basic'] = requests.get(url).json()['data']
 
+            url = "https://movie.daum.net/data/movie/movie_info/cast_crew.json?movieId=%s" % code[2:]
+            ret['data']['cast'] = requests.get(url).json()['data']
 
+            url = "https://movie.daum.net/data/movie/photo/movie/list.json?pageNo=1&pageSize=100&id=%s" % code[2:]
+            ret['data']['photo'] = requests.get(url).json()['data']
 
+            url = 'https://movie.daum.net/moviedb/videolist.json?id=%s&page=%s' % (code[2:], '1')
+            ret['data']['video'] = requests.get(url).json()
+            return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
 
+   
 
     @classmethod 
     def info(cls, code):
@@ -272,30 +292,6 @@ class SiteDaumMovie(SiteDaum):
             cls.info_cast(code, entity)
             cls.info_photo(code, entity)
             cls.info_video(code, entity)
-
-
-
-            """
-            url = 'https://movie.daum.net/moviedb/main?movieId=%s' % metadata_id
-            data = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-
-            tags = root.xpath('//span[@class="txt_name"]')
-            tmp = tags[0].text_content().split('(')
-            metadata.title = urllib.unquote(tmp[0])
-
-            
-            data = JSON.ObjectFromURL(url=DAUM_MOVIE_CAST % metadata_id)
-            data = JSON.ObjectFromURL(url=DAUM_MOVIE_PHOTO % metadata_id)
-            DAUM_MOVIE_SRCH   = "http://movie.daum.net/data/movie/search/v2/%s.json?size=20&start=1&searchText=%s"
-
-            DAUM_MOVIE_DETAIL = "http://movie.daum.net/data/movie/movie_info/detail.json?movieId=%s"
-
-
-            DAUM_MOVIE_CAST   = "http://movie.daum.net/data/movie/movie_info/cast_crew.json?pageNo=1&pageSize=100&movieId=%s"
-            DAUM_MOVIE_PHOTO  = "http://movie.daum.net/data/movie/photo/movie/list.json?pageNo=1&pageSize=100&id=%s"
-            """
-
-
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
             return ret

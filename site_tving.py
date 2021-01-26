@@ -33,7 +33,14 @@ channel_code_map = {
     'C07381' : 'OCN',
     'C06941' : 'tooniverse',
 }
-product_country_map = {'CACT1001':u'한국', 'CACT4017':u'룩셈부르크'}
+product_country_map = {'CACT1001':u'한국', 'CACT4017':u'룩셈부르크',
+    'CACT4004':u'독일',
+    'CACT4010':u'영국',
+    'CACT4005':u'러시아',
+    'CACT2002':u'미국',
+    'CACT1008':u'일본',
+    'CACT1012':u'홍콩',
+}
 
 
 class SiteTving(object):
