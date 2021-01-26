@@ -277,8 +277,6 @@ class SiteWavveMovie(SiteWavve):
                 
             except: pass
 
-            
-
             entity.country.append(wavve_data['country'])
             if wavve_data['country'] == u'한국':
                 entity.originaltitle = entity.title
