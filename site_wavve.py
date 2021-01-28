@@ -314,6 +314,7 @@ class SiteWavveMovie(SiteWavve):
                 entity.extra_info['wavve_stream']['drm'] = (wavve_data['drms'] != '')
                 if entity.extra_info['wavve_stream']['drm'] == False:
                     entity.extra_info['wavve_stream']['plex'] = Wavve.streaming('movie', code[2:], 'FHD', return_url=True)
+                    entity.extra_info['wavve_stream']['plex2'] = '{}/metadata/api/movie/stream?apikey={}&mode=redirect&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
                 url_for_kodi = '{}/metadata/api/movie/stream?apikey={}&mode=json&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
                 entity.extra_info['wavve_stream']['kodi'] = 'plugin://metadata.sjva.movie/?action=play&url=%s' % py_urllib.quote(url_for_kodi)
                 #entity.extra_info['wavve_stream']['price'] = wavve_data['price']
