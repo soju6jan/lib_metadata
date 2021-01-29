@@ -16,3 +16,4 @@ from .site_tving import SiteTvingTv, SiteTvingMovie
 from .site_wavve import SiteWavveTv, SiteWavveMovie
 from .site_naver import SiteNaverMovie
 from .site_watcha import SiteWatchaMovie
+from .site_tvdb import SiteTvdbTv
