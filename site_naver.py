@@ -332,11 +332,15 @@ class SiteNaverMovie(SiteNaver):
     def info_basic(cls, code, entity):
         try:
             url = 'https://movie.naver.com/movie/bi/mi/basic.nhn?code=%s' % code[2:]
-            #logger.debug(url)
+            logger.debug(url)
             entity.code_list.append(['naver_id', code[2:]])
-            root = html.fromstring(requests.get(url).text)
 
-            tags = root.xpath('//div[@class="mv_info"]')
+            text = requests.get(url, headers=cls.default_headers).text
+            root = html.fromstring(text)
+
+            #tags = root.xpath('//div[@class="mv_info"]')
+            #logger.debug('111111111111111')
+            #logger.debug(text.find('mv_info'))
             #logger.debug(html.tostring(tags[0]))
             if tags:
                 entity.title = tags[0].xpath('.//h3/a')[0].text_content()

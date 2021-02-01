@@ -77,7 +77,7 @@ class SiteTvdbTv(SiteTvdb):
             data = cls.search_api(keyword)
             result_list = []
             if data is not None:
-                for idx, item in enumerate(data):
+                for idx, item in enumerate(data[:10]):
                     entity = EntitySearchItemFtv(cls.site_name)
                     entity.code = cls.module_char + cls.site_char + str(item['id'])
                     entity.studio = item['network']
@@ -87,9 +87,9 @@ class SiteTvdbTv(SiteTvdb):
                     try: entity.year = int(entity.premiered.split('-')[0])
                     except: pass
                     entity.title = item['seriesName']
+                    entity.title = re.sub(r'\(\d{4}\)$', '', entity.title).strip()
                     try: entity.desc = item['overview']
                     except: pass
-                    
                     
                     if (SiteUtil.is_hangul(keyword) and SiteUtil.is_hangul(entity.title) and SiteUtil.compare(keyword, entity.title)) or (SiteUtil.is_hangul(keyword) == False and SiteUtil.is_hangul(entity.title) == False and SiteUtil.compare(keyword, entity.title)):
                         if year is not None:
@@ -140,7 +140,9 @@ class SiteTvdbTv(SiteTvdb):
             try:
                 tvdb = tvdb_api.Tvdb(apikey=APIKEY, select_first=True, banners=True, actors=True, language='en') 
                 series = tvdb[code[2:]]
-            except:
+            except Exception as exception: 
+                logger.error('Exception:%s', exception)
+                logger.error(traceback.format_exc())
                 tvdb = tvdb_api.Tvdb(apikey=APIKEY, select_first=True, banners=True, language='en') 
                 series = tvdb[code[2:]]
             entity = EntityFtv(cls.site_name, code)
@@ -171,10 +173,12 @@ class SiteTvdbTv(SiteTvdb):
             try: entity.ratings.append(EntityRatings(float(series['siteRating']), name=cls.site_name))
             except: pass
             #logger.debug(series['_actors'])
-            if '_actors' in series:
+            try:
                 for item in series['_actors']:
                     #logger.debug(item)
                     entity.actor.append(EntityActor2(name=item['name'], role=item['role'], image=item['image']))
+            except:
+                logger.debug('actor...not load')
             if 'fanart' in series['_banners']:        
                 for item in series['_banners']['fanart']['raw'][:10]:
                     entity.art.append(EntityThumb(aspect='landscape', value='http://thetvdb.com/banners/' + item['fileName'], site=cls.site_name, score=70))
