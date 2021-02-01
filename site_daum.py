@@ -91,7 +91,11 @@ class SiteDaum(object):
             #logger.debug('get_show_info_on_home 1: %s', entity['status'])
             #시리즈
             entity.series = []
-            entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year, 'status':entity.status})
+            
+            try:
+                tmp = entity.broadcast_term.split('.')
+                entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year, 'status':entity.status, 'date':'%s.%s' % (tmp[0], tmp[1])})
+            except: pass
             tags = root.xpath('//*[@id="tv_series"]/div/ul/li')
 
             if tags:
@@ -111,22 +115,36 @@ class SiteDaum(object):
                     logger.debug('Not More!')
                     logger.debug(traceback.format_exc())
 
+                find_1900 = False
                 for tag in tags:
                     dic = {}
                     dic['title'] = tag.xpath('a')[0].text
+                    logger.debug(dic['title'])
                     dic['code'] = cls.module_char + cls.site_char + re.compile(r'irk\=(?P<id>\d+)').search(tag.xpath('a')[0].attrib['href']).group('id')
                     if tag.xpath('span'):
                         # 년도 없을 수 있음
                         dic['date'] = tag.xpath('span')[0].text
                         if dic['date'] is None:
-                            dic['date'] = '1900-01-01'
                             dic['date'] = '1900'
+                            find_1900 = True
                         else:
                             dic['year'] = re.compile(r'(?P<year>\d{4})').search(dic['date']).group('year')
                     else:
                         dic['year'] = None
                     entity.series.append(dic)
-                entity.series = sorted(entity.series, key=lambda k: int(k['code'][2:])) 
+                # 뒷 시즌이 code가 더 적은 경우 있음. csi 라스베가스
+                if find_1900:
+                    entity.series = sorted(entity.series, key=lambda k: int(k['code'][2:]))
+                else:
+                    for item in entity.series:
+                        tmp = item['date'].split('.')
+                        if len(tmp) == 2:
+                            item['sort_value'] = int('%s%s' % (tmp[0],tmp[1].zfill(2)))
+                        elif len(tmp) == 1:
+                            item['sort_value'] = int('%s00' % tmp[0])
+                    entity.series = sorted(entity.series, key=lambda k: k['sort_value'])
+
+                
             logger.debug('SERIES : %s', len(entity.series))
             #동명
             entity.equal_name = []
@@ -258,19 +276,19 @@ class SiteDaumTv(SiteDaum):
 
             home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
 
-            logger.debug(home_url)
+            #logger.debug(home_url)
             home_root = SiteUtil.get_tree(home_url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             home_data = cls.get_show_info_on_home(home_root)
 
-            logger.debug('home_datahome_datahome_datahome_datahome_datahome_datahome_datahome_datahome_data')
-            logger.debug(home_data)
+            #logger.debug('home_datahome_datahome_datahome_datahome_datahome_datahome_datahome_datahome_data')
+            #logger.debug(home_data)
 
             tags = root.xpath('//*[@id="tv_program"]/div[1]/div[2]/strong')
             if len(tags) == 1:
                 show.title = tags[0].text_content().strip()
                 show.originaltitle = show.title
                 show.sorttitle = show.title #unicodedata.normalize('NFKD', show.originaltitle)
-                logger.debug(show.sorttitle)
+                #logger.debug(show.sorttitle)
             """
             tags = root.xpath('//*[@id="tv_program"]/div[1]/div[3]/span')
             # 이 정보가 없다면 종영
@@ -302,19 +320,19 @@ class SiteDaumTv(SiteDaum):
             show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
 
 
-            """
-            tags = root.xpath('//*[@id="tv_program"]/div[4]/div/ul/li')
-            for tag in tags:
-                a_tags = tag.xpath('.//a')
-                if len(a_tags) == 2:
-                    thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
-                    #video_url = cls.get_kakao_play_url(a_tags[1].attrib['href'])
-                    video_url = a_tags[1].attrib['href']
-                    title = a_tags[1].text_content()
-                    #logger.debug(video_url)
-                    date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
-                    show.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
-            """
+            if True: 
+                tags = root.xpath('//ul[@class="col_size3 list_video"]/li')
+                for idx, tag in enumerate(tags):
+                    if idx > 9:
+                        break
+                    a_tags = tag.xpath('.//a')
+                    if len(a_tags) == 2:
+                        thumb = cls.process_image_url(a_tags[0].xpath('.//img')[0].attrib['src'])
+                        video_url = a_tags[1].attrib['href'].split('/')[-1]
+                        title = a_tags[1].text_content()
+                        date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
+                        show.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
+
 
             for i in range(1,3):
                 items = root.xpath('//*[@id="tv_casting"]/div[%s]/ul//li' % i)
@@ -392,7 +410,7 @@ class SiteDaumTv(SiteDaum):
 
 
     @classmethod
-    def episode_info(cls, episode_code, include_kakao=False):
+    def episode_info(cls, episode_code, include_kakao=False, is_ktv=True):
         try:
             ret = {}
             episode_code = episode_code[2:]
@@ -425,7 +443,13 @@ class SiteDaumTv(SiteDaum):
                 if len(tmp) == 1:
                     title = tmp[0].text_content().strip()
                     if title !='None': 
-                        entity.title = '%s %s' % (entity.title, title)
+                        if is_ktv:
+                            entity.title = '%s %s' % (entity.title, title)
+                        else:
+                            entity.title = title
+                else:
+                    if is_ktv == False:
+                        entity.title = ''
             summary2 = '\r\n'.join(txt.strip() for txt in root.xpath('//p[@class="episode_desc"]/text()'))
             entity.plot = '%s\r\n%s' % (entity.title, summary2)
             
@@ -460,3 +484,22 @@ class SiteDaumTv(SiteDaum):
 
 
 
+    @classmethod
+    def get_actor_eng_name(cls, name):
+        try:
+            ret = {}
+            url = 'https://search.daum.net/search?w=tot&q=%s' % (name)
+            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+
+            for xpath in ['//*[@id="prfColl"]/div/div/div/div[2]/div[2]/div[1]/span[2]', '//*[@id="prfColl"]/div/div/div/div[2]/div/div/span[2]']:
+                tags = root.xpath(xpath)
+                if tags:
+                    tmp = tags[0].text_content()
+                    tmps = tmp.split(',')
+                    if len(tmps) == 1:
+                        return [tmps[0].strip()]
+                    else:
+                        return [x.strip() for x in tmps]
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())

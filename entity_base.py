@@ -586,13 +586,13 @@ class EntityMovie2(object):
         }
 
 class EntityReview(object):
-    def __init__(self, site):
+    def __init__(self, site, author='', source='', link='', text='', rating=0):
         self.site = site
-        self.author = ''
-        self.source = ''
-        self.link = ''
-        self.text = ''
-        self.rating = 0
+        self.author = author
+        self.source = source
+        self.link = link
+        self.text = text
+        self.rating = rating
 
     def as_dict(self):
         return {
@@ -604,4 +604,216 @@ class EntityReview(object):
             'rating' : self.rating,
         }
 
+
+
+
+
+
+class EntitySearchItemFtv(object):
+    # FU => tvdb
+    # W => 왓챠
+    # D => 
+    # FU
+    def __init__(self, site):
+        self.site = site
+        self.code = ''
+        self.title = ''
+        self.image_url = ''
+        self.studio = ''
+        self.premiered = '1900-01-01'
+        self.score = 0
+        self.status = '' # Continuing, Ended
+        self.extra_info = {}
+        self.desc = ''
         
+        #self.title_ko = ''
+        self.seasons = []
+        self.title_en = ''
+        self.title_original = ''
+        self.country = []
+        self.genre = []
+        self.year = ''        
+        
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,
+            #'title_ko' : self.title_ko,  
+            'title_en' : self.title_en,  
+            'title_original' : self.title_original,  
+            'country' : self.country,  
+            'image_url' : self.image_url,
+            'studio' : self.studio,
+            'genre' : self.genre,
+            'extra_info' : self.extra_info,
+            'premiered' : self.premiered,  
+            'seasons' : self.seasons,  
+            'year' : self.year,   
+            'desc' : self.desc,                   
+            'score' : self.score,
+            'status' : self.status,
+        }
+
+from collections import OrderedDict
+
+class EntityFtv(object):
+    def __init__(self, site, code):
+        self.site = site
+        self.code = code  # uniqueid
+
+        self.title = ''
+        self.originaltitle = ''
+        self.mpaa = ''
+        self.plot = ''
+        self.premiered = ''
+        self.year = ''
+        self.studio = ''
+        self.art = []
+        self.genre = []
+        self.status = '' #Ended Continuing
+        self.season_count = 0
+        self.seasons = OrderedDict()
+        self.extra_info = {}
+        self.actor = []
+        self.writer = [] 
+        self.director = [] 
+        self.extras = []
+        self.ratings = []
+        
+
+
+        
+        self.sorttitle = ''
+        
+        self.userrating = ''
+        self.season = 1 # 시즌카운트
+        self.episode = 0 # 에피소드 카운트
+        self.tagline = ''
+        self.tag = [] #colletion
+        self.trailer = ''
+        self.namedseason = []
+        # kodi spec에 없음.
+        self.country = [] #없음
+        
+
+        
+
+    def as_dict(self):
+        tmp = dict(self.seasons)
+        for key in tmp.keys():
+            tmp[key] = tmp[key].as_dict()
+        return {
+            'site' : self.site,
+            'code' : self.code,
+            'title' : self.title,
+            'originaltitle' : self.originaltitle,
+            'mpaa' : self.mpaa,
+            'plot' : self.plot,
+            'premiered' : self.premiered,
+            'year' : self.year,
+            'studio' : self.studio,
+            'art' : [x.as_dict() for x in self.art] if self.art is not None else None,
+            'genre' : self.genre,
+            'status' : self.status,
+            'seasons' : self.seasons,
+            'season_count' : self.season_count,
+            'seasons' : tmp,
+            'extra_info' : self.extra_info,
+            'actor' : [x.as_dict() for x in self.actor] if self.actor is not None else None,
+            'writer' : self.writer,
+            'director' : self.director,
+            'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
+            'ratings' : [x.as_dict() for x in self.ratings] if self.ratings is not None else None,
+        }
+        """
+            
+            'sorttitle' : self.sorttitle,
+            
+            'userrating' : self.userrating,
+            'season' : self.season,
+            'episode' : self.episode,
+            'tagline' : self.tagline,
+            'tag' : self.tag,
+            
+            'trailer' : self.trailer,
+            
+            'country' : self.country,
+            'credits' : [x.as_dict() for x in self.credits] if self.credits is not None else None,
+            'director' :  [x.as_dict() for x in self.director] if self.director is not None else None,
+            
+            
+        }
+        """
+
+
+class EntityActor2(object):
+    def __init__(self, site='', name='', name_en='', name_ko='', role='', image=''):
+        self.site = site
+        self.name = name
+        self.name_en = name_en
+        self.name_ko = name_ko
+        self.role = role
+        self.image = image
+
+    def as_dict(self):
+        return {
+            'site' : self.site,
+            'name' : self.name,
+            'name_en' : self.name_en,
+            'name_ko' : self.name_ko,
+            'role' : self.role,
+            'image' : self.image,
+        }
+
+class EntitySeason(object):
+    def __init__(self, parent_code, season_no):
+        self.parent_code = parent_code
+        self.season_no = season_no
+        self.art = []
+        self.episodes = OrderedDict()
+        self.title = ''
+
+    def as_dict(self):
+        tmp = dict(self.episodes)
+        for key in tmp.keys():
+            tmp[key] = tmp[key].as_dict()
+        return {
+            'parent_code' : self.parent_code,
+            'season_no' : self.season_no,
+            'art' : [x.as_dict() for x in self.art] if self.art is not None else None,
+            'episodes' : tmp,
+            'title' : self.title
+        }
+
+class EntityEpisode2(object):
+    def __init__(self, season_no, episode_no):
+        self.season_no = season_no
+        self.episode_no = episode_no
+        self.art = []
+        self.title = ''
+        self.plot = ''
+        self.guests = []
+        self.premiered = ''
+        self.rating = ''
+        self.is_title_kor = False
+        self.is_plot_kor = False
+
+
+
+    def as_dict(self):
+        return {
+            'season_no' : self.season_no,
+            'episode_no' : self.episode_no,
+            'art' : self.art,
+            'title' : self.title,
+            'plot' : self.plot,
+            'guests' : self.guests,
+            'premiered' : self.premiered,
+            'rating' : self.rating,
+            'directors' : self.directors,
+            'writers' : self.writers,
+            'is_title_kor' : self.is_title_kor,
+            'is_plot_kor' : self.is_plot_kor,
+        }

@@ -83,11 +83,11 @@ class SiteNaverMovie(SiteNaver):
                 result_list.append(entity.as_dict())
 
             result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
-            if result_list is None:
-                ret['ret'] = 'empty'
-            else:
+            if result_list:
                 ret['ret'] = 'success'
                 ret['data'] = result_list
+            else:
+                ret['ret'] = 'empty'
             
         except Exception as exception: 
             logger.error('Exception:%s', exception)

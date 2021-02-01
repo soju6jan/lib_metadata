@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-import os, time, json, re
+import os, time, json, re, sys
 
 import requests
 import traceback
@@ -275,3 +275,17 @@ class SiteUtil(object):
         if 'art' in data:
             data['art'] = sorted(data['art'], key=lambda k: k['score'], reverse=True)
         return data
+
+    @classmethod
+    def is_hangul(cls, text):
+        pyVer3 =  sys.version_info >= (3, 0)
+        if pyVer3 : # for Ver 3 or later
+            encText = text
+        else: # for Ver 2.x
+            if type(text) is not unicode:
+                encText = text.decode('utf-8')
+            else:
+                encText = text
+
+        hanCount = len(re.findall(u'[\u3130-\u318F\uAC00-\uD7A3]+', encText))
+        return hanCount > 0

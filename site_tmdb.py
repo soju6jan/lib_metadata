@@ -137,7 +137,7 @@ class SiteTmdbTv(SiteTmdb):
             for tmdb_item in tmdb_actor['cast']:
                 if tmdb_item['profile_path'] is None:
                     continue
-                kor_name = SystemLogicTrans.trans(tmdb_item['name'], source='en', target='ko').replace(' ', '')
+                kor_name = SystemLogicTrans.trans(tmdb_item['name'], source='en', target='ko')
                 #kor_name = MetadataServerUtil.trans_en_to_ko(tmdb_item['name'])
                 flag_find = False
 
@@ -148,7 +148,8 @@ class SiteTmdbTv(SiteTmdb):
                         actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
                         break
                 if flag_find == False:
-                    kor_role_name = MetadataServerUtil.trans_en_to_ko(tmdb_item['character'])
+                    kor_role_name = SystemLogicTrans.trans(tmdb_item['character'], source='en', target='ko')
+                    #kor_role_name = MetadataServerUtil.trans_en_to_ko(tmdb_item['character'])
                     for actor in show['actor']:
                         if actor['role'] == kor_role_name:
                             flag_find = True
@@ -274,11 +275,12 @@ class SiteTmdbMovie(SiteTmdb):
             
             result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)
 
-            if result_list is None:
-                ret['ret'] = 'empty'
-            else:
+            if result_list:
                 ret['ret'] = 'success'
                 ret['data'] = result_list
+            else:
+                ret['ret'] = 'empty'
+               
             return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
