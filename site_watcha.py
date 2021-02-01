@@ -90,7 +90,7 @@ class SiteWatchaMovie(SiteWatcha):
                 entity = EntitySearchItemMovie(cls.site_name)
                 entity.code = cls.module_char + cls.site_char + item['code']
                 entity.title = item['title']
-                if 'poster' in item and item['poster'] is not None:
+                if 'poster' in item and item['poster'] is not None and 'original' in item['poster']:
                     entity.image_url = item['poster']['original']
                 entity.year = item['year']
                 #except: entity.year = 1900
@@ -411,6 +411,9 @@ class SiteWatchaTv(SiteWatcha):
     @classmethod 
     def info_basic(cls, code, entity, api_return=False):
         try:
+            logger.debug('code :%s', code)
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
             url = 'https://api-mars.watcha.com/api/contents/%s.json' % code
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
             if api_return:

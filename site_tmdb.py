@@ -242,6 +242,7 @@ class SiteTmdbMovie(SiteTmdb):
     def search(cls, keyword, year=1900):
         try:
             ret = {}
+            logger.debug('tmdb search : %s', keyword)
             tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko')
             logger.debug('TMDB MOVIE SEARCh [%s] [%s]', keyword, year)
             result_list = []
