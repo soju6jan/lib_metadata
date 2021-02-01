@@ -338,7 +338,7 @@ class SiteNaverMovie(SiteNaver):
             text = requests.get(url, headers=cls.default_headers).text
             root = html.fromstring(text)
 
-            #tags = root.xpath('//div[@class="mv_info"]')
+            tags = root.xpath('//div[@class="mv_info"]')
             #logger.debug('111111111111111')
             #logger.debug(text.find('mv_info'))
             #logger.debug(html.tostring(tags[0]))
