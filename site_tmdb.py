@@ -225,6 +225,7 @@ class SiteTmdbMovie(SiteTmdb):
         try:
             if code.startswith(cls.module_char + cls.site_char):
                 code = code[2:]
+
             tmdb = tmdbsimple.Movies(code)
             ret = {}
             ret['info'] = tmdb.info(language='ko')
@@ -296,14 +297,12 @@ class SiteTmdbMovie(SiteTmdb):
         try:
             ret = {}
             entity = EntityMovie2(cls.site_name, code)
-            
             tmdb = tmdbsimple.Movies(code[2:])
             entity.code_list.append(['tmdb_id', code[2:]])
             cls.info_basic(tmdb, entity)
             cls.info_actor(tmdb, entity)
             cls.info_videos(tmdb, entity)
-
-            
+           
             entity = entity.as_dict()
             cls._process_image(tmdb, entity['art'])
 
@@ -360,14 +359,15 @@ class SiteTmdbMovie(SiteTmdb):
                 trans = True
             #trans = True
             if primary:
-                for tmdb_item in info['cast']:
+                logger.debug(len(info['cast']))
+                for tmdb_item in info['cast'][:20]:
                     actor = EntityActor('', site=cls.site_name)
                     actor.name = SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name']
                     actor.role = SystemLogicTrans.trans(tmdb_item['character'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['character']
                     if tmdb_item['profile_path'] is not None:
                         actor.thumb = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
                     entity.actor.append(actor)
-                for tmdb_item in info['crew']:
+                for tmdb_item in info['crew'][:20]:
                     if tmdb_item['job'] == 'Director':
                         entity.director.append(SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name'])
                     if tmdb_item['job'] == 'Executive Producer':

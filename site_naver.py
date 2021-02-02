@@ -358,7 +358,9 @@ class SiteNaverMovie(SiteNaver):
                     entity.year = int(tmps[0])
                 else:
                     logger.debug('TTTTTOOOOOODDDDOOO')
-
+            else:
+                # 19금
+                return False
             tags = root.xpath('//div[@class="main_score"]')
             if tags:
                 """
@@ -419,7 +421,7 @@ class SiteNaverMovie(SiteNaver):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
-
+        return True
 
     @classmethod 
     def get_video_url(cls, param):

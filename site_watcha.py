@@ -446,7 +446,7 @@ class SiteWatchaTv(SiteWatcha):
                 review.link = ''
                 tmp = item['text'].replace('\n', '\r\n')
                 #logger.debug(tmp)
-                tmp = re.sub(r'[^ %s-=+,#/\?:^$.@*\"~&%%!\\|\(\)\[\]\<\>`\'A-Za-z]' % u'ㄱ-ㅣ가-힣', ' ', tmp)
+                tmp = re.sub(r'[^ %s-=+,#/\?:^$.@*\"~&%%!\\|\(\)\[\]\<\>`\'A-Za-z0-9]' % u'ㄱ-ㅣ가-힣', ' ', tmp)
                 #logger.debug(tmp)
                 review.text += ']   ' + tmp
                 entity.review.append(review)
