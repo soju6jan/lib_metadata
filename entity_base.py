@@ -625,11 +625,12 @@ class EntitySearchItemFtv(object):
         self.status = '' # Continuing, Ended
         self.extra_info = {}
         self.desc = ''
-        
+        self.title_original = ''
+
+
         #self.title_ko = ''
         self.seasons = []
         self.title_en = ''
-        self.title_original = ''
         self.country = []
         self.genre = []
         self.year = ''        

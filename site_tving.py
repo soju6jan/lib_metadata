@@ -33,13 +33,36 @@ channel_code_map = {
     'C07381' : 'OCN',
     'C06941' : 'tooniverse',
 }
-product_country_map = {'CACT1001':u'한국', 'CACT4017':u'룩셈부르크',
+product_country_map = {
+    'CACT1001':u'한국', 
+    'CACT4017':u'프랑스',
     'CACT4004':u'독일',
     'CACT4010':u'영국',
     'CACT4005':u'러시아',
     'CACT2002':u'미국',
     'CACT1008':u'일본',
     'CACT1012':u'홍콩',
+    'CACT1009':u'중국',
+    'CACT1011':u'대만',
+    'CACT4025':u'아일랜드',
+    'CACT1010':u'태국',
+    'CACT9999':u'슬로바키아',
+    'CACT4012':u'이탈리아',
+    'CACT5001':u'호주',
+    'CACT4009':u'스페인',
+    'CACT2003':u'캐나다',
+    'CACT4023':u'노르웨이',
+    'CACT4018':u'핀란드',
+    'CACT4006':u'벨기에',
+    'CACT4013':u'체코',
+    'CACT4003':u'덴마크',
+    'CACT1006':u'이란',
+    'CACT3002':u'브라질',
+    'CACT1007':u'인도',
+    'CACT4002':u'네덜란드',
+    'CACT4015':u'포르투칼',
+    'CACT5002':u'뉴질랜드',
+    'CACT4016':u'폴란드'
 }
 
 

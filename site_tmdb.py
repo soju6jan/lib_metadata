@@ -15,7 +15,7 @@ from system.logic_site import SystemLogicSite
 from lib_metadata import MetadataServerUtil
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings,  EntitySearchItemMovie, EntityMovie2, EntityExtra2
+from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings,  EntitySearchItemMovie, EntityMovie2, EntityExtra2, EntitySearchItemFtv, EntityFtv, EntityActor2, EntitySeason, EntityEpisode2
 from .site_util import SiteUtil
 logger = P.logger
 
@@ -34,6 +34,7 @@ BACKDROP_SCORE_RATIO = .3
 
 class SiteTmdb(object):
     site_name = 'tmdb'
+    site_char = 'T'
 
     @classmethod
     def get_poster_path(cls, path):
@@ -106,11 +107,25 @@ class SiteTmdb(object):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class SiteTmdbTv(SiteTmdb):
     
     #site_base_url = 'https://search.daum.net'
     module_char = 'K'
-    site_char = 'T'
+    
 
 
     @classmethod 
@@ -206,7 +221,6 @@ class SiteTmdbMovie(SiteTmdb):
     
     #site_base_url = 'https://search.daum.net'
     module_char = 'M'
-    site_char = 'T'
 
     @classmethod
     def search_api(cls, keyword):
@@ -454,6 +468,105 @@ class SiteTmdbMovie(SiteTmdb):
                             break
                 if flag_find == False:
                     logger.debug(kor_name)
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class SiteTmdbFtv(SiteTmdb):
+    module_char = 'F'
+
+
+
+    @classmethod 
+    def search_api(cls, keyword):
+        try:
+            tmdb_search = tmdbsimple.Search().tv(query=keyword, language='ko')
+            return tmdb_search
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+        return
+
+
+    @classmethod 
+    def search(cls, keyword, year=None):
+        try:
+            logger.debug('TMDB TV [%s] [%s]', keyword, year)
+            ret = {}
+            data = cls.search_api(keyword)
+            result_list = []
+            if data is not None:
+                for idx, item in enumerate(data['results']):
+                    entity = EntitySearchItemFtv(cls.site_name)
+                    entity.code = cls.module_char + cls.site_char + str(item['id'])
+                    entity.title = item['name']
+                    entity.title = re.sub(r'\(\d{4}\)$', '', entity.title).strip()
+                    entity.title_original = item['original_name']
+                    entity.image_url = cls.get_poster_path(item['poster_path'])
+                    if 'first_air_date' not in item:
+                        continue
+                    entity.premiered = item['first_air_date']
+                    try: entity.year = int(entity.premiered.split('-')[0])
+                    except: pass
+                    try: entity.desc = item['overview']
+                    except: pass
+                    
+                    if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.title_original):
+                        if year is not None:
+                            if entity.year - year == 0:
+                                entity.score = 100
+                            else:
+                                entity.score = 80
+                        else:
+                            entity.score = 95
+                    else:
+                        entity.score = 80 - (idx*5)
+                    logger.debug(entity.score)
+                    result_list.append(entity.as_dict())
+                result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
+            if result_list:
+                ret['ret'] = 'success'
+                ret['data'] = result_list
+            else:
+                ret['ret'] = 'empty'
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+
+
+    @classmethod
+    def info_api(cls, code):
+        try:
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
+            tmdb = tmdbsimple.TV(code)
+            
+            ret = {}
+            ret['info'] = tmdb.info(language='ko')
+            ret['image'] = tmdb.images()
+            ret['credits'] = tmdb.credits()
+            ret['video'] = tmdb.videos()
+            
+            return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
