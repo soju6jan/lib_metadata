@@ -43,15 +43,21 @@ class SiteWatcha(object):
     }
 
     @classmethod
-    def search_api(cls, keyword):
+    def _search_api(cls, keyword, content_type='movies'):
         try:
             
             url = 'https://api-pedia.watcha.com/api/searches?query=%s' % keyword
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
-            if isinstance(cls, SiteWatchaMovie):
+            #if isinstance(cls, SiteWatchaMovie):
+            #    return data['result']['movies']
+            #else:
+            #    return data['result']['tv_seasons']
+            if content_type == 'movies':
                 return data['result']['movies']
-            else:
+            elif content_type == 'tv_seasons':
                 return data['result']['tv_seasons']
+                
+
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -76,6 +82,9 @@ class SiteWatchaMovie(SiteWatcha):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
+    @classmethod 
+    def search_api(cls, keyword):
+        return cls._search_api(keyword, 'movies')
 
     @classmethod 
     def search(cls, keyword, year=1900):
@@ -265,6 +274,10 @@ class SiteWatchaTv(SiteWatcha):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
+
+    @classmethod 
+    def search_api(cls, keyword):
+        return cls._search_api(keyword, 'tv_seasons')
 
     # 로마도 검색할 경우 리턴이 Rome이다. 
     @classmethod 
