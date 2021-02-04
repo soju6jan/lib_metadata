@@ -13,7 +13,7 @@ class EntityAVSearch(object):
         self.title_ko = None
         self.score = 0
         self.desc = ''
-        self.year = None
+        self.year = 1900
 
 
     def __repr__(self):

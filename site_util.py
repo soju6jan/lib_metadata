@@ -231,8 +231,6 @@ class SiteUtil(object):
             else:
                 data['info']['director'] = data['director']
         if 'credits' in data and len(data['credits']) > 0:
-            logger.debug('11111111111111111')
-            logger.debug(type(data['credits']))
             data['info']['writer'] = []
             if type(data['credits'][0]) == type({}):
                 for tmp in data['credits']:
