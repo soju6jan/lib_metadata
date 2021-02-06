@@ -16,7 +16,7 @@ from .plugin import P
 logger = P.logger
 # 패키지
 
-server_plugin_ddns = 'https://sjva-server2.soju6jan.com'
+server_plugin_ddns = 'https://meta.sjva.me'
 
 class MetadataServerUtil(object):
     @classmethod
