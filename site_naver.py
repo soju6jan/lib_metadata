@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-import requests, re, json, time
+import requests, re, json, time, sys
 import traceback, unicodedata
 from datetime import datetime
 
@@ -112,7 +112,10 @@ class SiteNaverMovie(SiteNaver):
                 requesturl.add_header("X-Naver-Client-Secret", client_secret)
                 #response = py_urllib2.urlopen(requesturl, data = data.encode("utf-8"))
                 response = py_urllib2.urlopen(requesturl)
-                data = json.load(response, encoding="utf-8")
+                if sys.version_info[0] == 2:
+                    data = json.load(response, encoding='utf8')
+                else:
+                    data = json.load(response)
                 rescode = response.getcode()
                 if rescode == 200:
                     return data
