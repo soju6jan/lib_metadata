@@ -92,7 +92,7 @@ class SiteJav321(object):
                             genre_tmp = SiteUtil.trans(tmp, do_trans=do_trans).replace(' ', '')
                             if genre_tmp not in SiteUtil.av_genre_ignore_ko:
                                 entity.genre.append(genre_tmp)
-                elif key == u'番号':
+                elif key == u'番号' or key == u'品番':
                     entity.title = entity.originaltitle = entity.sorttitle = value.upper()
                     entity.tag = [entity.title.split('-')[0]]
                 elif key == u'发行日期':
