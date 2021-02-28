@@ -170,10 +170,17 @@ class SiteWatchaMovie(SiteWatcha):
             entity.title = data['title']
             entity.year = data['year']
             for item in data['actors']:
-                actor = EntityActor('', site=cls.site_name)
-                actor.name = item['name']
-                actor.thumb = item['photo']['medium']
-                entity.actor.append(actor)
+                #logger.debug(item)
+                try:
+                    actor = EntityActor('', site=cls.site_name)
+                    actor.name = item['name']
+                    if item['photo'] is not None:
+                        actor.thumb = item['photo']['medium']
+                    entity.actor.append(actor)
+                except Exception as exception: 
+                    logger.error('Exception:%s', exception)
+                    logger.error(traceback.format_exc())
+                    logger.debug(item)
             
             for item in data['directors']:
                 entity.director.append(item['name'])

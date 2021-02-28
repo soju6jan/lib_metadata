@@ -216,9 +216,7 @@ class EntitySearchItemTvDaum(object):
         self.image_url = ''        
         self.desc = ''
         self.score = 0
-        
-
-        self.status = 1 #1:방송중, 0:방송종료, 2:방송예정
+        self.status = 1 #0:방송예정 1:방송중, 2:방송종료
         self.extra_info = ''
         self.studio = ''
         self.broadcast_info = ''
