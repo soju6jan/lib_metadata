@@ -351,9 +351,10 @@ class SiteTvingMovie(SiteTving):
             #wavve_data = cls.info_api(code)
 
             tving_data_all = Tving.get_movie_json2(code[2:])
+            #logger.debug(json.dumps(tving_data_all, indent=4))
+            #logger.debug(tving_data_all['body']['result']['message'])
             tving_data = tving_data_all['body']['content']['info']
-
-            
+   
             entity.title = tving_data['movie']['name']['ko']
             entity.extra_info['title_en'] = tving_data['movie']['name']['en']
             for item in tving_data['movie']['actor']:
