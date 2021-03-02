@@ -400,8 +400,12 @@ class SiteNaverMovie(SiteNaver):
                                 entity.originaltitle = entity.extra_info['title_3'] if 'title_3' in entity.extra_info else entity.extra_info['title_en'] 
 
                         elif href.find('open=') != -1:
-                            entity.premiered = (a_tag[0].text_content().strip() + a_tag[1].text_content().strip()).replace('.', '-')
-                            #entity.year = int(entity.premiered.split('-')[0])
+                            for a_tag_tmp in a_tag:
+                                tmp = a_tag_tmp.attrib['href'].split("open=")[1]
+                                logger.debug(tmp)
+                                if len(tmp) == 8:
+                                    #entity.premiered = (a_tag[0].text_content().strip() + a_tag[1].text_content().strip()).replace('.', '-')
+                                    entity.premiered = '%s-%s-%s' % (tmp[0:4], tmp[4:6], tmp[6:8])
                         elif href.find('grade=') != -1:
                             entity.mpaa = a_tag[0].text_content().strip()
                     else:
