@@ -326,6 +326,11 @@ class SiteDaumMovie(SiteDaum):
                     entity.extra_info['title_en'] = title_en
                     entity.originaltitle = title_en
                     entity.year = int(tmp[-1].strip())
+                elif len(tmp) == 1:
+                    entity.extra_info['title_en'] = entity.originaltitle = ''
+                    try: entity.year = int(tmp[0].strip())
+                    except: pass
+
 
             tags = root.xpath('//dl[@class="list_cont"]')
             if tags:
