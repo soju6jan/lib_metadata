@@ -134,7 +134,7 @@ class SiteWatchaMovie(SiteWatcha):
 
 
     @classmethod 
-    def info(cls, code):
+    def info(cls, code, like_count=100):
         try:
             ret = {}
             entity = EntityMovie2(cls.site_name, code)
@@ -144,7 +144,7 @@ class SiteWatchaMovie(SiteWatcha):
             entity.code_list.append(['watcha_id', code])
             cls.info_basic(code, entity)
             cls.info_review(code, entity)
-            cls.info_collection(code, entity)
+            cls.info_collection(code, entity, like_count=like_count)
             
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
@@ -235,7 +235,7 @@ class SiteWatchaMovie(SiteWatcha):
 
 
     @classmethod 
-    def info_collection(cls, code, entity, api_return=False):
+    def info_collection(cls, code, entity, api_return=False, like_count=100):
         try:
             url = 'https://api-pedia.watcha.com/api/contents/%s/decks?page=1&size=10' % code
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
@@ -245,7 +245,7 @@ class SiteWatchaMovie(SiteWatcha):
             #logger.debug(json.dumps(data, indent=4))
             for item in data['result']['result']:
                 #logger.debug(item['likes_count'])
-                if item['likes_count'] > 100:
+                if item['likes_count'] > like_count:
                     entity.tag.append(item['title'])
         except Exception as exception: 
             logger.error('Exception:%s', exception)
