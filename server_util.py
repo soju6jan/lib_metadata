@@ -16,7 +16,13 @@ from .plugin import P
 logger = P.logger
 # 패키지
 
+
 server_plugin_ddns = 'https://meta.sjva.me'
+try:
+    if SystemModelSetting.get('ddns') == server_plugin_ddns:
+        server_plugin_ddns = 'http://127.0.0.1:19999'
+except:
+    pass
 
 class MetadataServerUtil(object):
     @classmethod
