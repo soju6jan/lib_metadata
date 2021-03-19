@@ -26,11 +26,13 @@ except:
     import tmdbsimple
 tmdbsimple.API_KEY = 'f090bb54758cabf231fb605d3e3e0468'
 
-ARTWORK_ITEM_LIMIT = 15
+ARTWORK_ITEM_LIMIT = 10
 POSTER_SCORE_RATIO = .3 # How much weight to give ratings vs. vote counts when picking best posters. 0 means use only ratings.
 BACKDROP_SCORE_RATIO = .3
 #STILLS_SCORE_RATIO = .3
 #RE_IMDB_ID = Regex('^tt\d{7,10}$')
+
+
 
 class SiteTmdb(object):
     site_name = 'tmdb'
@@ -47,7 +49,7 @@ class SiteTmdb(object):
         try:
             tmdb_images_dict = tmdb.images()
 
-            if tmdb_images_dict['posters']:
+            if 'posters' in tmdb_images_dict and tmdb_images_dict['posters']:
                 max_average = max([(lambda p: p['vote_average'] or 5)(p) for p in tmdb_images_dict['posters']])
                 max_count = max([(lambda p: p['vote_count'])(p) for p in tmdb_images_dict['posters']]) or 1
 
@@ -73,7 +75,7 @@ class SiteTmdb(object):
                         thumb_url = 'https://www.themoviedb.org/t/p/' + 'w154' + poster['file_path']
                         data.append(EntityThumb(aspect='poster', value=poster_url, thumb=thumb_url, site='tmdb', score=poster['score']+100).as_dict())
 
-            if tmdb_images_dict['backdrops']:
+            if 'backdrops' in tmdb_images_dict and tmdb_images_dict['backdrops']:
                 max_average = max([(lambda p: p['vote_average'] or 5)(p) for p in tmdb_images_dict['backdrops']])
                 max_count = max([(lambda p: p['vote_count'])(p) for p in tmdb_images_dict['backdrops']]) or 1
 
@@ -385,10 +387,8 @@ class SiteTmdbMovie(SiteTmdb):
                     if tmdb_item['job'] == 'Director':
                         entity.director.append(SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name'])
                     if tmdb_item['job'] == 'Executive Producer':
-                        entity.director.append(SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name'])
-                    if tmdb_item['job'] == 'Executive Producer':
                         entity.producers.append(SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name'])
-                    if tmdb_item['job'] == 'Executive Producer':
+                    if tmdb_item['job'] == 'Producer':
                         entity.producers.append(SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name'])
                     if tmdb_item['job'] in ['Writer', 'Novel', 'Screenplay']:
                         entity.credits.append(SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name'])
@@ -403,6 +403,8 @@ class SiteTmdbMovie(SiteTmdb):
         try:
             info = tmdb.info(language='ko')
             
+
+
             if 'imdb_id' in info:
                 entity.code_list.append(['imdb_id', info['imdb_id']])
 
@@ -487,9 +489,53 @@ class SiteTmdbMovie(SiteTmdb):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class SiteTmdbFtv(SiteTmdb):
     module_char = 'F'
-
 
 
     @classmethod 
@@ -522,7 +568,7 @@ class SiteTmdbFtv(SiteTmdb):
                         continue
                     entity.premiered = item['first_air_date']
                     try: entity.year = int(entity.premiered.split('-')[0])
-                    except: pass
+                    except: entity.year = 1900
                     try: entity.desc = item['overview']
                     except: pass
                     
@@ -536,7 +582,7 @@ class SiteTmdbFtv(SiteTmdb):
                             entity.score = 95
                     else:
                         entity.score = 80 - (idx*5)
-                    logger.debug(entity.score)
+                    #logger.debug(entity.score)
                     result_list.append(entity.as_dict())
                 result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
             if result_list:
@@ -559,14 +605,310 @@ class SiteTmdbFtv(SiteTmdb):
             if code.startswith(cls.module_char + cls.site_char):
                 code = code[2:]
             tmdb = tmdbsimple.TV(code)
-            
             ret = {}
             ret['info'] = tmdb.info(language='ko')
-            ret['image'] = tmdb.images()
+            ret['alternative_titles'] = tmdb.alternative_titles(language='ko')
+            ret['content_ratings'] = tmdb.content_ratings(language='ko')
             ret['credits'] = tmdb.credits()
+            ret['image'] = tmdb.images()
             ret['video'] = tmdb.videos()
-            
+            ret['external_ids'] = tmdb.external_ids()
             return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod 
+    def info(cls, code):
+        try:
+            ret = {}
+            entity = EntityFtv(cls.site_name, code)
+            tmdb = tmdbsimple.TV(code[2:])
+            entity.code_list.append(['tmdb_id', code[2:]])
+            cls.info_basic(tmdb, entity)
+            cls.info_content_ratings(tmdb, entity)
+            cls.info_credits(tmdb, entity)
+            
+            for season in entity.seasons:
+                season_no = season.season_no
+                season = tmdbsimple.TV_Seasons(code[2:], season_no)
+                cls.info_credits(season, entity, crew=False)
+            
+            cls.info_external_ids(tmdb, entity)
+            entity = entity.as_dict()
+            cls._process_image(tmdb, entity['art'])
+            entity['actor'] = list(sorted(entity['actor'], key=lambda k: k['order']))
+            ret['ret'] = 'success'
+            ret['data'] = entity #entity.as_dict() #tmdb_dict
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+
+    @classmethod
+    def info_external_ids(cls, tmdb, entity):
+        try:
+            info = tmdb.external_ids()
+            if 'imdb_id' in info:
+                entity.code_list.append(['imdb_id', info['imdb_id']])
+            if 'tvdb_id' in info:
+                entity.code_list.append(['tvdb_id', info['tvdb_id']])
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def info_credits(cls, tmdb, entity, crew=True):
+        try:
+            info = tmdb.credits()
+           
+            for tmdb_item in info['cast']:#[:20]:
+                actor = EntityActor2(site=cls.site_name)
+                actor.tmdb_id = tmdb_item['id']
+                is_exist = False
+                for tmp in entity.actor:
+                    if tmp.tmdb_id == actor.tmdb_id:
+                        is_exist = True
+                if is_exist:
+                    continue
+
+                actor.order = tmdb_item['order']
+                actor.name_original = tmdb_item['original_name']
+                if SiteUtil.is_include_hangul(actor.name_original):
+                    actor.name = actor.name_ko = actor.name_original
+                else:
+                    people_info = tmdbsimple.People(actor.tmdb_id).info()
+                    for tmp in people_info['also_known_as']:
+                        if SiteUtil.is_include_hangul(tmp):
+                            actor.name = actor.name_ko = tmp
+                            break
+                actor.role = tmdb_item['character']
+                if 'profile_path' in tmdb_item and tmdb_item['profile_path'] is not None:
+                    actor.image = cls.get_poster_path(tmdb_item['profile_path'])
+                entity.actor.append(actor)
+            
+            if crew == False:
+                return
+
+            for tmdb_item in info['crew'][:20]:
+                if tmdb_item['job'] == 'Director':
+                    entity.director.append(tmdb_item['original_name'])
+                if tmdb_item['job'] == 'Executive Producer':
+                    entity.producer.append(tmdb_item['original_name'])
+                if tmdb_item['job'] == 'Producer':
+                    entity.producer.append(tmdb_item['original_name'])
+                if tmdb_item['job'] in ['Writer', 'Novel', 'Screenplay']:
+                    entity.writer.append(tmdb_item['original_name'])
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def info_content_ratings(cls, tmdb, entity):
+        try:
+            info = tmdb.content_ratings(language='ko')
+            order = [u'한국', u'미국', u'영국', u'일본', u'중국']
+            ret = ['', '', '', '', '']
+            for item in info['results']:
+                country = SiteUtil.country_code_translate[item['iso_3166_1']]
+                for idx, value in enumerate(order):
+                    if country == value:
+                        ret[idx] = item['rating']
+                        break
+            for tmp in ret:
+                if tmp != '':
+                    entity.mpaa = tmp
+                    return
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+    @classmethod
+    def info_basic(cls, tmdb, entity):
+        try:
+            info = tmdb.info(language='ko')
+            
+            if 'backdrop_path' in info:
+                entity.art.append(EntityThumb(aspect='landscape', value=cls.get_poster_path(info['backdrop_path']), site=cls.site_name, score=200))
+            if 'poster_path' in info:
+                entity.art.append(EntityThumb(aspect='poster', value=cls.get_poster_path(info['poster_path']), site=cls.site_name, score=200))
+
+            
+            if 'created_by' in info:
+                for tmp in info['created_by']:
+                    entity.producer.append(tmp['name'])
+            
+            if 'genres' in info:
+                for genre in info['genres']:
+                    if genre['name'] in SiteUtil.genre_map:
+                        entity.genre.append(SiteUtil.genre_map[genre['name']])
+                    else:
+                        entity.genre.append(genre['name'])
+            
+            if 'first_air_date'  in info:
+                entity.premiered = info['first_air_date']
+                try: entity.year = int(info['first_air_date'].split('-')[0])
+                except: entity.year = 1900
+            entity.title = info['name'] if 'name' in info else ''
+            entity.originaltitle = info['original_name'] if 'original_name' in info else ''
+            entity.plot = info['overview'] if 'overview' in info else ''
+
+            #if 'production_companies' in info:
+            #    for tmp in info['production_companies']:
+            #        entity.studio.append(tmp['name'])
+            if 'networks' in info and len(info['networks']) > 0:
+                entity.studio = info['networks'][0]['name']
+
+            if 'production_countries' in info:
+                for tmp in info['production_countries']:
+                    entity.country.append(SiteUtil.country_code_translate[tmp['iso_3166_1']])
+
+            if 'seasons' in info:
+                for tmp in info['seasons']:
+                    if tmp['episode_count'] > 0 and tmp['season_number'] > 0:
+                        entity.seasons.append(EntitySeason(
+                            cls.site_name,
+                            parent_code=cls.module_char + cls.site_char +str(info['id']), 
+                            #season_code=cls.module_char + cls.site_char +str(tmp['id']), 
+                            season_code=cls.module_char + cls.site_char + '_' + str(tmp['season_number']), 
+                            season_no=tmp['season_number'], 
+                            season_name=tmp['name'], 
+                            plot=tmp['overview'], 
+                            poster=cls.get_poster_path(tmp['poster_path']), 
+                            epi_count=tmp['episode_count'], 
+                            premiered=tmp['air_date']))
+            
+            entity.status = info['status'] if 'status' in info else ''
+
+            try: entity.ratings.append(EntityRatings(info['vote_average'], name=cls.site_name, votes=info['vote_count']))
+            except: pass
+            entity.episode_run_time = info['episode_run_time'][0] if 'episode_run_time' in info and len(info['episode_run_time'])>0 else 0
+            return
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def info_season_api(cls, code):
+        try:
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
+            tmp = code.split('_')
+            if len(tmp) != 2:
+                return
+            tmdb_id = tmp[0]
+            season_number = tmp[1]
+            tmdb = tmdbsimple.TV_Seasons(tmdb_id, season_number)
+            ret = {}
+            ret['info'] = tmdb.info(language='ko')
+            ret['credits'] = tmdb.credits()
+            ret['image'] = tmdb.images()
+            ret['video'] = tmdb.videos()
+            ret['external_ids'] = tmdb.external_ids()
+            return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def info_season(cls, code):
+        try:
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
+            tmp = code.split('_')
+            if len(tmp) != 2:
+                return
+            tmdb_id = tmp[0]
+            season_number = int(tmp[1])
+            """
+            series_info = tmdbsimple.TV(tmdb_id).info(language='ko')
+            series_title = series_info['name']
+            series_season_count = 0
+            for tmp in series_info['seasons']:
+                if tmp['episode_count'] > 0 and tmp['season_number'] > 0:
+                    series_season_count += 1
+            try: series_year = int(series_info['first_air_date'].split('-')[0])
+            except: series_year = 1900
+            """
+            ret = {}
+            entity = EntitySeason(cls.site_name, parent_code=cls.module_char + cls.site_char +str(tmdb_id), season_code=cls.module_char + cls.site_char + code, season_no=season_number)
+            tmdb = tmdbsimple.TV_Seasons(tmdb_id, season_number)
+            
+            cls.info_season_basic(tmdb, entity)
+            #cls.info_content_ratings(tmdb, entity)
+            #cls.info_credits(tmdb, entity)
+            #cls.info_external_ids(tmdb, entity)
+            entity = entity.as_dict()
+            cls._process_image(tmdb, entity['art'])
+            ret['ret'] = 'success'
+            ret['data'] = entity #entity.as_dict() #tmdb_dict
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        return ret
+
+
+    @classmethod
+    def info_season_basic(cls, tmdb, entity):
+        try:
+            info = tmdb.info(language='ko')
+            info_us = tmdb.info()
+            entity.season_name = info['name'] if 'name' in info else ''
+            if entity.season_name.find(u'시즌') == -1:
+                entity.season_name = u'시즌 %s. %s' % (entity.season_no, entity.season_name)
+
+            entity.plot = info['overview'] if 'overview' in info else ''
+            entity.premiered = info['first_air_date'] if 'first_air_date'  in info else ''
+            
+            if 'episodes' in info:
+                for idx, tmp in enumerate(info['episodes']):
+                    episode = EntityEpisode2(
+                        cls.site_name, entity.season_no, tmp['episode_number'],
+                        title=tmp['name'],
+                        plot=tmp['overview'],
+                        premiered=tmp['air_date'],
+                        art=[cls.get_poster_path(tmp['still_path'])] if 'still_path' in tmp and tmp['still_path'] is not None else [])
+                    if episode.title.find(u'에피소드') == -1 and SiteUtil.is_include_hangul(episode.title):
+                        episode.is_title_kor = True
+                    else:
+                        episode.is_title_kor = False
+                        episode.title = info_us['episodes'][idx]['name']
+                   
+                    if episode.plot != '' and SiteUtil.is_include_hangul(episode.plot):
+                        episode.is_plot_kor = True
+                    else:
+                        episode.is_plot_kor = False
+                        episode.plot = info_us['episodes'][idx]['overview']
+
+                    if 'guest_stars' in tmp:
+                        for t in tmp['guest_stars']:
+                            if 'original_name' in t:
+                                episode.guest.append(t['original_name'])
+                    if 'crew' in tmp:
+                         for t in tmp['crew']:
+                            if t['job'] == 'Director':
+                                episode.director.append(t['original_name'])
+                            if t['job'] == 'Executive Producer':
+                                episode.producer.append(t['original_name'])
+                            if t['job'] == 'Producer':
+                                episode.producer.append(t['original_name'])
+                            if t['job'] in ['Writer', 'Novel', 'Screenplay']:
+                                episode.writer.append(t['original_name'])
+
+
+                    #entity.episodes.append(episode)
+                    entity.episodes[tmp['episode_number']] = episode.as_dict()
+            return
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())

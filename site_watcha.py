@@ -93,7 +93,7 @@ class SiteWatchaMovie(SiteWatcha):
             #url = 'https://api-mars.watcha.com/api/search.json?query=%s&page=1&per=30&exclude=limited' % keyword
             
             data = cls.search_api(keyword)
-         
+            
             result_list = []
             for idx, item in enumerate(data):
                 entity = EntitySearchItemMovie(cls.site_name)
@@ -294,11 +294,13 @@ class SiteWatchaTv(SiteWatcha):
             #url = 'https://api-mars.watcha.com/api/search.json?query=%s&page=1&per=30&exclude=limited' % keyword
             
             data = cls.search_api(keyword)
+            logger.debug(json.dumps(data, indent=4))
             #return {'ret':'success', 'data':data}
             result_list = []
             for idx, item in enumerate(data):
                 #if item['content_type'] != 'tv_seasons':
                 #    continue
+                #logger.debug(item['title'])
                 entity = EntitySearchItemFtv(cls.site_name)
                 entity.code = cls.module_char + cls.site_char + item['code']
                 entity.studio = item['channel_name']
@@ -367,7 +369,7 @@ class SiteWatchaTv(SiteWatcha):
                             item['score'] = 80
                     else:
                         item['score'] = 80 - (idx*5)
-                logger.debug('[%s] [%s] [%s] [%s]', item['title'], item['year'], year, item['score'])
+                logger.debug('[%s] [%s] [%s] [%s] [%s]', item['title'], item['title_original'], item['year'], year, item['score'])
             result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)
 
             for item in result_list:

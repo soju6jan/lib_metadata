@@ -56,11 +56,11 @@ class SiteDaum(object):
             entity.image_url = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
 
 
-            logger.debug('get_show_info_on_home status: %s', entity.status)
+            #logger.debug('get_show_info_on_home status: %s', entity.status)
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div')
             entity.extra_info = SiteUtil.change_html(tags[0].text_content().strip())
 
-            logger.debug('get_show_info_on_home extra_info: %s', entity.extra_info)
+            #logger.debug('get_show_info_on_home extra_info: %s', entity.extra_info)
 
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/a')
             if len(tags) == 1:
@@ -69,11 +69,11 @@ class SiteDaum(object):
                 tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/span[1]')
                 if len(tags) == 1:
                     entity.studio = tags[0].text
-            logger.debug('get_show_info_on_home studio: %s', entity.studio)
+            #logger.debug('get_show_info_on_home studio: %s', entity.studio)
 
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/span')
             extra_infos = [tag.text_content() for tag in tags]
-            logger.debug(extra_infos)
+            #logger.debug(extra_infos)
             #tmps = extra_infos[1].strip().split(' ')
             entity.genre = extra_infos[0]
             #logger.debug(tmps)
@@ -94,8 +94,14 @@ class SiteDaum(object):
             
             try:
                 tmp = entity.broadcast_term.split('.')
-                entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year, 'status':entity.status, 'date':'%s.%s' % (tmp[0], tmp[1])})
-            except: pass
+                if len(tmp) == 2:
+                    entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year, 'status':entity.status, 'date':'%s.%s' % (tmp[0], tmp[1])})
+                else:
+                    entity.series.append({'title':entity.title, 'code' : entity.code, 'year' : entity.year, 'status':entity.status, 'date':'%s' % (entity.year)})
+            except Exception as exception:
+                logger.debug('Not More!')
+                logger.debug(traceback.format_exc())
+
             tags = root.xpath('//*[@id="tv_series"]/div/ul/li')
 
             if tags:
@@ -106,7 +112,7 @@ class SiteDaum(object):
                         url = more[0].attrib['href']
                         if not url.startswith('http'):
                             url = 'https://search.daum.net/search%s' % url
-                        logger.debug('MORE URL : %s', url)
+                        #logger.debug('MORE URL : %s', url)
                         if more[0].xpath('span')[0].text == u'시리즈 더보기':
                             #more_root = HTML.ElementFromURL(url)
                             more_root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
@@ -119,7 +125,7 @@ class SiteDaum(object):
                 for tag in tags:
                     dic = {}
                     dic['title'] = tag.xpath('a')[0].text
-                    logger.debug(dic['title'])
+                    #logger.debug(dic['title'])
                     dic['code'] = cls.module_char + cls.site_char + re.compile(r'irk\=(?P<id>\d+)').search(tag.xpath('a')[0].attrib['href']).group('id')
                     if tag.xpath('span'):
                         # 년도 없을 수 있음
@@ -145,7 +151,7 @@ class SiteDaum(object):
                     entity.series = sorted(entity.series, key=lambda k: k['sort_value'])
 
                 
-            logger.debug('SERIES : %s', len(entity.series))
+            #logger.debug('SERIES : %s', len(entity.series))
             #동명
             entity.equal_name = []
             tags = root.xpath(u'//div[@id="tv_program"]//dt[contains(text(),"동명 콘텐츠")]//following-sibling::dd')
@@ -165,7 +171,7 @@ class SiteDaum(object):
                             entity.equal_name.append(dic)
                         elif tag.text == u'(동명회차)':
                             continue
-            logger.debug(entity)
+            #logger.debug(entity)
             return entity.as_dict()
         except Exception as exception:
             logger.debug('Exception get_show_info_by_html : %s', exception)
@@ -314,7 +320,7 @@ class SiteDaumTv(SiteDaum):
             show.episode = home_data['episode']
 
             tmp = root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')
-            logger.debug(tmp)
+            #logger.debug(tmp)
 
 
             show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
@@ -331,17 +337,22 @@ class SiteDaumTv(SiteDaum):
                         video_url = a_tags[1].attrib['href'].split('/')[-1]
                         title = a_tags[1].text_content()
                         date = cls.change_date(tag.xpath('.//span')[0].text_content().strip())
-                        show.extras.append(EntityExtra('Featurette', title, 'kakao', video_url, premiered=date, thumb=thumb))
+                        content_type = 'Featurette'
+                        if title.find(u'예고') != -1:
+                            content_type = 'Trailer'
+                        show.extras.append(EntityExtra(content_type, title, 'kakao', video_url, premiered=date, thumb=thumb))
 
 
             for i in range(1,3):
                 items = root.xpath('//*[@id="tv_casting"]/div[%s]/ul//li' % i)
-                logger.debug('CASTING ITEM LEN : %s' % len(items))
+                #logger.debug('CASTING ITEM LEN : %s' % len(items))
                 for item in items:
                     actor = EntityActor(None)
-                    cast_img = item.xpath('div/a/img')
+                    cast_img = item.xpath('div//img')
+                    #cast_img = item.xpath('.//img')
                     if len(cast_img) == 1:
                         actor.thumb = cls.process_image_url(cast_img[0].attrib['src'])
+                        #logger.debug(actor.thumb)
                     
                     span_tag = item.xpath('span')
                     for span in span_tag:
@@ -495,11 +506,21 @@ class SiteDaumTv(SiteDaum):
                 tags = root.xpath(xpath)
                 if tags:
                     tmp = tags[0].text_content()
+                    #logger.debug(tmp)
                     tmps = tmp.split(',')
                     if len(tmps) == 1:
-                        return [tmps[0].strip()]
+                        ret = [tmps[0].strip()]
                     else:
-                        return [x.strip() for x in tmps]
+                        ret = [x.strip() for x in tmps]
+                    #일본배우땜에
+                    ret2 = []
+                    for x in ret:
+                        ret2.append(x)
+                        tmp = x.split(' ')
+                        if len(tmp) == 2:
+                            ret2.append('%s %s' % (tmp[1], tmp[0]))
+
+                    return ret2
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
