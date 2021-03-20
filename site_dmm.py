@@ -249,19 +249,23 @@ class SiteDmm(object):
                             if genre_tmp not in SiteUtil.av_genre_ignore_ko:
                                 entity.genre.append(genre_tmp)
                 elif key == u'品番：':
-                    logger.debug(value)
-                    logger.debug(value)
-                    logger.debug(value)
-                    
-
-                    value = value.replace('24id', 'xxid')
+                    #24id
+                    match = re.compile('\d{2}id', re.I).search(value)
+                    id_before = None
+                    if match:
+                        id_before = match.group(0)
+                        value = value.lower().replace(id_before, 'zzid')
                     
                     match = re.compile(r'(h_)?\d*(?P<real>[a-zA-Z]+)(?P<no>\d+)([a-zA-Z]+)?$').match(value)
                     if match:
-                        value = '%s-%s' % (match.group('real').upper().replace('XXID', '24ID'), str(int(match.group('no'))).zfill(3))
+                        label = match.group('real').upper()
+                        if id_before is not None:
+                            label = label.replace('ZZID', id_before.upper())
+
+                        value = '%s-%s' % (label, str(int(match.group('no'))).zfill(3))
                         if entity.tag is None:
                             entity.tag = []
-                        entity.tag.append(match.group('real').upper().replace('XXID', '24ID'))
+                        entity.tag.append(label)
                     entity.title = entity.originaltitle = entity.sorttitle = value
             if entity.premiered is None and tmp_premiered is not None:
                 entity.premiered = tmp_premiered
