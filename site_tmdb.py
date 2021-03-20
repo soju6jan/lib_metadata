@@ -150,7 +150,7 @@ class SiteTmdbTv(SiteTmdb):
     @classmethod
     def process_actor_image(cls, tmdb, show):
         try:
-            tmdb_actor = tmdb.credits()
+            tmdb_actor = tmdb.credits(language='en')
             for tmdb_item in tmdb_actor['cast']:
                 if tmdb_item['profile_path'] is None:
                     continue
@@ -196,7 +196,7 @@ class SiteTmdbTv(SiteTmdb):
 
             if apply_actor_image:
                 cls.process_actor_image(tmdb, show)
-            #ret['tmdb']['info'] = tmdb.credits()
+            #ret['tmdb']['info'] = tmdb.credits(language='en')
             return True
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -246,7 +246,7 @@ class SiteTmdbMovie(SiteTmdb):
             ret = {}
             ret['info'] = tmdb.info(language='ko')
             ret['image'] = tmdb.images()
-            ret['credits'] = tmdb.credits()
+            ret['credits'] = tmdb.credits(language='en')
             ret['video'] = tmdb.videos()
             
             return ret
@@ -369,7 +369,7 @@ class SiteTmdbMovie(SiteTmdb):
     @classmethod
     def info_actor(cls, tmdb, entity, primary=True, kor_trans=True):
         try:
-            info = tmdb.credits()
+            info = tmdb.credits(language='en')
             trans = False
             if kor_trans and ((len(entity.country) > 0 and entity.country[0] in ['South Korea', u'한국', u'대한민국']) or (entity.extra_info['original_language'] == 'ko')):
                 trans = True
@@ -447,7 +447,7 @@ class SiteTmdbMovie(SiteTmdb):
     @classmethod
     def process_actor_image(cls, tmdb, show):
         try:
-            tmdb_actor = tmdb.credits()
+            tmdb_actor = tmdb.credits(language='en')
             for tmdb_item in tmdb_actor['cast']:
                 if tmdb_item['profile_path'] is None:
                     continue
@@ -609,7 +609,7 @@ class SiteTmdbFtv(SiteTmdb):
             ret['info'] = tmdb.info(language='ko')
             ret['alternative_titles'] = tmdb.alternative_titles(language='ko')
             ret['content_ratings'] = tmdb.content_ratings(language='ko')
-            ret['credits'] = tmdb.credits()
+            ret['credits'] = tmdb.credits(language='ko')
             ret['image'] = tmdb.images()
             ret['video'] = tmdb.videos()
             ret['external_ids'] = tmdb.external_ids()
@@ -665,7 +665,7 @@ class SiteTmdbFtv(SiteTmdb):
     @classmethod
     def info_credits(cls, tmdb, entity, crew=True):
         try:
-            info = tmdb.credits()
+            info = tmdb.credits(language='en')
            
             for tmdb_item in info['cast']:#[:20]:
                 actor = EntityActor2(site=cls.site_name)
@@ -808,7 +808,7 @@ class SiteTmdbFtv(SiteTmdb):
             tmdb = tmdbsimple.TV_Seasons(tmdb_id, season_number)
             ret = {}
             ret['info'] = tmdb.info(language='ko')
-            ret['credits'] = tmdb.credits()
+            ret['credits'] = tmdb.credits(language='en')
             ret['image'] = tmdb.images()
             ret['video'] = tmdb.videos()
             ret['external_ids'] = tmdb.external_ids()
