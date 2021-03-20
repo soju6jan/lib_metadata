@@ -757,7 +757,13 @@ class SiteTmdbFtv(SiteTmdb):
                 except: entity.year = 1900
             entity.title = info['name'] if 'name' in info else ''
             entity.originaltitle = info['original_name'] if 'original_name' in info else ''
-            entity.plot = info['overview'] if 'overview' in info else ''
+            if 'overview' in info and info['overview'] != '':
+                entity.plot = info['overview'] if 'overview' in info else ''
+                entity.is_plot_kor = True
+            else:
+                info_en = tmdb.info(language='en')
+                entity.plot = info_en['overview']
+                entity.is_plot_kor = False
 
             #if 'production_companies' in info:
             #    for tmp in info['production_companies']:
@@ -862,7 +868,7 @@ class SiteTmdbFtv(SiteTmdb):
     def info_season_basic(cls, tmdb, entity):
         try:
             info = tmdb.info(language='ko')
-            info_us = tmdb.info()
+            info_us = tmdb.info(language='en')
             entity.season_name = info['name'] if 'name' in info else ''
             if entity.season_name.find(u'시즌') == -1:
                 entity.season_name = u'시즌 %s. %s' % (entity.season_no, entity.season_name)

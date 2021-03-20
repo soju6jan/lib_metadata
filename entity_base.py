@@ -684,6 +684,7 @@ class EntityFtv(object):
         self.director = [] 
         self.extras = []
         self.episode_run_time = 0
+        self.is_plot_kor = False
 
 
        
@@ -716,6 +717,7 @@ class EntityFtv(object):
             'director' : self.director,
             'extras' :  [x.as_dict() for x in self.extras] if len(self.extras) > 0 else [],
             'episode_run_time' : self.episode_run_time,
+            'is_plot_kor' : self.is_plot_kor,
         }
         """
        
