@@ -87,7 +87,7 @@ class SiteDmm(object):
                     if do_trans:
                         item.title_ko = SystemLogicTrans.trans(item.title, source='ja', target='ko')
                     
-                    match = re.compile(r'(h_)?\d*(?P<real>[a-zA-Z]+)(?P<no>\d+)([a-zA-Z]+)?$').search(item.code[2:])
+                    match = re.compile(r'^(h_)?\d*(?P<real>[a-zA-Z]+)(?P<no>\d+)([a-zA-Z]+)?$').search(item.code[2:])
                     if match:
                         item.ui_code = '%s%s' % (match.group('real'), match.group('no'))
                     else:
@@ -256,7 +256,7 @@ class SiteDmm(object):
                         id_before = match.group(0)
                         value = value.lower().replace(id_before, 'zzid')
                     
-                    match = re.compile(r'(h_)?\d*(?P<real>[a-zA-Z]+)(?P<no>\d+)([a-zA-Z]+)?$').match(value)
+                    match = re.compile(r'^(h_)?\d*(?P<real>[a-zA-Z]+)(?P<no>\d+)([a-zA-Z]+)?$').match(value)
                     if match:
                         label = match.group('real').upper()
                         if id_before is not None:
