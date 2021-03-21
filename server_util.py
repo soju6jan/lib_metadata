@@ -18,6 +18,7 @@ logger = P.logger
 
 
 server_plugin_ddns = 'https://meta.sjva.me'
+server_web = 'https://sjva.me'
 try:
     if SystemModelSetting.get('ddns') == server_plugin_ddns:
         server_plugin_ddns = 'http://127.0.0.1:19999'
@@ -29,13 +30,15 @@ class MetadataServerUtil(object):
     def get_metadata(cls, code):
         try:
             from framework import py_urllib
-            url = '{server_plugin_ddns}/server/normal/metadata/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
+            #url = '{server_plugin_ddns}/server/normal/metadata/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
+            url = '{server_web}/meta/get_meta.php?type=meta&code={code}'.format(server_web=server_web, code=code)
             data = requests.get(url).json()
             if data['ret'] == 'success':
                 return data['data']
         except Exception as exception: 
             logger.error('metaserver connection fail.. get_metadata')
     
+    """
     @classmethod
     def search_metadata(cls, keyword):
         try:
@@ -46,6 +49,7 @@ class MetadataServerUtil(object):
                 return data['data']
         except Exception as exception: 
             logger.error('metaserver connection fail.. search_metadata')
+    """
 
     @classmethod
     def set_metadata(cls, code, data, keyword):
@@ -80,7 +84,7 @@ class MetadataServerUtil(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
-    
+    """
     @classmethod
     def get_actor_name_en(cls, name):
         try:
@@ -92,7 +96,7 @@ class MetadataServerUtil(object):
                 return data['data']
         except Exception as exception: 
             logger.error('metaserver connection fail.. get_actor_name_en')
-
+    
 
     @classmethod
     def trans_en_to_ko(cls, name):
@@ -105,13 +109,14 @@ class MetadataServerUtil(object):
                 return data['data']
         except Exception as exception: 
             logger.error('metaserver connection fail.. get_actor_name_en')
-
+    """
     
     @classmethod
     def get_meta_extra(cls, code):
         try:
             from framework import py_urllib
-            url = '{server_plugin_ddns}/server/normal/meta_extra/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
+            #url = '{server_plugin_ddns}/server/normal/meta_extra/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
+            url = '{server_web}/meta/get_meta.php?type=extra&code={code}'.format(server_web=server_web, code=code)
             data = requests.get(url).json()
             if data['ret'] == 'success':
                 return data['data']
