@@ -32,14 +32,19 @@ class MetadataServerUtil(object):
             from framework import py_urllib
             #url = '{server_plugin_ddns}/server/normal/metadata/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
             #url = '{server_web}/meta/get_meta.php?type=meta&code={code}'.format(server_web=server_web, code=code)
+            logger.debug(code)
+
             url = '{server_web}/meta/get_meta.php?'.format(server_web=server_web)
             url += py_urllib.urlencode({'type':'meta', 'code':code})
+
+            logger.debug(url)
+            
             data = requests.get(url).json()
             if data['ret'] == 'success':
                 return data['data']
         except Exception as exception:
-            logger.debug('Exception:%s', exception)
-            logger.debug(traceback.format_exc())
+            #logger.debug('Exception:%s', exception)
+            #logger.debug(traceback.format_exc())
             logger.error('metaserver connection fail.. get_metadata')
     
     """
