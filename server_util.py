@@ -81,10 +81,12 @@ class MetadataServerUtil(object):
                     return
                 if requests.get(tmp['value']).status_code != 200:
                     return
+            """
             if data['fanart'] is not None:
                 for tmp in data['fanart']:
                     if tmp.find('.discordapp.') == -1:
                         return
+            """
             cls.set_metadata(code, data, keyword)   
         except Exception as exception: 
             logger.error('Exception:%s', exception)

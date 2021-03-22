@@ -301,7 +301,8 @@ class SiteDmm(object):
                 tag = node.xpath('.//img')
                 tmp = tag[0].attrib['src']
                 image_url = tag[0].attrib['src'].replace(entity.code[2:]+'-', entity.code[2:]+'jp-')
-                entity.fanart.append(SiteUtil.process_image_mode(image_mode, image_url, proxy_url=proxy_url))
+                #discord_url = SiteUtil.process_image_mode(image_mode, image_url, proxy_url=proxy_url)
+                entity.fanart.append(image_url)
                 
             try:
                 if tree.xpath('//div[@class="d-review__points"]/p[1]/strong'):
