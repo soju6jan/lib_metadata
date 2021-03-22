@@ -25,7 +25,7 @@ class SiteJavbus(object):
     site_char = 'B'
 
     @classmethod 
-    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0'):
+    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         try:
             ret = {'data':[]}
             keyword = keyword.strip().lower()
@@ -44,11 +44,17 @@ class SiteJavbus(object):
                     item = EntityAVSearch(cls.site_name)
                     tag = node.xpath('.//img')[0]
                     item.image_url = tag.attrib['src'].lower()
+                    if manual == True:
+                        if image_mode == '3':
+                            image_mode = '0'
+                        item.image_url = SiteUtil.process_image_mode(image_mode, item.image_url, proxy_url=proxy_url)
+                    """
                     tmp = SiteUtil.discord_proxy_get_target(item.image_url)
                     if tmp is None:
                         item.image_url = SiteUtil.process_image_mode(image_mode, item.image_url, proxy_url=proxy_url)
                     else:
                         item.image_url = tmp
+                    """
                     tag = node.xpath('.//date')
                     item.ui_code = tag[0].text_content().strip()
                     item.code = cls.module_char + cls.site_char + node.attrib['href'].split('/')[-1]

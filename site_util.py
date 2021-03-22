@@ -72,7 +72,7 @@ class SiteUtil(object):
         elif image_mode == '2':
             tmp = '{ddns}/metadata/api/discord_proxy?url=' + py_urllib.quote_plus(image_url)
             ret = Util.make_apikey(tmp)
-        elif image_mode == '3':
+        elif image_mode == '3': # 고정 디스코드 URL. 
             ret = cls.discord_proxy_image(image_url)
         elif image_mode == '4': #landscape to poster
             #logger.debug(image_url)
@@ -118,11 +118,12 @@ class SiteUtil(object):
             return SystemLogicTrans.trans(text, source=source, target=target)
         return text
 
-
+    """
     @classmethod
     def discord_proxy_get_target(cls, image_url):
         from tool_expand import ToolExpandDiscord
         return ToolExpandDiscord.discord_proxy_get_target(image_url)
+    """
     
     @classmethod
     def discord_proxy_get_target_poster(cls, image_url):

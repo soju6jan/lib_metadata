@@ -63,7 +63,7 @@ class MetadataServerUtil(object):
             from framework import py_urllib
             url = '{server_plugin_ddns}/server/normal/metadata/set'.format(server_plugin_ddns=server_plugin_ddns)
             param = {'code':code, 'data':json.dumps(data), 'user':SystemModelSetting.get('sjva_me_user_id'), 'keyword':keyword}
-            logger.debug(param)
+            #logger.debug(param)
             data = requests.post(url, data=param).json()
             if data['ret'] == 'success':
                 logger.info('%s Data save success. Thanks!!!!', code)

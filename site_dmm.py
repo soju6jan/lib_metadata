@@ -32,7 +32,7 @@ class SiteDmm(object):
     } 
 
     @classmethod 
-    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0'):
+    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         try:
             ret = {}
             keyword = keyword.strip().lower()
@@ -79,11 +79,17 @@ class SiteDmm(object):
                     tag = node.xpath('.//span[1]/img')[0]
                     item.title = item.title_ko = tag.attrib['alt']
                     item.image_url = tag.attrib['src']
-                    tmp = SiteUtil.discord_proxy_get_target(item.image_url)
-                    if tmp is None:
+
+                    
+                    # tmp = SiteUtil.discord_proxy_get_target(item.image_url)
+                    # 2021-03-22 서치에는 discord 고정 url을 사용하지 않는다. 3번
+                    # manual == False  때는 아예 이미치 처리를 할 필요가 없다.
+                    # 일치항목 찾기 때는 화면에 보여줄 필요가 있는데 3번은 하면 하지 않는다.
+                    if manual == True:
+                        if image_mode == '3':
+                            image_mode = '0'
                         item.image_url = SiteUtil.process_image_mode(image_mode, item.image_url, proxy_url=proxy_url)
-                    else:
-                        item.image_url = tmp
+
                     if do_trans:
                         item.title_ko = SystemLogicTrans.trans(item.title, source='ja', target='ko')
                     
