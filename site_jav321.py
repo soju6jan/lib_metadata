@@ -23,7 +23,7 @@ class SiteJav321(object):
     site_char = 'T'
 
     @classmethod 
-    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0'):
+    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         logger.debug('serarch : %s', keyword)
         try:
             ret = {'data':[]}
