@@ -123,12 +123,17 @@ class SiteDmm(object):
                             score += -5
                         else:
                             item.score = 20
-                    if item.ui_code.find ('0000') != -1:
-                        item.ui_code = item.ui_code.replace('0000', '-00').upper()
+                    
+                    if match:
+                        item.ui_code = '%s-%s' % (match.group('real').upper(), str(int(match.group('no'))).zfill(3))
                     else:
-                        item.ui_code = item.ui_code.replace('00', '-').upper()
-                    if item.ui_code.endswith('-'):
-                        item.ui_code = '%s00' % (item.ui_code[:-1])
+                        if item.ui_code.find ('0000') != -1:
+                            item.ui_code = item.ui_code.replace('0000', '-00').upper()
+                        else:
+                            item.ui_code = item.ui_code.replace('00', '-').upper()
+                        if item.ui_code.endswith('-'):
+                            item.ui_code = '%s00' % (item.ui_code[:-1])
+
                     logger.debug('score :%s %s ', item.score, item.ui_code)
                     ret['data'].append(item.as_dict())
                 except Exception as exception: 
