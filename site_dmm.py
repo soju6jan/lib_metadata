@@ -160,10 +160,11 @@ class SiteDmm(object):
             entity.mpaa = u'청소년 관람불가'
             entity.thumb = []
             basetag = '//*[@id="mu"]/div/table//tr/td[1]'
-            nodes = tree.xpath('{basetag}/div[1]/div[2]'.format(basetag=basetag))
+            nodes = tree.xpath('{basetag}/div[1]/div[1]'.format(basetag=basetag))
             if not nodes:
+                ret['ret'] = 'fail_tag_not_exist'
                 logger.debug('CRITICAL!!!')
-                return entity
+                return ret
             
 
             #logger.debug('crs-full :%s ', len(a_nodes))
