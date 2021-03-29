@@ -139,7 +139,8 @@ class SiteDaum(object):
                         dic['year'] = None
                     entity.series.append(dic)
                 # 뒷 시즌이 code가 더 적은 경우 있음. csi 라스베가스
-                if find_1900:
+                # 2021-03-29 전지적 짝사랑 시점
+                if find_1900 or entity.year == 0:
                     entity.series = sorted(entity.series, key=lambda k: int(k['code'][2:]))
                 else:
                     for item in entity.series:
@@ -151,7 +152,7 @@ class SiteDaum(object):
                     entity.series = sorted(entity.series, key=lambda k: k['sort_value'])
 
                 
-            #logger.debug('SERIES : %s', len(entity.series))
+            logger.debug('SERIES : %s', len(entity.series))
             #동명
             entity.equal_name = []
             tags = root.xpath(u'//div[@id="tv_program"]//dt[contains(text(),"동명 콘텐츠")]//following-sibling::dd')

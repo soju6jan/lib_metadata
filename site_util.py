@@ -548,5 +548,5 @@ class SiteUtil(object):
         'History' : u'역사',
         'Science Fiction' : u'SF',
         'War & Politics' : u'전쟁 & 정치',
-        
+        'Reality' : '리얼리티', 
     }
