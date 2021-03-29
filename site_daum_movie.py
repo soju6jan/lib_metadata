@@ -352,7 +352,7 @@ class SiteDaumMovie(SiteDaum):
                         try: entity.ratings.append(EntityRatings(float(value), name=cls.site_name))
                         except: pass
 
-            tags = root.xpath('//div[@class="thumb_img"]/span[@class="bg_img"]')
+            tags = root.xpath('//a[@class="thumb_img"]/span[@class="bg_img"]')
             if tags:
                 tmp = tags[0].attrib['style']
                 tmp = tmp.split('(')[1].split(')')[0]
