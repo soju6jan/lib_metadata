@@ -17,3 +17,8 @@ from .site_wavve import SiteWavveTv, SiteWavveMovie
 from .site_naver import SiteNaverMovie
 from .site_watcha import SiteWatchaMovie, SiteWatchaTv
 from .site_tvdb import SiteTvdbTv
+
+from .site_dmm import SiteDmm
+from .site_javbus import SiteJavbus
+from .site_jav321 import SiteJav321
+from .site_mgstage import SiteMgstageDvd, SiteMgstageAma

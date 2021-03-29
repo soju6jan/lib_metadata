@@ -215,10 +215,14 @@ class SiteUtil(object):
 
     @classmethod
     def info_to_kodi(cls, data):
+        
         data['info'] = {}
         data['info']['title'] = data['title']
         data['info']['studio'] = data['studio']
         data['info']['premiered'] = data['premiered']
+        #if data['info']['premiered'] == '':
+        #    data['info']['premiered'] = data['year'] + '-01-01'
+        data['info']['year'] = data['year']
         data['info']['genre'] = data['genre']
         data['info']['plot'] = data['plot']
         data['info']['tagline'] = data['tagline']
