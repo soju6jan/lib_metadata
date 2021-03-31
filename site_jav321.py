@@ -95,7 +95,7 @@ class SiteJav321(object):
                 elif key == u'番号' or key == u'品番':
                     entity.title = entity.originaltitle = entity.sorttitle = value.upper()
                     entity.tag = [entity.title.split('-')[0]]
-                elif key == u'发行日期':
+                elif key == u'发行日期' or key == u'配信開始日':
                     entity.premiered = value
                     entity.year = int(value[:4])
                 elif key == u'播放时长':
