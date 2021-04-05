@@ -374,14 +374,27 @@ class SiteTmdbMovie(SiteTmdb):
             if kor_trans and ((len(entity.country) > 0 and entity.country[0] in ['South Korea', u'한국', u'대한민국']) or (entity.extra_info['original_language'] == 'ko')):
                 trans = True
             #trans = True
+            # 한국배우는 자동번역
             if primary:
                 logger.debug(len(info['cast']))
                 for tmdb_item in info['cast'][:20]:
+                    name = tmdb_item['original_name']
+                    #logger.debug(tmdb_item)
+                    try:
+                        if SiteUtil.is_include_hangul(tmdb_item['original_name']) == False:
+                            people_info = tmdbsimple.People(tmdb_item['credit_id']).info()
+                            for tmp in people_info['also_known_as']:
+                                if SiteUtil.is_include_hangul(tmp):
+                                    name = tmp
+                                    break
+                    except: pass
+
                     actor = EntityActor('', site=cls.site_name)
-                    actor.name = SystemLogicTrans.trans(tmdb_item['original_name'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['original_name']
+                    actor.name = SystemLogicTrans.trans(name, source='en', target='ko').replace(' ', '') if trans else name
                     actor.role = SystemLogicTrans.trans(tmdb_item['character'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['character']
                     if tmdb_item['profile_path'] is not None:
                         actor.thumb = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+
                     entity.actor.append(actor)
                 for tmdb_item in info['crew'][:20]:
                     if tmdb_item['job'] == 'Director':
@@ -402,6 +415,7 @@ class SiteTmdbMovie(SiteTmdb):
     def info_basic(cls, tmdb, entity):
         try:
             info = tmdb.info(language='ko')
+            info_en = tmdb.info(language='en')
             
 
 
@@ -411,6 +425,14 @@ class SiteTmdbMovie(SiteTmdb):
             entity.title = info['title']
             entity.originaltitle = info['original_title']
             entity.plot = info['overview']
+            logger.debug(info['overview'])
+            logger.debug(info['overview'])
+            logger.debug(info['overview'])
+            
+            logger.debug(info['overview'])
+
+            if entity.plot == '':
+                entity.plot = info_en['overview']
 
             for tmp in info['genres']:
                 entity.genre.append(tmp['name'])
