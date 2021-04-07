@@ -337,7 +337,7 @@ class SiteDaumMovie(SiteDaum):
                 for tag in tags:
                     key = tag.xpath('.//dt')[0].text_content().strip()
                     value = tag.xpath('.//dd')[0].text_content().strip()
-                    logger.debug('%s:%s', key, value)
+                    #logger.debug('%s:%s', key, value)
                     if key in [u'개봉', u'공개']:
                         entity.premiered = value.replace('.', '-')
                     elif key == u'장르':
@@ -347,7 +347,11 @@ class SiteDaumMovie(SiteDaum):
                     elif key == u'등급':
                         entity.mpaa = value
                     elif key == u'러닝타임':
-                        entity.runtime = int(value.replace(u'분', '').strip())
+                        match = re.compile(r'(?P<min>\d+)%s' % u'분').match(value)
+                        if match:
+                            entity.runtime = int(match.group('min'))
+                        else:
+                            entity.runtime = ''
                     elif key == u'평점':
                         try: entity.ratings.append(EntityRatings(float(value), name=cls.site_name))
                         except: pass
