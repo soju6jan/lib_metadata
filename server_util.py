@@ -81,6 +81,8 @@ class MetadataServerUtil(object):
                     return
                 if requests.get(tmp['value']).status_code != 200:
                     return
+            if SiteUtil.is_include_hangul(data['plot']) == False:
+                return
             """
             if data['fanart'] is not None:
                 for tmp in data['fanart']:
