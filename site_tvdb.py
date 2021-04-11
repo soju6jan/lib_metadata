@@ -21,9 +21,13 @@ logger = P.logger
 try:
     import tvdb_api
 except:
-    os.system("{} install requests_cache==0.5.2".format(app.config['config']['pip']))
-    os.system("{} install tvdb-api".format(app.config['config']['pip']))
-    import tvdb_api
+    try:
+        os.system("{} install requests_cache==0.5.2".format(app.config['config']['pip']))
+        os.system("{} install tvdb-api".format(app.config['config']['pip']))
+        import tvdb_api
+    except Exception as exception: 
+        logger.error('Exception:%s', exception)
+        logger.error(traceback.format_exc())
 
 APIKEY = 'D4DDDAEFAD083E6F'
 
