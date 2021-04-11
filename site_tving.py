@@ -344,6 +344,7 @@ class SiteTvingMovie(SiteTving):
     @classmethod 
     def info(cls, code):
         try:
+            logger.debug('tving info code:%s', code)
             ret = {}
             
             entity = EntityMovie2(cls.site_name, code)
