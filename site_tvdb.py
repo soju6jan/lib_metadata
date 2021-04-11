@@ -21,7 +21,7 @@ logger = P.logger
 try:
     import tvdb_api
 except:
-    os.system("{} install requests_cache=0.5.2".format(app.config['config']['pip']))
+    os.system("{} install requests_cache==0.5.2".format(app.config['config']['pip']))
     os.system("{} install tvdb-api".format(app.config['config']['pip']))
     import tvdb_api
 
