@@ -363,12 +363,13 @@ class SiteDaumMovie(SiteDaum):
                 entity.art.append(EntityThumb(aspect='poster', value=cls.process_image_url(tmp), site=cls.site_name, score=70))
 
             tags = root.xpath('//div[@class="desc_cont"]')
-            all_plot = tags[0].text_content().strip()
-            tags = root.xpath('//div[@class="desc_cont"]/div[@class="making_note"]')
             if tags:
-                tmp2 = tags[0].text_content().strip()
-                all_plot = all_plot.replace(tmp2, '').strip()
-            entity.plot = all_plot.strip()
+                all_plot = tags[0].text_content().strip()
+                tags = root.xpath('//div[@class="desc_cont"]/div[@class="making_note"]')
+                if tags:
+                    tmp2 = tags[0].text_content().strip()
+                    all_plot = all_plot.replace(tmp2, '').strip()
+                entity.plot = all_plot.strip()
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
