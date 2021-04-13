@@ -26,10 +26,13 @@ class SiteHentaku(object):
             tree = html.fromstring(data)
             nodes = tree.xpath('//img')
             if nodes:
-                entity_actor['thumb'] = SiteUtil.process_image_mode('3', nodes[0].attrib['src'].strip())
+                logger.debug('hentaku %s %s', entity_actor['originalname'], nodes[0].attrib['src'].strip())
+                thumb_url = nodes[0].attrib['src'].strip()
+                if thumb_url != '':
+                    entity_actor['thumb'] = SiteUtil.process_image_mode('3', thumb_url)
                 tmps = tree.xpath('//div[@class="avstar_info_b"]/text()')[0].split('/')
-                logger.debug(entity_actor['originalname'])
-                logger.debug(tmps[2].strip() )
+                #logger.debug(entity_actor['originalname'])
+                #logger.debug(tmps[2].strip() )
                 if len(tmps) == 3 and tmps[2].strip() == entity_actor['originalname']:
                     # 미등록 배우입니다.
                     if tmps[0].strip() != '':

@@ -25,7 +25,10 @@ class SiteAvdbs(object):
             proxies = None
             if proxy_url is not None:
                 proxies = {"http"  : proxy_url, "https" : proxy_url}
-            res = requests.get(url, headers=SiteUtil.default_headers, proxies=proxies)
+            try:
+                res = requests.get(url, headers=SiteUtil.default_headers, proxies=proxies, timeout=5)
+            except:
+                return
             #logger.debug('avdbs status code : %s', res.status_code)
             #logger.debug(res.text)
             res.encoding = 'utf-8'
