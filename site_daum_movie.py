@@ -57,36 +57,38 @@ class SiteDaumMovie(SiteDaum):
         try:
             #movie_list = []
             url = 'https://suggest-bar.daum.net/suggest?id=movie&cate=movie&multiple=1&mod=json&code=utf_in_out&q=%s' % (py_urllib.quote(str(keyword)))
+            logger.debug(url)
             data = SiteUtil.get_response(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies()).json()
 
             #logger.debug(json.dumps(data, indent=4))
-            for idx, item in enumerate(data['items']['movie']):
-                if idx > 5:
-                    break
-                tmps = item.split('|')
-                entity = EntitySearchItemMovie(cls.site_name)
-                entity.title = tmps[0]
-                entity.code = cls.module_char + cls.site_char + tmps[1]
-                if len(tmps) == 5:
-                    entity.image_url = tmps[2]
-                    entity.year = int(tmps[3])
-                else:
-                    if not tmps[2].startswith('http'):
-                        entity.year = int(tmps[2])
-
-                if SiteUtil.compare(keyword, entity.title):
-                    if year != 1900:
-                        if abs(entity.year-year) <= 1:
-                            entity.score = 100
-                        else:
-                            entity.score = 80
+            if 'movie' in data['items']:
+                for idx, item in enumerate(data['items']['movie']):
+                    if idx > 5:
+                        break
+                    tmps = item.split('|')
+                    entity = EntitySearchItemMovie(cls.site_name)
+                    entity.title = tmps[0]
+                    entity.code = cls.module_char + cls.site_char + tmps[1]
+                    if len(tmps) == 5:
+                        entity.image_url = tmps[2]
+                        entity.year = int(tmps[3])
                     else:
-                        entity.score = 95
-                else:
-                    entity.score = 80 - (idx*5)
-                if entity.score < 10:
-                    entity.score = 10
-                cls.movie_append(result_list, entity.as_dict())
+                        if not tmps[2].startswith('http'):
+                            entity.year = int(tmps[2])
+
+                    if SiteUtil.compare(keyword, entity.title):
+                        if year != 1900:
+                            if abs(entity.year-year) <= 1:
+                                entity.score = 100
+                            else:
+                                entity.score = 80
+                        else:
+                            entity.score = 95
+                    else:
+                        entity.score = 80 - (idx*5)
+                    if entity.score < 10:
+                        entity.score = 10
+                    cls.movie_append(result_list, entity.as_dict())
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -336,9 +338,10 @@ class SiteDaumMovie(SiteDaum):
                     entity.director.append(actor.name)
                 else:
                     entity.actor.append(actor)
-            for cast in data['staff']:
-                if cast['movieJob']['role'] == u'각본':
-                    entity.credits.append(cast['nameKorean'])
+            if 'staff' in data:
+                for cast in data['staff']:
+                    if cast['movieJob']['role'] == u'각본':
+                        entity.credits.append(cast['nameKorean'])
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
