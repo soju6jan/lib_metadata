@@ -289,7 +289,7 @@ class SiteDaumMovie(SiteDaum):
             entity = EntityMovie2(cls.site_name, code)
             entity.code_list.append(['daum_id', code[2:]])
             cls.info_basic(code, entity)
-            cls.info_cast(code, entity)
+            #cls.info_cast(code, entity)
             cls.info_photo(code, entity)
             cls.info_video(code, entity)
             ret['ret'] = 'success'
@@ -303,12 +303,55 @@ class SiteDaumMovie(SiteDaum):
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
         return ret
- 
+    
+        
+    # 2021-04-15 
+    @classmethod
+    def info_basic(cls, code, entity):
+        try:
+            url = "https://movie.daum.net/api/movie/%s/main" % code[2:]
+            data = requests.get(url).json()
+            entity.title = data['movieCommon']['titleKorean']
+            entity.originaltitle = data['movieCommon']['titleEnglish']
+            entity.year = data['movieCommon']['productionYear']
+            entity.plot = data['movieCommon']['plot']
+            entity.plot = entity.plot.replace('<b>', '').replace('</b>', '').replace('<br>', '\n')
+            entity.ratings.append(EntityRatings(float(data['movieCommon']['avgRating']), name=cls.site_name))
+            entity.country = data['movieCommon']['productionCountries']
+            entity.genre = data['movieCommon']['genres']
+            if len(data['movieCommon']['countryMovieInformation']) > 0:
+                entity.mpaa = data['movieCommon']['countryMovieInformation'][0]['admissionCode']
+                entity.runtime = data['movieCommon']['countryMovieInformation'][0]['duration']
+                tmp = data['movieCommon']['countryMovieInformation'][0]['releaseDate']
+                entity.premiered = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
+            entity.art.append(EntityThumb(aspect='poster', value=data['movieCommon']['mainPhoto']['imageUrl'], site=cls.site_name, score=70))
 
+            for cast in data['casts']:
+                actor = EntityActor('', site=cls.site_name)
+                actor.thumb = cast['profileImage']
+                actor.name = cast['nameKorean']
+                actor.originalname = cast['nameEnglish']
+                actor.role = cast['description']
+                if cast['movieJob']['job'] == u'감독':
+                    entity.director.append(actor.name)
+                else:
+                    entity.actor.append(actor)
+            for cast in data['staff']:
+                if cast['movieJob']['role'] == u'각본':
+                    entity.credits.append(cast['nameKorean'])
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    #https://movie.daum.net/api/movie/124084/main
+    #https://movie.daum.net/api/movie/124084/crew
+    """
     @classmethod
     def info_basic(cls, code, entity):
         try:
             url = "https://movie.daum.net/moviedb/main?movieId=%s" % code[2:]
+            logger.debug(url)
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             tags = root.xpath('//h3[@class="tit_movie"]/span[@class="txt_tit"]')
             if tags:
@@ -333,6 +376,7 @@ class SiteDaumMovie(SiteDaum):
 
 
             tags = root.xpath('//dl[@class="list_cont"]')
+            logger.debug(tags)
             if tags:
                 for tag in tags:
                     key = tag.xpath('.//dt')[0].text_content().strip()
@@ -357,12 +401,14 @@ class SiteDaumMovie(SiteDaum):
                         except: pass
 
             tags = root.xpath('//a[@class="thumb_img"]/span[@class="bg_img"]')
+            logger.debug(tags)
             if tags:
                 tmp = tags[0].attrib['style']
                 tmp = tmp.split('(')[1].split(')')[0]
                 entity.art.append(EntityThumb(aspect='poster', value=cls.process_image_url(tmp), site=cls.site_name, score=70))
 
-            tags = root.xpath('//div[@class="desc_cont"]')
+            tags = root.xpath('//div[@class="movie_summary"]')
+            logger.debug(tags)
             if tags:
                 all_plot = tags[0].text_content().strip()
                 tags = root.xpath('//div[@class="desc_cont"]/div[@class="making_note"]')
@@ -375,10 +421,12 @@ class SiteDaumMovie(SiteDaum):
             logger.error(traceback.format_exc())
 
 
+
     @classmethod
     def info_cast(cls, code, entity):
         try:
             url = "https://movie.daum.net/moviedb/crew?movieId=%s" % code[2:]
+            logger.debug(url)
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             tags = root.xpath('//div[@class="item_crew"]')
             for tag in tags:
@@ -420,6 +468,9 @@ class SiteDaumMovie(SiteDaum):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+    """
+
+
 
 
     @classmethod
