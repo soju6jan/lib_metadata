@@ -96,6 +96,8 @@ class SiteDaumMovie(SiteDaum):
 
         try:
             url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
+            #logger.debug('1111111111111')
+            #logger.debug(url)
             new_item, movie = cls.get_movie_info_from_home(url, keyword, year)
             if new_item is not None:
                 # 부제목때문에 제목은 체크 하지 않는다.
