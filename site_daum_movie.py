@@ -327,7 +327,7 @@ class SiteDaumMovie(SiteDaum):
             entity.genre = data['movieCommon']['genres']
             if len(data['movieCommon']['countryMovieInformation']) > 0:
                 for country in data['movieCommon']['countryMovieInformation']:
-                    if country['id'] == 'KR':
+                    if country['country']['id'] == 'KR':
                         entity.mpaa = country['admissionCode']
                         entity.runtime = country['duration']
                         tmp = country['releaseDate']
