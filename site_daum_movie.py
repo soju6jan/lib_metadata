@@ -316,8 +316,11 @@ class SiteDaumMovie(SiteDaum):
             entity.title = data['movieCommon']['titleKorean']
             entity.originaltitle = data['movieCommon']['titleEnglish']
             entity.year = data['movieCommon']['productionYear']
-            entity.plot = data['movieCommon']['plot']
-            entity.plot = entity.plot.replace('<b>', '').replace('</b>', '').replace('<br>', '\n')
+            tmp = data['movieCommon']['plot']
+            if tmp is None:
+                entity.plot = ''
+            else:
+                entity.plot = tmp.replace('<b>', '').replace('</b>', '').replace('<br>', '\n')
             try: entity.ratings.append(EntityRatings(float(data['movieCommon']['avgRating']), name=cls.site_name))
             except: pass
             entity.country = data['movieCommon']['productionCountries']
