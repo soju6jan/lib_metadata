@@ -325,7 +325,8 @@ class SiteDaumMovie(SiteDaum):
                 entity.mpaa = data['movieCommon']['countryMovieInformation'][0]['admissionCode']
                 entity.runtime = data['movieCommon']['countryMovieInformation'][0]['duration']
                 tmp = data['movieCommon']['countryMovieInformation'][0]['releaseDate']
-                entity.premiered = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
+                if tmp is not None:
+                    entity.premiered = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
             entity.art.append(EntityThumb(aspect='poster', value=data['movieCommon']['mainPhoto']['imageUrl'], site=cls.site_name, score=70))
 
             for cast in data['casts']:
@@ -334,6 +335,8 @@ class SiteDaumMovie(SiteDaum):
                 actor.name = cast['nameKorean']
                 actor.originalname = cast['nameEnglish']
                 actor.role = cast['description']
+                if actor.role is None:
+                    actor.role = cast['movieJob']['job']
                 if cast['movieJob']['job'] == u'감독':
                     entity.director.append(actor.name)
                 else:
