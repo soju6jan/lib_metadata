@@ -318,15 +318,18 @@ class SiteDaumMovie(SiteDaum):
             entity.year = data['movieCommon']['productionYear']
             entity.plot = data['movieCommon']['plot']
             entity.plot = entity.plot.replace('<b>', '').replace('</b>', '').replace('<br>', '\n')
-            entity.ratings.append(EntityRatings(float(data['movieCommon']['avgRating']), name=cls.site_name))
+            try: entity.ratings.append(EntityRatings(float(data['movieCommon']['avgRating']), name=cls.site_name))
+            except: pass
             entity.country = data['movieCommon']['productionCountries']
             entity.genre = data['movieCommon']['genres']
             if len(data['movieCommon']['countryMovieInformation']) > 0:
-                entity.mpaa = data['movieCommon']['countryMovieInformation'][0]['admissionCode']
-                entity.runtime = data['movieCommon']['countryMovieInformation'][0]['duration']
-                tmp = data['movieCommon']['countryMovieInformation'][0]['releaseDate']
-                if tmp is not None:
-                    entity.premiered = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
+                for country in data['movieCommon']['countryMovieInformation']:
+                    if country['id'] == 'KR':
+                        entity.mpaa = data['movieCommon']['countryMovieInformation'][0]['admissionCode']
+                        entity.runtime = data['movieCommon']['countryMovieInformation'][0]['duration']
+                        tmp = data['movieCommon']['countryMovieInformation'][0]['releaseDate']
+                        if tmp is not None:
+                            entity.premiered = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
             entity.art.append(EntityThumb(aspect='poster', value=data['movieCommon']['mainPhoto']['imageUrl'], site=cls.site_name, score=70))
 
             for cast in data['casts']:
