@@ -138,7 +138,7 @@ class UtilNfo(object):
             from io import StringIO
             output_stream = StringIO(u'%s' % text)
             response = Response(
-                output_stream.getvalue(), 
+                output_stream.getvalue().encode('utf-8'), 
                 mimetype='application/xml', 
                 content_type='application/octet-stream',
             )
