@@ -119,6 +119,8 @@ class UtilNfo(object):
 
             root = movie
             tmp = ET.tostring(root, pretty_print=True, xml_declaration=True, encoding="utf-8")
+            if isinstance(tmp, bytes):
+               tmp = tmp.decode('utf-8')
             return tmp
             #return app.response_class(tmp, mimetype='application/xml')
 
