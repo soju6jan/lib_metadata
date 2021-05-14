@@ -42,7 +42,7 @@ class SiteTmdb(object):
     def get_poster_path(cls, path):
         if path is None:
             return ''
-        return 'https://www.themoviedb.org/t/p/'+ 'original' + path
+        return 'https://image.tmdb.org/t/p/'+ 'original' + path
 
     @classmethod
     def _process_image(cls, tmdb, data):
@@ -71,8 +71,8 @@ class SiteTmdb(object):
                     if i > ARTWORK_ITEM_LIMIT:
                         break
                     else:
-                        poster_url = 'https://www.themoviedb.org/t/p/'+ 'original' + poster['file_path']
-                        thumb_url = 'https://www.themoviedb.org/t/p/' + 'w154' + poster['file_path']
+                        poster_url = 'https://image.tmdb.org/t/p/'+ 'original' + poster['file_path']
+                        thumb_url = 'https://image.tmdb.org/t/p/' + 'w154' + poster['file_path']
                         data.append(EntityThumb(aspect='poster', value=poster_url, thumb=thumb_url, site='tmdb', score=poster['score']+100).as_dict())
 
             if 'backdrops' in tmdb_images_dict and tmdb_images_dict['backdrops']:
@@ -100,8 +100,8 @@ class SiteTmdb(object):
                     if i > ARTWORK_ITEM_LIMIT:
                         break
                     else:
-                        backdrop_url = 'https://www.themoviedb.org/t/p/' + 'original' + backdrop['file_path']
-                        thumb_url = 'https://www.themoviedb.org/t/p/' + 'w300' + backdrop['file_path']
+                        backdrop_url = 'https://image.tmdb.org/t/p/' + 'original' + backdrop['file_path']
+                        thumb_url = 'https://image.tmdb.org/t/p/' + 'w300' + backdrop['file_path']
                         data.append(EntityThumb(aspect='landscape', value=backdrop_url, thumb=thumb_url, site='tmdb', score=backdrop['score']+100).as_dict())
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -162,7 +162,7 @@ class SiteTmdbTv(SiteTmdb):
                 for actor in show['actor']:
                     if actor['name'] == kor_name:
                         flag_find = True
-                        actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                        actor['thumb'] = 'https://image.tmdb.org/t/p/' + 'original' + tmdb_item['profile_path']
                         break
                 if flag_find == False:
                     kor_role_name = SystemLogicTrans.trans(tmdb_item['character'], source='en', target='ko')
@@ -170,7 +170,7 @@ class SiteTmdbTv(SiteTmdb):
                     for actor in show['actor']:
                         if actor['role'] == kor_role_name:
                             flag_find = True
-                            actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                            actor['thumb'] = 'https://image.tmdb.org/t/p/' + 'original' + tmdb_item['profile_path']
                             break
                 if flag_find == False:
                     logger.debug(kor_name)
@@ -393,7 +393,7 @@ class SiteTmdbMovie(SiteTmdb):
                     actor.name = SystemLogicTrans.trans(name, source='en', target='ko').replace(' ', '') if trans else name
                     actor.role = SystemLogicTrans.trans(tmdb_item['character'], source='en', target='ko').replace(' ', '') if trans else tmdb_item['character']
                     if tmdb_item['profile_path'] is not None:
-                        actor.thumb = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                        actor.thumb = 'https://image.tmdb.org/t/p/' + 'original' + tmdb_item['profile_path']
 
                     entity.actor.append(actor)
                 for tmdb_item in info['crew'][:20]:
@@ -481,14 +481,14 @@ class SiteTmdbMovie(SiteTmdb):
                 for actor in show['actor']:
                     if actor['name'] == kor_name:
                         flag_find = True
-                        actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                        actor['thumb'] = 'https://image.tmdb.org/t/p/' + 'original' + tmdb_item['profile_path']
                         break
                 if flag_find == False:
                     kor_role_name = MetadataServerUtil.trans_en_to_ko(tmdb_item['character'])
                     for actor in show['actor']:
                         if actor['role'] == kor_role_name:
                             flag_find = True
-                            actor['thumb'] = 'https://www.themoviedb.org/t/p/' + 'original' + tmdb_item['profile_path']
+                            actor['thumb'] = 'https://image.tmdb.org/t/p/' + 'original' + tmdb_item['profile_path']
                             break
                 if flag_find == False:
                     logger.debug(kor_name)
