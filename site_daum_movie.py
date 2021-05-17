@@ -336,7 +336,8 @@ class SiteDaumMovie(SiteDaum):
                         if tmp is not None:
                             entity.premiered = tmp[0:4] + '-' + tmp[4:6] + '-' + tmp[6:8]
                         break
-            entity.art.append(EntityThumb(aspect='poster', value=data['movieCommon']['mainPhoto']['imageUrl'], site=cls.site_name, score=70))
+            if data['movieCommon']['mainPhoto'] is not None:
+                entity.art.append(EntityThumb(aspect='poster', value=data['movieCommon']['mainPhoto']['imageUrl'], site=cls.site_name, score=70))
 
             for cast in data['casts']:
                 actor = EntityActor('', site=cls.site_name)
