@@ -440,8 +440,15 @@ class SiteTmdbMovie(SiteTmdb):
             if len(info['production_companies']) > 0:
                 entity.studio = info['production_companies'][0]['name']
 
-            for tmp in info['production_countries']:
-                entity.country.append(tmp['name'])
+            #for tmp in info['production_countries']:
+            #    entity.country.append(tmp['name'])
+            if 'production_countries' in info and len(info['production_countries']) > 0:
+                for tmp in info['production_countries']:
+                    entity.country.append(SiteUtil.country_code_translate[tmp['iso_3166_1']])
+            else:
+                if 'production_countries' in info_en:
+                    for tmp in info_en['production_countries']:
+                        entity.country.append(SiteUtil.country_code_translate[tmp['iso_3166_1']])
             
             entity.premiered = info['release_date']
             try: entity.year = int(info['release_date'].split('-')[0])
@@ -755,7 +762,8 @@ class SiteTmdbFtv(SiteTmdb):
     def info_basic(cls, tmdb, entity):
         try:
             info = tmdb.info(language='ko')
-            
+            info_en = tmdb.info(language='en')
+
             if 'backdrop_path' in info:
                 entity.art.append(EntityThumb(aspect='landscape', value=cls.get_poster_path(info['backdrop_path']), site=cls.site_name, score=200))
             if 'poster_path' in info:
@@ -783,7 +791,6 @@ class SiteTmdbFtv(SiteTmdb):
                 entity.plot = info['overview'] if 'overview' in info else ''
                 entity.is_plot_kor = True
             else:
-                info_en = tmdb.info(language='en')
                 entity.plot = info_en['overview']
                 entity.is_plot_kor = False
 
@@ -793,9 +800,18 @@ class SiteTmdbFtv(SiteTmdb):
             if 'networks' in info and len(info['networks']) > 0:
                 entity.studio = info['networks'][0]['name']
 
-            if 'production_countries' in info:
-                for tmp in info['production_countries']:
-                    entity.country.append(SiteUtil.country_code_translate[tmp['iso_3166_1']])
+            # 2021-05-21
+            #if 'production_countries' in info:
+            #    for tmp in info['production_countries']:
+            #        entity.country.append(SiteUtil.country_code_translate[tmp['iso_3166_1']])
+            if 'origin_country' in info and len(info['origin_country']) > 0:
+                for tmp in info['origin_country']:
+                    entity.country.append(SiteUtil.country_code_translate[tmp])
+            else:
+                if 'origin_country' in info_en:
+                    for tmp in info_en['origin_country']:
+                        entity.country.append(SiteUtil.country_code_translate[tmp])
+
 
             if 'seasons' in info:
                 for tmp in info['seasons']:
