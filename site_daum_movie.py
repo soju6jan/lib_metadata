@@ -31,11 +31,8 @@ class SiteDaumMovie(SiteDaum):
     def search(cls, keyword, year=1900):
         try:
             ret = {}
-            result_list = []
-            cls.search_movie_web(result_list, keyword, year)
-
+            result_list = cls.search_movie_api(keyword, year)
             result_list = list(reversed(sorted(result_list, key=lambda k:k['score'])))
-
             if result_list is None:
                 ret['ret'] = 'empty'
             else:
@@ -52,213 +49,42 @@ class SiteDaumMovie(SiteDaum):
 
 
     @classmethod
-    def search_movie_web(cls, result_list, keyword, year):
-        
+    def search_movie_api(cls, keyword, year):
         try:
-            #movie_list = []
-            url = 'https://suggest-bar.daum.net/suggest?id=movie&cate=movie&multiple=1&mod=json&code=utf_in_out&q=%s' % (py_urllib.quote(str(keyword)))
-            logger.debug(url)
-            data = SiteUtil.get_response(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies()).json()
-
-            #logger.debug(json.dumps(data, indent=4))
-            if 'movie' in data['items']:
-                for idx, item in enumerate(data['items']['movie']):
-                    if idx > 5:
-                        break
-                    tmps = item.split('|')
-                    entity = EntitySearchItemMovie(cls.site_name)
-                    entity.title = tmps[0]
-                    entity.code = cls.module_char + cls.site_char + tmps[1]
-                    if len(tmps) == 5:
-                        entity.image_url = tmps[2]
-                        entity.year = int(tmps[3])
-                    else:
-                        if not tmps[2].startswith('http'):
-                            entity.year = int(tmps[2])
-
-                    if SiteUtil.compare(keyword, entity.title):
-                        if year != 1900:
-                            if abs(entity.year-year) <= 1:
-                                entity.score = 100
-                            else:
-                                entity.score = 80
-                        else:
-                            entity.score = 95
-                    else:
-                        entity.score = 80 - (idx*5)
-                    if entity.score < 10:
-                        entity.score = 10
-                    cls.movie_append(result_list, entity.as_dict())
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
-       
-
-        try:
-            url = 'https://suggest-bar.daum.net/suggest?id=movie_v2&cate=movie&multiple=1&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
-            #url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
-            #logger.debug('1111111111111')
-            #logger.debug(url)
-            new_item, movie = cls.get_movie_info_from_home(url, keyword, year)
-            if new_item is not None:
-                # 부제목때문에 제목은 체크 하지 않는다.
-                # 홈에 검색한게 년도도 같다면 score : 100을 주고 다른것은 검색하지 않는다.
-                if new_item['year'] == year:
-                    new_item['score'] = 100
-                    need_another_search = False
-                else:
-                    new_item['score'] = 90
-                    need_another_search = True
-
-                cls.movie_append(result_list, new_item)
-
-                logger.debug('need_another_search : %s' % need_another_search)
-               
-                #movie = ret['movie']
-                if need_another_search:
-                    # 동명영화
-                    tmp = movie.find('div[@class="coll_etc"]')
-                    logger.debug('coll_etc : %s' % tmp)
-                    if tmp is not None:
-                        first_url = None
-                        tag_list = tmp.findall('.//a')
-
-                        for idx, tag in enumerate(tag_list):
-                            match = re.compile(r'(.*?)\((.*?)\)').search(tag.text_content())
-                            
-                            if match:
-                                entity = EntitySearchItemMovie(cls.site_name)
-                                entity.code = cls.module_char + cls.site_char + tag.attrib['href'].split('||')[1]
-                                entity.title = match.group(1)
-                                entity.year = int(match.group(2))
-
-                                if SiteUtil.compare(keyword, entity.title):
-                                    if year != 1900:
-                                        if abs(entity.year-year) <= 1:
-                                            entity.score = 100
-                                        else:
-                                            entity.score = 80
-                                    else:
-                                        entity.score = 95 - idx
-                                else:
-                                    entity.score = 80 - (idx*5)
-
-                                cls.movie_append(result_list, entity.as_dict())
-
-                                if entity.score == 100:
-                                    first_url = 'https://search.daum.net/search?%s' % tag.attrib['href']
-                                
-                        logger.debug('first_url : %s' % first_url)
-                        if need_another_search and first_url is not None:
-                            new_ret, dummy = cls.get_movie_info_from_home(first_url, keyword, year)
-                            cls.movie_append(result_list, new_ret)
-
-                    #시리즈
-                    tmp = movie.find('.//ul[@class="list_thumb list_few"]')
-                    if tmp is None:
-                        tmp = movie.find('.//ul[@class="list_thumb list_more"]')
-                    
-                    logger.debug('SERIES:%s' % tmp)
-                    if tmp is not None:
-                        tag_list = tmp.findall('.//div[@class="wrap_cont"]')
-                        first_url = None
-                        score = 80
-                        for tag in tag_list:
-                            a_tag = tag.find('a')
-                            daum_id = a_tag.attrib['href'].split('||')[1]
-                            daum_name = a_tag.text_content()
-                            span_tag = tag.find('span')
-                            tmp_year = span_tag.text_content()
-                            logger.debug('daum_id:%s %s %s' % (daum_id, tmp_year, daum_name))
-                            if daum_name == keyword and str(year) == tmp_year:
-                                first_url = 'https://search.daum.net/search?%s' % a_tag.attrib['href']
-                            elif str(year) == tmp_year and first_url is not None:
-                                first_url = 'https://search.daum.net/search?%s' % tag.attrib['href']
-                            
-                            #MovieSearch.movie_append(movie_list, {'id':daum_id, 'title':daum_name, 'year':year, 'score':score}) 
-                            entity = EntitySearchItemMovie(cls.site_name)
-                            entity.code = cls.module_char + cls.site_char + daum_id
-                            entity.title = daum_name
-                            entity.year = int(tmp_year)
-                            entity.score = score
-                            cls.movie_append(result_list, entity.as_dict()) 
-                            logger.debug('first_url : %s' % first_url)
-                        if need_another_search and first_url is not None:
-                            #logger.debug('RRRRRRRRRRRRRRRRRRRRRR')
-                            new_ret, dummy = cls.get_movie_info_from_home(first_url, keyword, year)
-                            cls.movie_append(result_list, new_ret)
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
-        result_list = list(reversed(sorted(result_list, key=lambda k:k['score'])))
-        return result_list
-
-
-    @classmethod
-    def movie_append(cls, result_list, new_item):
-        try:
-            flag_exist = False
-            for item in result_list:
-                if item['code'] == new_item['code']:
-                    flag_exist = True
-                    item['score'] = new_item['score']
-                    item['title'] = new_item['title']
-                    item['year'] = new_item['year']
-                    item['image_url'] = new_item['image_url']
+            ret = []
+            url = f"https://movie.daum.net/api/search?q={py_urllib.quote(str(keyword))}&t=movie&page=1&size=20"
+            data = requests.get(url).json()
+            for idx, item in enumerate(data['result']['search_result']['documents']):
+                item = item['document']
+                logger.debug(item)
+                if idx > 5:
                     break
-            if not flag_exist:
-                result_list.append(new_item)
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
+                entity = EntitySearchItemMovie(cls.site_name)
+                entity.title = item['titleKoreanHanl']
+                entity.code = cls.module_char + cls.site_char + item['movieId']
+                entity.image_url = item['mainPhoto']
+                entity.year = item['productionYear']
+                entity.extra_info['title_en'] = item['titleEnglishHanl']
+                entity.desc = f"{item['admission']} / {item['genres']}"
 
-
-
-    @classmethod
-    def get_movie_info_from_home(cls, url, keyword, year):
-        try:
-            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
-
-            movie = None
-            try:
-                movie = root.get_element_by_id('movieEColl')
-            except Exception as e: 
-                pass
-            if movie is None:
-                return None
-            
-            new_item = EntitySearchItemMovie(cls.site_name)
-            new_item.title = movie.xpath('.//*[@id="movieTitle"]/a/b')[0].text_content()
-            new_item.code = cls.module_char + cls.site_char + movie.xpath('.//*[@id="movieTitle"]/a')[0].attrib['href'].split('=')[1]    
-            new_item.image_url = movie.xpath('//*[@id="nmovie_img_0"]/a/img')[0].attrib['src']
-
-            tmp = movie.xpath('.//*[@id="movieTitle"]/span')[0].text_content()
-            match = re.compile(r'(?P<year>\d{4})\s%s' % u'제작').search(tmp)
-            if match:
-                new_item.year = int(match.group('year'))
-                new_item.extra_info['title_en'] = tmp.split(',')[0].strip()
-            
-            idx = 0
-            if SiteUtil.compare(keyword, new_item.title) or ('title_en' in new_item.extra_info and SiteUtil.compare(keyword, new_item.extra_info['title_en'])):
-                if year != 1900:
-                    if abs(new_item.year-year) <= 1:
-                        new_item.score = 100
+                if SiteUtil.compare(keyword, entity.title) or (item['titleEnglishHanl'] != '' and SiteUtil.compare(keyword, item['titleEnglishHanl'])):
+                    if year != 1900:
+                        if abs(entity.year-year) <= 1:
+                            entity.score = 100
+                        else:
+                            entity.score = 80
                     else:
-                        new_item.score = 80
+                        entity.score = 95
                 else:
-                    new_item.score = 95
-            else:
-                new_item.score = 80 - (idx*5)
-
-            return new_item.as_dict(), movie
-            #return {'movie':movie, 'title':title, 'daum_id':daum_id, 'year':tmp_year, 'country':country, 'more':more}
-
+                    entity.score = 80 - (idx*5)
+                if entity.score < 10:
+                    entity.score = 10
+                ret.append(entity.as_dict())
+            return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
-
-
-
+    
 
 
 
@@ -659,5 +485,288 @@ class SiteDaumMovie(SiteDaum):
 https://movie.daum.net/api/video/list/movie/97728?page=1&size=20
 https://movie.daum.net/api/movie/97728/photoList?page=1&size=100
 https://movie.daum.net/api/movie/97728/dailyAttendanceList
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+""" 
+2021-05-30
+
+
+    @classmethod
+    def search_movie_web(cls, result_list, keyword, year):
+        
+        try:
+            #movie_list = []
+            url = 'https://suggest-bar.daum.net/suggest?id=movie&cate=movie&multiple=1&mod=json&code=utf_in_out&q=%s' % (py_urllib.quote(str(keyword)))
+            logger.debug(url)
+            data = SiteUtil.get_response(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies()).json()
+
+            #logger.debug(json.dumps(data, indent=4))
+            if 'movie' in data['items']:
+                for idx, item in enumerate(data['items']['movie']):
+                    if idx > 5:
+                        break
+                    tmps = item.split('|')
+                    entity = EntitySearchItemMovie(cls.site_name)
+                    entity.title = tmps[0]
+                    entity.code = cls.module_char + cls.site_char + tmps[1]
+                    if len(tmps) == 5:
+                        entity.image_url = tmps[2]
+                        entity.year = int(tmps[3])
+                    else:
+                        if not tmps[2].startswith('http'):
+                            entity.year = int(tmps[2])
+
+                    if SiteUtil.compare(keyword, entity.title):
+                        if year != 1900:
+                            if abs(entity.year-year) <= 1:
+                                entity.score = 100
+                            else:
+                                entity.score = 80
+                        else:
+                            entity.score = 95
+                    else:
+                        entity.score = 80 - (idx*5)
+                    if entity.score < 10:
+                        entity.score = 10
+                    cls.movie_append(result_list, entity.as_dict())
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+       
+
+        try:
+            #url = 'https://suggest-bar.daum.net/suggest?id=movie_v2&cate=movie&multiple=1&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
+            #url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
+            #logger.debug('1111111111111')
+            #logger.debug(url)
+            new_item, movie = cls.get_movie_info_from_home(url, keyword, year)
+            if new_item is not None:
+                # 부제목때문에 제목은 체크 하지 않는다.
+                # 홈에 검색한게 년도도 같다면 score : 100을 주고 다른것은 검색하지 않는다.
+                if new_item['year'] == year:
+                    new_item['score'] = 100
+                    need_another_search = False
+                else:
+                    new_item['score'] = 90
+                    need_another_search = True
+
+                cls.movie_append(result_list, new_item)
+
+                logger.debug('need_another_search : %s' % need_another_search)
+               
+                #movie = ret['movie']
+                if need_another_search:
+                    # 동명영화
+                    tmp = movie.find('div[@class="coll_etc"]')
+                    logger.debug('coll_etc : %s' % tmp)
+                    if tmp is not None:
+                        first_url = None
+                        tag_list = tmp.findall('.//a')
+
+                        for idx, tag in enumerate(tag_list):
+                            match = re.compile(r'(.*?)\((.*?)\)').search(tag.text_content())
+                            
+                            if match:
+                                entity = EntitySearchItemMovie(cls.site_name)
+                                entity.code = cls.module_char + cls.site_char + tag.attrib['href'].split('||')[1]
+                                entity.title = match.group(1)
+                                entity.year = int(match.group(2))
+
+                                if SiteUtil.compare(keyword, entity.title):
+                                    if year != 1900:
+                                        if abs(entity.year-year) <= 1:
+                                            entity.score = 100
+                                        else:
+                                            entity.score = 80
+                                    else:
+                                        entity.score = 95 - idx
+                                else:
+                                    entity.score = 80 - (idx*5)
+
+                                cls.movie_append(result_list, entity.as_dict())
+
+                                if entity.score == 100:
+                                    first_url = 'https://search.daum.net/search?%s' % tag.attrib['href']
+                                
+                        logger.debug('first_url : %s' % first_url)
+                        if need_another_search and first_url is not None:
+                            new_ret, dummy = cls.get_movie_info_from_home(first_url, keyword, year)
+                            cls.movie_append(result_list, new_ret)
+
+                    #시리즈
+                    tmp = movie.find('.//ul[@class="list_thumb list_few"]')
+                    if tmp is None:
+                        tmp = movie.find('.//ul[@class="list_thumb list_more"]')
+                    
+                    logger.debug('SERIES:%s' % tmp)
+                    if tmp is not None:
+                        tag_list = tmp.findall('.//div[@class="wrap_cont"]')
+                        first_url = None
+                        score = 80
+                        for tag in tag_list:
+                            a_tag = tag.find('a')
+                            daum_id = a_tag.attrib['href'].split('||')[1]
+                            daum_name = a_tag.text_content()
+                            span_tag = tag.find('span')
+                            tmp_year = span_tag.text_content()
+                            logger.debug('daum_id:%s %s %s' % (daum_id, tmp_year, daum_name))
+                            if daum_name == keyword and str(year) == tmp_year:
+                                first_url = 'https://search.daum.net/search?%s' % a_tag.attrib['href']
+                            elif str(year) == tmp_year and first_url is not None:
+                                first_url = 'https://search.daum.net/search?%s' % tag.attrib['href']
+                            
+                            #MovieSearch.movie_append(movie_list, {'id':daum_id, 'title':daum_name, 'year':year, 'score':score}) 
+                            entity = EntitySearchItemMovie(cls.site_name)
+                            entity.code = cls.module_char + cls.site_char + daum_id
+                            entity.title = daum_name
+                            entity.year = int(tmp_year)
+                            entity.score = score
+                            cls.movie_append(result_list, entity.as_dict()) 
+                            logger.debug('first_url : %s' % first_url)
+                        if need_another_search and first_url is not None:
+                            #logger.debug('RRRRRRRRRRRRRRRRRRRRRR')
+                            new_ret, dummy = cls.get_movie_info_from_home(first_url, keyword, year)
+                            cls.movie_append(result_list, new_ret)
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+        result_list = list(reversed(sorted(result_list, key=lambda k:k['score'])))
+        return result_list
+
+
+    @classmethod
+    def get_movie_info_from_home(cls, url, keyword, year):
+        try:
+            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+
+            movie = None
+            try:
+                movie = root.get_element_by_id('movieEColl')
+            except Exception as e: 
+                pass
+            if movie is None:
+                return None, None
+            
+            new_item = EntitySearchItemMovie(cls.site_name)
+            new_item.title = movie.xpath('.//*[@id="movieTitle"]/a/b')[0].text_content()
+            new_item.code = cls.module_char + cls.site_char + movie.xpath('.//*[@id="movieTitle"]/a')[0].attrib['href'].split('=')[1]    
+            new_item.image_url = movie.xpath('//*[@id="nmovie_img_0"]/a/img')[0].attrib['src']
+
+            tmp = movie.xpath('.//*[@id="movieTitle"]/span')[0].text_content()
+            match = re.compile(r'(?P<year>\d{4})\s%s' % u'제작').search(tmp)
+            if match:
+                new_item.year = int(match.group('year'))
+                new_item.extra_info['title_en'] = tmp.split(',')[0].strip()
+            
+            idx = 0
+            if SiteUtil.compare(keyword, new_item.title) or ('title_en' in new_item.extra_info and SiteUtil.compare(keyword, new_item.extra_info['title_en'])):
+                if year != 1900:
+                    if abs(new_item.year-year) <= 1:
+                        new_item.score = 100
+                    else:
+                        new_item.score = 80
+                else:
+                    new_item.score = 95
+            else:
+                new_item.score = 80 - (idx*5)
+
+            return new_item.as_dict(), movie
+            #return {'movie':movie, 'title':title, 'daum_id':daum_id, 'year':tmp_year, 'country':country, 'more':more}
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def movie_append(cls, result_list, new_item):
+        try:
+            flag_exist = False
+            for item in result_list:
+                if item['code'] == new_item['code']:
+                    flag_exist = True
+                    item['score'] = new_item['score']
+                    item['title'] = new_item['title']
+                    item['year'] = new_item['year']
+                    item['image_url'] = new_item['image_url']
+                    break
+            if not flag_exist:
+                result_list.append(new_item)
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 """

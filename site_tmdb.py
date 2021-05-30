@@ -425,11 +425,6 @@ class SiteTmdbMovie(SiteTmdb):
             entity.title = info['title']
             entity.originaltitle = info['original_title']
             entity.plot = info['overview']
-            logger.debug(info['overview'])
-            logger.debug(info['overview'])
-            logger.debug(info['overview'])
-            
-            logger.debug(info['overview'])
 
             if entity.plot == '':
                 entity.plot = info_en['overview']
