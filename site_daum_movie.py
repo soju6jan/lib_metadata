@@ -95,7 +95,8 @@ class SiteDaumMovie(SiteDaum):
        
 
         try:
-            url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
+            url = 'https://suggest-bar.daum.net/suggest?id=movie_v2&cate=movie&multiple=1&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
+            #url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(str(keyword)))
             #logger.debug('1111111111111')
             #logger.debug(url)
             new_item, movie = cls.get_movie_info_from_home(url, keyword, year)
