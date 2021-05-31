@@ -48,39 +48,40 @@ class SiteNaverMovie(SiteNaver):
             data = cls.search_api(keyword)
             #logger.debug(json.dumps(data, indent=4))
             result_list = []
-            for idx, item in enumerate(data['items']):
-                entity = EntitySearchItemMovie(cls.site_name)
-                entity.code = cls.module_char + cls.site_char + item['link'].split('=')[1]
-                entity.title = re.sub(r'\<.*?\>', '', item['title']).strip()
-                entity.originaltitle = re.sub(r'\<.*?\>', '', item['subtitle']).strip()
-                entity.image_url = item['image']
-                try: entity.year = int(item['pubDate'])
-                except: entity.year = 1900
-                if item['actor'] != '':
-                    entity.desc += u'배우 : %s\r\n' % ', '.join(item['actor'].rstrip('|').split('|'))
-                if item['director'] != '':
-                    entity.desc += u'감독 : %s\r\n' % ', '.join(item['director'].rstrip('|').split('|'))
-                if item['userRating'] != '0.00':
-                    entity.desc += u'평점 : %s\r\n' % item['userRating']
+            if data is not None:
+                for idx, item in enumerate(data['items']):
+                    entity = EntitySearchItemMovie(cls.site_name)
+                    entity.code = cls.module_char + cls.site_char + item['link'].split('=')[1]
+                    entity.title = re.sub(r'\<.*?\>', '', item['title']).strip()
+                    entity.originaltitle = re.sub(r'\<.*?\>', '', item['subtitle']).strip()
+                    entity.image_url = item['image']
+                    try: entity.year = int(item['pubDate'])
+                    except: entity.year = 1900
+                    if item['actor'] != '':
+                        entity.desc += u'배우 : %s\r\n' % ', '.join(item['actor'].rstrip('|').split('|'))
+                    if item['director'] != '':
+                        entity.desc += u'감독 : %s\r\n' % ', '.join(item['director'].rstrip('|').split('|'))
+                    if item['userRating'] != '0.00':
+                        entity.desc += u'평점 : %s\r\n' % item['userRating']
 
-                # etc
-                entity.extra_info['actor'] = item['actor']
-                entity.extra_info['director'] = item['director']
-                entity.extra_info['userRating'] = item['userRating']
-               
-                if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
-                    if year != 1900:
-                        if abs(entity.year-year) < 2:
-                            entity.score = 100
+                    # etc
+                    entity.extra_info['actor'] = item['actor']
+                    entity.extra_info['director'] = item['director']
+                    entity.extra_info['userRating'] = item['userRating']
+                
+                    if SiteUtil.compare(keyword, entity.title) or SiteUtil.compare(keyword, entity.originaltitle):
+                        if year != 1900:
+                            if abs(entity.year-year) < 2:
+                                entity.score = 100
+                            else:
+                                entity.score = 80
                         else:
-                            entity.score = 80
+                            entity.score = 95
                     else:
-                        entity.score = 95
-                else:
-                    entity.score = 80 - (idx*5)
-                    if entity.score < 0:
-                        entity.socre = 10
-                result_list.append(entity.as_dict())
+                        entity.score = 80 - (idx*5)
+                        if entity.score < 0:
+                            entity.socre = 10
+                    result_list.append(entity.as_dict())
 
             result_list = sorted(result_list, key=lambda k: k['score'], reverse=True)  
             if result_list:
