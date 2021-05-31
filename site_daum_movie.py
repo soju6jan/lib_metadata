@@ -57,7 +57,7 @@ class SiteDaumMovie(SiteDaum):
             for idx, item in enumerate(data['result']['search_result']['documents']):
                 item = item['document']
                 logger.debug(item)
-                if idx > 5:
+                if idx > 15:
                     break
                 entity = EntitySearchItemMovie(cls.site_name)
                 entity.title = item['titleKoreanHanl']
