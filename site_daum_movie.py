@@ -64,7 +64,7 @@ class SiteDaumMovie(SiteDaum):
                 entity.code = cls.module_char + cls.site_char + item['movieId']
                 entity.image_url = item['mainPhoto']
                 entity.year = item['productionYear']
-                eneity.title_en = item['titleEnglishHanl']
+                entity.title_en = item['titleEnglishHanl']
                 entity.extra_info['title_en'] = item['titleEnglishHanl']
                 entity.desc = f"{item['admission']} / {item['genres']}"
 
