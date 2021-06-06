@@ -143,6 +143,9 @@ class SiteDaum(object):
                 if find_1900 or entity.year == 0:
                     entity.series = sorted(entity.series, key=lambda k: int(k['code'][2:]))
                 else:
+                    # 2021-06-06 펜트하우스3. 2는 2021.2로 나오고 3은 2021로만 나와서 00이 붙어 3이 위로 가버림
+                    # 같은 년도는 코드로...
+                    """
                     for item in entity.series:
                         tmp = item['date'].split('.')
                         if len(tmp) == 2:
@@ -150,6 +153,14 @@ class SiteDaum(object):
                         elif len(tmp) == 1:
                             item['sort_value'] = int('%s00' % tmp[0])
                     entity.series = sorted(entity.series, key=lambda k: k['sort_value'])
+                    """
+                    for item in entity.series:
+                        tmp = item['date'].split('.')
+                        if len(tmp) == 2:
+                            item['sort_value'] = int(tmp[0])
+                        elif len(tmp) == 1:
+                            item['sort_value'] = int(tmp[0])
+                    entity.series = sorted(entity.series, key=lambda k: (k['sort_value'], int(k['code'][2:])))
 
                 
             logger.debug('SERIES : %s', len(entity.series))
