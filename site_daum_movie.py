@@ -70,8 +70,10 @@ class SiteDaumMovie(SiteDaum):
 
                 if SiteUtil.compare(keyword, entity.title) or (item['titleEnglishHanl'] != '' and SiteUtil.compare(keyword, item['titleEnglishHanl'])) or (item['titleAdminHanl'] != '' and SiteUtil.compare(keyword, item['titleAdminHanl'])):
                     if year != 1900:
-                        if abs(entity.year-year) <= 1:
+                        if abs(entity.year-year) == 0:
                             entity.score = 100
+                        elif abs(entity.year-year) <= 1:
+                            entity.score = 99
                         else:
                             entity.score = 80
                     else:
