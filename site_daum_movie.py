@@ -54,6 +54,7 @@ class SiteDaumMovie(SiteDaum):
             ret = []
             url = f"https://movie.daum.net/api/search?q={py_urllib.quote(str(keyword))}&t=movie&page=1&size=20"
             data = requests.get(url).json()
+            score_100 = 100
             for idx, item in enumerate(data['result']['search_result']['documents']):
                 item = item['document']
                 logger.debug(item)
@@ -68,7 +69,7 @@ class SiteDaumMovie(SiteDaum):
                 entity.extra_info['title_en'] = item['titleEnglishHanl']
                 entity.desc = f"{item['admission']} / {item['genres']}"
 
-                score_100 = 100
+                
                 if SiteUtil.compare(keyword, entity.title) or (item['titleEnglishHanl'] != '' and SiteUtil.compare(keyword, item['titleEnglishHanl'])) or (item['titleAdminHanl'] != '' and SiteUtil.compare(keyword, item['titleAdminHanl'])):
                     if year != 1900:
                         if abs(entity.year-year) == 0:
