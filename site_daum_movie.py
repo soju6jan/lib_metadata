@@ -68,16 +68,18 @@ class SiteDaumMovie(SiteDaum):
                 entity.extra_info['title_en'] = item['titleEnglishHanl']
                 entity.desc = f"{item['admission']} / {item['genres']}"
 
+                score_100 = 100
                 if SiteUtil.compare(keyword, entity.title) or (item['titleEnglishHanl'] != '' and SiteUtil.compare(keyword, item['titleEnglishHanl'])) or (item['titleAdminHanl'] != '' and SiteUtil.compare(keyword, item['titleAdminHanl'])):
                     if year != 1900:
                         if abs(entity.year-year) == 0:
-                            entity.score = 100
+                            entity.score = score_100
+                            score_100 -= 1
                         elif abs(entity.year-year) <= 1:
-                            entity.score = 99
+                            entity.score = score_100 - 1
                         else:
                             entity.score = 80
                     else:
-                        entity.score = 95
+                        entity.score = score_100 -5
                 else:
                     entity.score = 80 - (idx*5)
                 if entity.score < 10:
