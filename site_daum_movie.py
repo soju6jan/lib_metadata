@@ -57,7 +57,7 @@ class SiteDaumMovie(SiteDaum):
             score_100 = 100
             for idx, item in enumerate(data['result']['search_result']['documents']):
                 item = item['document']
-                logger.debug(item)
+                #logger.debug(item)
                 if idx > 50:
                     break
                 entity = EntitySearchItemMovie(cls.site_name)
