@@ -25,14 +25,34 @@ tv_mpaa_map = {'CPTG0100' : u'모든 연령 시청가', 'CPTG0200' : u'7세 이�
 
 movie_mpaa_map = {'CMMG0100': u'전체 관람가', 'CMMG0200': u'12세 관람가', 'CMMG0300': u'15세 관람가', 'CMMG0400':u'청소년 관람불가'}
 channel_code_map = {
+    'C00544' : '중화TV',
     'C00551' : 'tvN',
     'C00579' : 'Mnet',
     'C00590' : 'OGN',
-    'C15152' : 'CH.DIA',
+    'C00708' : 'MBN',
+    'C01581' : 'TV CHOSUN',
     'C01582' : 'JTBC',
+    'C01583' : '채널A',
+    'C05901' : '채널W',
+    'C06941' : 'tooniverse',    
     'C07381' : 'OCN',
-    'C06941' : 'tooniverse',
+    'C15152' : 'CH.DIA',
+    'C18641' : 'IHQ',
+    'C30541' : 'JAYE Ent.', 
+    'C35741' : 'iMBC',
+    'C43441' : '채널차이나', 
+    'C44742' : 'KTH',
+    'C45541' : 'AsiaN',    
+    'C47841' : 'SPO KOREA', 
+    'C48241' : '엔케이컨텐츠', 
+    'C48341' : '얼리버드 픽쳐스', 
+    'C49441' : 'tvN D ENT', 
+    'C50241' : 'TVING', 
+    'C51247' : 'KCONTACT Main', 
+    'C51253' : '콘텐츠판다',
+    'C51261' : 'CNTV',
 }
+
 product_country_map = {
     'CACT1001':u'한국', 
     'CACT4017':u'프랑스',
@@ -154,17 +174,22 @@ class SiteTvingTv(SiteTving):
                 while True:
                     episode_data = Tving.get_frequency_programid(program_info['code'], page=page)
                     for epi_all in episode_data['body']['result']:
-                        epi = epi_all['episode']
-                        if epi['frequency'] not in show['extra_info']['episodes']:
-                            show['extra_info']['episodes'][int(epi['frequency'])] = {}
+                        try:
+                            epi = epi_all['episode']
+                            if epi['frequency'] not in show['extra_info']['episodes']:
+                                show['extra_info']['episodes'][int(epi['frequency'])] = {}
 
-                        show['extra_info']['episodes'][int(epi['frequency'])][cls.site_name] = {
-                            'code' : cls.module_char + cls.site_char + epi['code'],
-                            'thumb' : cls.tving_base_image + epi['image'][0]['url'],
-                            'plot' : epi['synopsis']['ko'],
-                            'premiered' : cls.change_to_premiered(epi['broadcast_date']), 
-                            'title' : '',
-                        }
+                            tmp = cls.tving_base_image + epi['image'][0]['url'] if len(epi['image']) > 0 else ''
+                            show['extra_info']['episodes'][int(epi['frequency'])][cls.site_name] = {
+                                'code' : cls.module_char + cls.site_char + epi['code'],
+                                'thumb' : tmp,
+                                'plot' : epi['synopsis']['ko'],
+                                'premiered' : cls.change_to_premiered(epi['broadcast_date']), 
+                                'title' : '',
+                            }
+                        except Exception as exception: 
+                            logger.error('Exception:%s', exception)
+                            logger.error(traceback.format_exc())
                     page += 1
                     if episode_data['body']['has_more'] == 'N' or page == 10:
                         break
@@ -173,20 +198,21 @@ class SiteTvingTv(SiteTving):
             logger.error(traceback.format_exc())
 
     @classmethod 
-    def apply_tv_by_search(cls, show, apply_plot=True, apply_image=True):
+    def apply_tv_by_search(cls, show, apply_plot=True, apply_image=True, force_search_title=None):
         try:
-            data = cls.search_api(show['title'])
+            keyword = force_search_title if force_search_title is not None else show['title']
+            data = cls.search_api(keyword)
             if data:
                 for item in data:
                     if item['gubun'] != 'VODBC':
                         continue
-                    if item['ch_nm'].replace(' ', '').lower() == show['studio'].replace(' ', '').lower() and (item['mast_nm'].replace(' ', '').lower() == show['title'].replace(' ', '').lower() or item['mast_nm'].replace(' ', '').lower().find(show['title'].replace(' ', '').lower()) != -1 or show['title'].replace(' ', '').lower().find(item['mast_nm'].replace(' ', '').lower()) != -1):
+                    if item['ch_nm'].replace(' ', '').lower() == show['studio'].replace(' ', '').lower() and (item['mast_nm'].replace(' ', '').lower() == keyword.replace(' ', '').lower() or item['mast_nm'].replace(' ', '').lower().find(keyword.replace(' ', '').lower()) != -1 or keyword.replace(' ', '').lower().find(item['mast_nm'].replace(' ', '').lower()) != -1):
                         # 시작일로 체크
                         tving_program = Tving.get_program_programid(item['mast_cd'])['body']
-                        logger.debug(tving_program)
-                        logger.debug(show['premiered'])
-                        logger.debug(tving_program['broad_dt'])
-                        logger.debug(show['premiered'])
+                        #logger.debug(tving_program)
+                        #logger.debug(show['premiered'])
+                        #logger.debug(tving_program['broad_dt'])
+                        #logger.debug(show['premiered'])
                         
                         
                         #if tving_program['broad_dt'] == show['premiered'].replace('-', ''):

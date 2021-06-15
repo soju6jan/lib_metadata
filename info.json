@@ -1,1 +1,10 @@
-{"version": "0.2.0.0", "type": "library", "name": "lib_metadata", "category_name": "library", "developer": "soju6jan", "description": "\uba54\ud0c0\ub370\uc774\ud130\ub97c \uc5bb\uae30 \uc704\ud55c \uac1c\ubcc4 \uc0ac\uc774\ud2b8 \ud06c\ub864\ub9c1 \ub77c\uc774\ube0c\ub7ec\ub9ac", "home": "https://github.com/soju6jan/lib_metadata", "more": ""}
+{
+    "version": "0.2.0.0",
+    "type": "library",
+    "name": "lib_metadata",
+    "category_name": "library",
+    "developer": "soju6jan",
+    "description": "메타데이터를 얻기 위한 개별 사이트 크롤링 라이브러리",
+    "home": "https://github.com/soju6jan/lib_metadata",
+    "more": ""
+}

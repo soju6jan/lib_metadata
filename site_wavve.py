@@ -96,18 +96,16 @@ class SiteWavveTv(SiteWavve):
 
 
     @classmethod 
-    def apply_tv_by_search(cls, show):
+    def apply_tv_by_search(cls, show, force_search_title=None):
         try:
-            data = cls.search(show['title'])
+            keyword = force_search_title if force_search_title is not None else show['title']
+            data = cls.search(keyword)
             if data['ret'] == 'success':
                 data = data['data']
                 for item in data:
                     logger.debug(item)
-                    if SiteUtil.compare_show_title(item['title'], show['title']) and SiteUtil.compare(cls.change_daum_channelname(item['title']), show['title']):
-                        # and SiteUtil.compare(item['premiered'], show['premiered']):
+                    if SiteUtil.compare_show_title(item['title'], keyword) and SiteUtil.compare(cls.change_daum_channelname(item['title']), keyword):
                         info = Wavve.vod_programs_programid(item['code'][2:])
-                        #if info['firstreleasedate'] == show['premiered']:
-                        #    logger.debug(info)
                         cls._apply_tv_by_program(show, info)
                         break
         except Exception as exception: 
@@ -175,7 +173,7 @@ class SiteWavveTv(SiteWavve):
         try:
             ret = {}
             program_info = Wavve.vod_programs_programid(code[2:])
-            #ogger.debug(tving_program)
+            logger.debug(program_info)
             
             show = EntityShow(cls.site_name, code)
             show.title = program_info['programtitle']
@@ -184,7 +182,8 @@ class SiteWavveTv(SiteWavve):
             show.studio = cls.change_daum_channelname(program_info['channelname'])
             #show.plot = program_info['programsynopsis'].replace('<br>', '\r\n')
             show.premiered = program_info['firstreleasedate']
-            show.year = int(show.premiered.split('-')[0])
+            if show.premiered != '':
+                show.year = int(show.premiered.split('-')[0])
             if program_info['closedate'] == '':
                 show.status = 1
             else:

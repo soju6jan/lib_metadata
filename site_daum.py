@@ -255,10 +255,26 @@ class SiteDaumTv(SiteDaum):
     site_char = 'D'
 
     
+    @classmethod
+    def get_search_name_from_original(cls, search_name):
+        search_name = search_name.replace('일일연속극', '').strip()
+        search_name = search_name.replace('특별기획드라마', '').strip()
+        search_name = re.sub(r'\[.*?\]', '', search_name).strip()
+        search_name = search_name.replace(".", ' ')
+        # 2020-10-10
+        channel_list = ['채널 A', '채널A']
+        for tmp in channel_list:
+            if search_name.startswith(tmp):
+                search_name = search_name.replace(tmp, '').strip()
+        search_name = re.sub(r'^.{2,3}드라마', '', search_name).strip()
+        #2019-08-01
+        search_name = re.sub(r'^.{1,3}특집', '', search_name).strip()
+        return search_name
 
     @classmethod 
     def search(cls, keyword, daum_id=None, year=None, image_mode='0'):
         try:
+            keyword = cls.get_search_name_from_original(keyword)
             ret = {}
             if daum_id is None:
                 url = 'https://search.daum.net/search?q=%s' % (py_urllib.quote(str(keyword)))
