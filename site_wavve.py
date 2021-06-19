@@ -103,7 +103,7 @@ class SiteWavveTv(SiteWavve):
             if data['ret'] == 'success':
                 data = data['data']
                 for item in data:
-                    logger.debug(item)
+                    #logger.debug(item)
                     if SiteUtil.compare_show_title(item['title'], keyword) and SiteUtil.compare(cls.change_daum_channelname(item['title']), keyword):
                         info = Wavve.vod_programs_programid(item['code'][2:])
                         cls._apply_tv_by_program(show, info)
@@ -184,6 +184,7 @@ class SiteWavveTv(SiteWavve):
             show.premiered = program_info['firstreleasedate']
             if show.premiered != '':
                 show.year = int(show.premiered.split('-')[0])
+            logger.warning(program_info['closedate'])
             if program_info['closedate'] == '':
                 show.status = 1
             else:
