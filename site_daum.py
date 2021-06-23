@@ -115,7 +115,7 @@ class SiteDaum(object):
                         #logger.debug('MORE URL : %s', url)
                         if more[0].xpath('span')[0].text == u'시리즈 더보기':
                             #more_root = HTML.ElementFromURL(url)
-                            more_root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+                            more_root = SiteUtil.get_tree(url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
                             tags = more_root.xpath('//*[@id="series"]/ul/li')
                 except Exception as exception:
                     logger.debug('Not More!')
@@ -279,7 +279,7 @@ class SiteDaumTv(SiteDaum):
             else:
                 url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(keyword)), daum_id)
 
-            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            root = SiteUtil.get_tree(url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             data = cls.get_show_info_on_home(root)
             #logger.debug(data)
             # KD58568 : 비하인드 더 쇼
@@ -306,12 +306,12 @@ class SiteDaumTv(SiteDaum):
             show = EntityShow(cls.site_name, code)
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
             url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
-            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            root = SiteUtil.get_tree(url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
             home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
 
             #logger.debug(home_url)
-            home_root = SiteUtil.get_tree(home_url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            home_root = SiteUtil.get_tree(home_url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             home_data = cls.get_show_info_on_home(home_root)
 
             #logger.debug('home_datahome_datahome_datahome_datahome_datahome_datahome_datahome_datahome_data')
@@ -452,7 +452,7 @@ class SiteDaumTv(SiteDaum):
         try:
             ret = {}
             episode_code = episode_code[2:]
-            root = SiteUtil.get_tree(episode_code, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            root = SiteUtil.get_tree(episode_code, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
             items = root.xpath('//div[@class="tit_episode"]')
             entity = EntityEpisode(cls.site_name, episode_code)
@@ -527,7 +527,7 @@ class SiteDaumTv(SiteDaum):
         try:
             ret = {}
             url = 'https://search.daum.net/search?w=tot&q=%s' % (name)
-            root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
+            root = SiteUtil.get_tree(url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
             for xpath in ['//*[@id="prfColl"]/div/div/div/div[2]/div[2]/div[1]/span[2]', '//*[@id="prfColl"]/div/div/div/div[2]/div/div/span[2]']:
                 tags = root.xpath(xpath)
