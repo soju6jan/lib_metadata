@@ -283,7 +283,7 @@ class SiteDaumTv(SiteDaum):
             data = cls.get_show_info_on_home(root)
             #logger.debug(data)
             # KD58568 : 비하인드 더 쇼
-            if data['code'] == 'KD58568':
+            if data is not None and data['code'] in ['KD58568']:
                 data = None
             if data is None:
                 ret['ret'] = 'empty'
