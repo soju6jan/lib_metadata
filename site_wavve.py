@@ -106,8 +106,9 @@ class SiteWavveTv(SiteWavve):
                     #logger.debug(item)
                     if SiteUtil.compare_show_title(item['title'], keyword) and SiteUtil.compare(cls.change_daum_channelname(item['title']), keyword):
                         info = Wavve.vod_programs_programid(item['code'][2:])
-                        cls._apply_tv_by_program(show, info)
-                        break
+                        if info is not None:
+                            cls._apply_tv_by_program(show, info)
+                            break
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())

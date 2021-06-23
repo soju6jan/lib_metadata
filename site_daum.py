@@ -162,8 +162,6 @@ class SiteDaum(object):
                             item['sort_value'] = int(tmp[0])
                     entity.series = sorted(entity.series, key=lambda k: (k['sort_value'], int(k['code'][2:])))
 
-                
-            logger.debug('SERIES : %s', len(entity.series))
             #동명
             entity.equal_name = []
             tags = root.xpath(u'//div[@id="tv_program"]//dt[contains(text(),"동명 콘텐츠")]//following-sibling::dd')
@@ -284,7 +282,9 @@ class SiteDaumTv(SiteDaum):
             root = SiteUtil.get_tree(url, headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             data = cls.get_show_info_on_home(root)
             #logger.debug(data)
-            
+            # KD58568 : 비하인드 더 쇼
+            if data['code'] == 'KD58568':
+                data = None
             if data is None:
                 ret['ret'] = 'empty'
             else:
@@ -430,7 +430,6 @@ class SiteDaumTv(SiteDaum):
             if tags:
                 tmp = tags[0].attrib['href']
                 show.extra_info['kakao_id'] = re.compile('/(?P<id>\d+)/').search(tmp).group('id')
-                logger.debug(show.extra_info['kakao_id'])
 
             tags = root.xpath("//a[starts-with(@href, 'http://www.tving.com/vod/player')]")
             #tags = root.xpath('//a[@contains(@href, "tving.com")')
