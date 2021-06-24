@@ -306,10 +306,11 @@ class SiteDaumTv(SiteDaum):
             show = EntityShow(cls.site_name, code)
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
             url = 'https://search.daum.net/search?w=tv&q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
+            show.home = url
             root = SiteUtil.get_tree(url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
 
             home_url = 'https://search.daum.net/search?q=%s&irk=%s&irt=tv-program&DA=TVP' % (py_urllib.quote(str(title)), code[2:])
-
+            
             #logger.debug(home_url)
             home_root = SiteUtil.get_tree(home_url, proxy_url=SystemModelSetting.get('site_daum_proxy'), headers=cls.default_headers, cookies=SystemLogicSite.get_daum_cookies())
             home_data = cls.get_show_info_on_home(home_root)

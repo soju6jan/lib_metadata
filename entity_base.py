@@ -357,6 +357,7 @@ class EntityShow(object):
         self.extras = []
 
         self.extra_info = {'episodes':{}}
+        self.home = ''
 
 
     def __repr__(self):
@@ -396,6 +397,7 @@ class EntityShow(object):
             'director' :  [x.as_dict() for x in self.director] if self.director is not None else None,
             'extras' :  [x.as_dict() for x in self.extras] if self.extras is not None else None,
             'extra_info' : self.extra_info,
+            'home' : self.home,
         }
 
 
