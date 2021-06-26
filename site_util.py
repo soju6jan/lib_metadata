@@ -553,3 +553,41 @@ class SiteUtil(object):
         'War & Politics' : u'전쟁 & 정치',
         'Reality' : '리얼리티', 
     }
+
+    # 의미상으로 여기 있으면 안되나 예전 코드에서 많이 사용하기 때문에 잠깐만 나둔다.
+    @classmethod 
+    def get_tree_daum(cls, url, post_data=None):
+        from system.logic_site import SystemLogicSite
+        cookies = SystemLogicSite.get_daum_cookies()
+        from framework import SystemModelSetting
+        proxy_url = SystemModelSetting.get('site_daum_proxy')
+        from .site_daum import SiteDaum
+        headers = SiteDaum.default_headers
+        text = cls.get_text(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies)
+        if text is None:
+            return
+        return html.fromstring(text)
+    
+    @classmethod 
+    def get_text_daum(cls, url, post_data=None):
+        from system.logic_site import SystemLogicSite
+        cookies = SystemLogicSite.get_daum_cookies()
+        from framework import SystemModelSetting
+        proxy_url = SystemModelSetting.get('site_daum_proxy')
+        from .site_daum import SiteDaum
+        headers = SiteDaum.default_headers
+        res = cls.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies)
+        return res.text
+
+
+    @classmethod 
+    def get_response_daum(cls, url, post_data=None):
+        from system.logic_site import SystemLogicSite
+        cookies = SystemLogicSite.get_daum_cookies()
+        from framework import SystemModelSetting
+        proxy_url = SystemModelSetting.get('site_daum_proxy')
+        from .site_daum import SiteDaum
+        headers = SiteDaum.default_headers
+
+        res = cls.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies)
+        return res
