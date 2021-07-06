@@ -172,8 +172,8 @@ class SiteTmdbTv(SiteTmdb):
                             flag_find = True
                             actor['thumb'] = 'https://image.tmdb.org/t/p/' + 'original' + tmdb_item['profile_path']
                             break
-                if flag_find == False:
-                    logger.debug(kor_name)
+                #if flag_find == False:
+                #    logger.debug(kor_name)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
