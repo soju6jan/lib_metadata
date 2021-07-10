@@ -76,6 +76,8 @@ class SiteDaum(object):
             #logger.debug(extra_infos)
             #tmps = extra_infos[1].strip().split(' ')
             entity.genre = extra_infos[0]
+            if entity.genre in ['미국드라마', '중국드라마', '영국드라마', '일본드라마', '대만드라마', '기타국가드라마']:
+                entity.status = 1
             #logger.debug(tmps)
             #if len(tmps) == 2:
             try: entity.episode = int(re.compile(r'(?P<epi>\d{1,4})%s' % u'부').search(entity.extra_info).group('epi'))
