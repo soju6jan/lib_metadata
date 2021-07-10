@@ -186,10 +186,11 @@ class SiteWavveTv(SiteWavve):
             if show.premiered != '':
                 show.year = int(show.premiered.split('-')[0])
             logger.warning(program_info['closedate'])
-            if program_info['closedate'] == '':
-                show.status = 1
-            else:
-                show.status = 2
+            show.status = 1
+            #if program_info['closedate'] == '':
+            #    show.status = 1
+            #else:
+            #    show.status = 2
 
             if program_info['tags']['list']:
                 show.genre = [program_info['tags']['list'][0]['text']]
