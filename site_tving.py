@@ -287,12 +287,13 @@ class SiteTvingTv(SiteTving):
             show.premiered = cls.change_to_premiered(tving_program['broad_dt'])
             try: show.year = int(show.premiered.split('-')[0])
             except: show.year = 1900
-            if tving_program['broad_state'] == 'CPBS0200':
-                show.status = 1
-            elif tving_program['broad_state'] == 'CPBS0300':
-                show.status = 2
-            else:
-                logger.debug('!!!!!!!!!!!!!!!!broad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_state')
+            show.status = 1
+            #if tving_program['broad_state'] == 'CPBS0200':
+            #    show.status = 1
+            #elif tving_program['broad_state'] == 'CPBS0300':
+            #    show.status = 2
+            #else:
+            #    logger.debug('!!!!!!!!!!!!!!!!broad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_statebroad_state')
 
             #if tving_program['broad_end_dt'] != '':
             #    show.status = 2
