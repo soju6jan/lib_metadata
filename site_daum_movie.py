@@ -52,7 +52,7 @@ class SiteDaumMovie(SiteDaum):
     def search_movie_api(cls, keyword, year):
         try:
             ret = []
-            url = f"https://movie.daum.net/api/search?q={py_urllib.quote(str(keyword))}&t=movie&page=1&size=20"
+            url = f"https://movie.daum.net/api/search?q={py_urllib.quote(str(keyword))}&t=movie&page=1&size=100"
             data = requests.get(url).json()
             score_100 = 100
             count = 0
