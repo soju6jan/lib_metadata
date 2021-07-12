@@ -55,11 +55,12 @@ class SiteDaumMovie(SiteDaum):
             url = f"https://movie.daum.net/api/search?q={py_urllib.quote(str(keyword))}&t=movie&page=1&size=20"
             data = requests.get(url).json()
             score_100 = 100
+            count = 0
             for idx, item in enumerate(data['result']['search_result']['documents']):
                 item = item['document']
                 #logger.debug(item)
-                if idx > 50:
-                    break
+                #if idx > 50:
+                #    break
                 entity = EntitySearchItemMovie(cls.site_name)
                 entity.title = item['titleKoreanHanl']
                 entity.code = cls.module_char + cls.site_char + item['movieId']
@@ -83,8 +84,13 @@ class SiteDaumMovie(SiteDaum):
                         entity.score = score_100 -5
                 else:
                     entity.score = 80 - (idx*5)
+
                 if entity.score < 10:
                     entity.score = 10
+                if entity.score == 10:
+                    count += 1
+                    if count > 10:
+                        continue
                 ret.append(entity.as_dict())
             return ret
         except Exception as exception: 
