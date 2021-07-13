@@ -304,6 +304,7 @@ class SiteDaumTv(SiteDaum):
     @classmethod 
     def info(cls, code, title):
         try:
+            if title  == '모델': title = '드라마 모델'
             ret = {}
             show = EntityShow(cls.site_name, code)
             # 종영와, 방송중이 표현 정보가 다르다. 종영은 studio가 없음
