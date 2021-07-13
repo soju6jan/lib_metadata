@@ -53,8 +53,11 @@ class SiteDaum(object):
                     entity.status = 0
 
             #entity.image_url = 'https:' + root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']
-            entity.image_url = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
-
+            # 악동탐정스 시즌2
+            try:
+                entity.image_url = cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src'])
+            except:
+                entity.image_url = None
 
             #logger.debug('get_show_info_on_home status: %s', entity.status)
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div')
@@ -354,8 +357,10 @@ class SiteDaumTv(SiteDaum):
             tmp = root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')
             #logger.debug(tmp)
 
-
-            show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
+            try:
+                show.thumb.append(EntityThumb(aspect='poster', value=cls.process_image_url(root.xpath('//*[@id="tv_program"]/div[1]/div[1]/a/img')[0].attrib['src']), site='daum', score=-10))
+            except:
+                pass
 
 
             if True: 
