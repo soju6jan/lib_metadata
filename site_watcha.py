@@ -190,7 +190,8 @@ class SiteWatchaMovie(SiteWatcha):
             entity.mpaa = data['film_rating_long']
             for item in data['genres']:
                 entity.genre.append(item['name'])
-            entity.country.append(data['nations'][0]['name'])
+            try: entity.country.append(data['nations'][0]['name'])
+            except: pass
             try:
                 if entity.country[0] == u'한국':
                     entity.originaltitle = entity.title
@@ -440,10 +441,6 @@ class SiteWatchaTv(SiteWatcha):
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
             if api_return:
                 return data
-            #logger.debug(json.dumps(data, indent=4))
-            #for item in data['genres']:
-            #    entity.genre.append(item['name'])
-            #entity.country.append(data['nations'][0]['name'])
             entity.plot = data['story']
         except Exception as exception: 
             logger.error('Exception:%s', exception)
