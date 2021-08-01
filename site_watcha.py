@@ -95,28 +95,29 @@ class SiteWatchaMovie(SiteWatcha):
             data = cls.search_api(keyword)
             
             result_list = []
-            for idx, item in enumerate(data):
-                entity = EntitySearchItemMovie(cls.site_name)
-                entity.code = cls.module_char + cls.site_char + item['code']
-                entity.title = item['title']
-                if 'poster' in item and item['poster'] is not None and 'original' in item['poster']:
-                    entity.image_url = item['poster']['original']
-                entity.year = item['year']
-                #except: entity.year = 1900
-                try: entity.desc = item['nations'][0]['name']
-                except: pass
+            if data is not None:
+                for idx, item in enumerate(data):
+                    entity = EntitySearchItemMovie(cls.site_name)
+                    entity.code = cls.module_char + cls.site_char + item['code']
+                    entity.title = item['title']
+                    if 'poster' in item and item['poster'] is not None and 'original' in item['poster']:
+                        entity.image_url = item['poster']['original']
+                    entity.year = item['year']
+                    #except: entity.year = 1900
+                    try: entity.desc = item['nations'][0]['name']
+                    except: pass
 
-                if SiteUtil.compare(keyword, entity.title):
-                    if year != 1900:
-                        if abs(entity.year-year) <= 1:
-                            entity.score = 100
+                    if SiteUtil.compare(keyword, entity.title):
+                        if year != 1900:
+                            if abs(entity.year-year) <= 1:
+                                entity.score = 100
+                            else:
+                                entity.score = 80
                         else:
-                            entity.score = 80
+                            entity.score = 95
                     else:
-                        entity.score = 95
-                else:
-                    entity.score = 80 - (idx*5)
-                result_list.append(entity.as_dict())
+                        entity.score = 80 - (idx*5)
+                    result_list.append(entity.as_dict())
 
             if result_list:
                 ret['ret'] = 'success'

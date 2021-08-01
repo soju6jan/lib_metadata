@@ -104,9 +104,11 @@ class SiteDaumMovie(SiteDaum):
     def info_api(cls, code):
         try:
             ret = {'ret':'success', 'data':{}}
-            url = "https://movie.daum.net/data/movie/movie_info/detail.json?movieId=%s" % code[2:]
-            ret['data']['basic'] = requests.get(url).json()['data']
+            #url = "https://movie.daum.net/data/movie/movie_info/detail.json?movieId=%s" % code[2:]
+            url = "https://movie.daum.net/api/movie/%s/main" % code[2:]
+            ret['data']['basic'] = requests.get(url).json()
 
+            """
             url = "https://movie.daum.net/data/movie/movie_info/cast_crew.json?movieId=%s" % code[2:]
             ret['data']['cast'] = requests.get(url).json()['data']
 
@@ -115,6 +117,7 @@ class SiteDaumMovie(SiteDaum):
 
             url = 'https://movie.daum.net/moviedb/videolist.json?id=%s&page=%s' % (code[2:], '1')
             ret['data']['video'] = requests.get(url).json()
+            """
             return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -340,17 +343,24 @@ class SiteDaumMovie(SiteDaum):
             max_art_count = 5
             for item in data:
                 art = EntityThumb()
-                if poster_count < max_poster_count and item['movieCategory'].find(u'포스터') != -1:
-                    if item['movieCategory'] == u'메인 포스터':
-                        score = 65
-                    elif item['movieCategory'] == u'포스터':
-                        score = 60
-                    else:
-                        score = 55
-                    entity.art.append(EntityThumb(aspect='poster', value=item['imageUrl'], site=cls.site_name, score=score-poster_count))
+                # 2021-07-29. 포스터가 있고, 와이드(landscape)형 포스터가 있음. 잠은행
+                aspect = ''
+                score = 60
+                if item['movieCategory'] == '메인 포스터':
+                    aspect = 'poster'
+                    score = 65
+                elif item['movieCategory'].find('포스터') != -1 and item['width'] < item['height']:
+                    aspect = 'poster'
+                elif item['movieCategory'].find('포스터') != -1 and item['width'] > item['height']:
+                    aspect = 'landscape'
+                elif item['movieCategory'] == '스틸':
+                    aspect = 'landscape'
+
+                if aspect == 'poster' and poster_count < max_poster_count:
+                    entity.art.append(EntityThumb(aspect=aspect, value=item['imageUrl'], site=cls.site_name, score=score-poster_count))
                     poster_count += 1
-                elif art_count < max_art_count and item['movieCategory'] == u'스틸':
-                    entity.art.append(EntityThumb(aspect='landscape', value=item['imageUrl'], site=cls.site_name, score=60-art_count))
+                elif aspect == 'landscape' and art_count < max_art_count:
+                    entity.art.append(EntityThumb(aspect=aspect, value=item['imageUrl'], site=cls.site_name, score=score-art_count))
                     art_count += 1
                 if poster_count == max_poster_count and art_count == max_art_count:
                     break

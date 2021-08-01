@@ -421,10 +421,12 @@ class SiteTvingMovie(SiteTving):
             
             if tving_data['movie']['billing_package_tag'] == '':
                 entity.extra_info['tving_stream'] = {}
+                """
                 entity.extra_info['tving_stream']['drm'] = (tving_data['movie']['drm_yn'] == 'Y')
                 if entity.extra_info['tving_stream']['drm'] == False:
                     entity.extra_info['tving_stream']['plex'] = '{}/metadata/api/movie/stream?apikey={}&mode=redirect&code={}'.format(SystemModelSetting.get('ddns'), SystemModelSetting.get('auth_apikey'), code)
                 entity.extra_info['tving_stream']['kodi'] = 'plugin://metadata.sjva.movie/?action=play&code=%s' % code
+                """
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
