@@ -184,10 +184,10 @@ class SiteDaumMovie(SiteDaum):
         """
         try:
             url_list = [
-                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % (py_urllib.quote(movie_name.encode('utf8')), movie_year),
-                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % (py_urllib.quote(movie_name.encode('utf8'))),
+                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s %s' % (py_urllib.quote(movie_name.encode('utf8')), movie_year),
+                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s' % (py_urllib.quote(movie_name.encode('utf8'))),
                 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')), movie_year),
-                url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')))
+                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')))
             ]
             for url in url_list:
                 ret = cls.get_movie_info_from_home(url)
