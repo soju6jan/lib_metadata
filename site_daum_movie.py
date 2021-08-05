@@ -36,7 +36,7 @@ class SiteDaumMovie(SiteDaum):
             #logger.debug(year)
             result_list = list(reversed(sorted(result_list, key=lambda k:k['score'])))
             #logger.debug(d(result_list[0]))
-            if result_list[0]['score'] != 100:
+            if result_list is None or result_list[0]['score'] != 100:
                 movie_list = []
                 cls.search_movie_web(movie_list, keyword, year)
                 #logger.debug(d(movie_list))
@@ -52,6 +52,8 @@ class SiteDaumMovie(SiteDaum):
                         except: home['image_url'] = ''
                         try: home['desc'] = movie_list[0]['more']['info'][0]
                         except: home['desc'] = ''
+                        if result_list is None:
+                            result_list = []
                         result_list.insert(0, home)
 
             if result_list is None:
