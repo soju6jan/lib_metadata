@@ -33,13 +33,13 @@ class SiteDaumMovie(SiteDaum):
             ret = {}
             result_list = cls.search_movie_api(keyword, year)
             
-            logger.debug(year)
+            #logger.debug(year)
             result_list = list(reversed(sorted(result_list, key=lambda k:k['score'])))
-            logger.debug(d(result_list[0]))
+            #logger.debug(d(result_list[0]))
             if result_list[0]['score'] != 100:
                 movie_list = []
                 cls.search_movie_web(movie_list, keyword, year)
-                logger.debug(d(movie_list))
+                #logger.debug(d(movie_list))
                 if len(movie_list) > 0:
                     if movie_list[0]['score'] == 100:
                         home = {'site':'daum', 'score':100, 'originaltitle':''}
@@ -118,7 +118,7 @@ class SiteDaumMovie(SiteDaum):
             country = ''
             if country_tag:
                 country = country_tag[0].text_content().split('|')[0].strip()
-                logger.debug(country)
+                #logger.debug(country)
             more['poster'] = movie.xpath('//*[@id="nmovie_img_0"]/a/img')[0].attrib['src']
             more['title'] = movie.xpath('//*[@id="movieTitle"]/span')[0].text_content()
             tmp = movie.xpath('//*[@id="movieEColl"]/div[3]/div/div[1]/div[2]/dl')
@@ -129,7 +129,7 @@ class SiteDaumMovie(SiteDaum):
             more['info'].append(country_tag[0].text_content().strip())
 
             #2019-09-07
-            logger.debug(more['info'][0])
+            #logger.debug(more['info'][0])
             tmp = more['info'][0].split('|')
             if len(tmp) == 5:
                 more['country'] = tmp[0].replace(u'외', '').strip()
@@ -196,7 +196,7 @@ class SiteDaumMovie(SiteDaum):
                     need_another_search = True
                 cls.movie_append(movie_list, {'id':ret['daum_id'], 'title':ret['title'], 'year':ret['year'], 'score':score, 'country':ret['country'], 'more':ret['more']})
 
-                logger.debug('need_another_search : %s' % need_another_search)
+                #logger.debug('need_another_search : %s' % need_another_search)
                 
                 movie = ret['movie']
                 if need_another_search:
@@ -215,13 +215,13 @@ class SiteDaumMovie(SiteDaum):
                                     first_url = 'https://search.daum.net/search?%s' % tag.attrib['href']
                                 cls.movie_append(movie_list, {'id':daum_id, 'title':match.group(1), 'year':match.group(2), 'score':score})
                                 #results.Append(MetadataSearchResult(id=daum_id, name=match.group(1), year=match.group(2), score=score, lang=lang))
-                        logger.debug('first_url : %s' % first_url)
+                        #logger.debug('first_url : %s' % first_url)
                         if need_another_search and first_url is not None:
                             new_ret = cls.get_movie_info_from_home(first_url)
                             cls.movie_append(movie_list, {'id':new_ret['daum_id'], 'title':new_ret['title'], 'year':new_ret['year'], 'score':100, 'country':new_ret['country'], 'more':new_ret['more']})
                 #시리즈
                     tmp = movie.find('.//ul[@class="list_thumb list_few"]')
-                    logger.debug('SERIES:%s' % tmp)
+                    #logger.debug('SERIES:%s' % tmp)
                     if tmp is not None:
                         tag_list = tmp.findall('.//div[@class="wrap_cont"]')
                         first_url = None
@@ -232,13 +232,13 @@ class SiteDaumMovie(SiteDaum):
                             daum_name = a_tag.text_content()
                             span_tag = tag.find('span')
                             year = span_tag.text_content()
-                            logger.debug('daum_id:%s %s %s' % (daum_id, year, daum_name))
+                            #logger.debug('daum_id:%s %s %s' % (daum_id, year, daum_name))
                             if daum_name == movie_name and year == movie_year:
                                 first_url = 'https://search.daum.net/search?%s' % a_tag.attrib['href']
                             elif year == movie_year and first_url is not None:
                                 first_url = 'https://search.daum.net/search?%s' % tag.attrib['href']
                             cls.movie_append(movie_list, {'id':daum_id, 'title':daum_name, 'year':year, 'score':score}) 
-                            logger.debug('first_url : %s' % first_url)
+                            #logger.debug('first_url : %s' % first_url)
                         if need_another_search and first_url is not None:
                             new_ret = cls.get_movie_info_from_home(first_url)
                             cls.movie_append(movie_list, {'id':new_ret['daum_id'], 'title':new_ret['title'], 'year':new_ret['year'], 'score':100, 'country':new_ret['country'], 'more':new_ret['more']})
