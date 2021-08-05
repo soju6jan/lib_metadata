@@ -39,6 +39,7 @@ class SiteDaumMovie(SiteDaum):
             if len(result_list) == 0 or result_list[0]['score'] != 100:
                 movie_list = []
                 cls.search_movie_web(movie_list, keyword, year)
+                logger.debug(d(movie_list))
                 if len(movie_list) > 0:
                     if movie_list[0]['score'] == 100:
                         home = {'site':'daum', 'score':100, 'originaltitle':''}
