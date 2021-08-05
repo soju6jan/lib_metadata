@@ -185,7 +185,7 @@ class SiteDaumMovie(SiteDaum):
             url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')))
             ret = cls.get_movie_info_from_home(url)
             if ret is None:
-                url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')), year)
+                url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')), movie_year)
                 ret = cls.get_movie_info_from_home(url)
             if ret is not None:
                 # 부제목때문에 제목은 체크 하지 않는다.
