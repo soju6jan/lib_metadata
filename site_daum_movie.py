@@ -39,7 +39,7 @@ class SiteDaumMovie(SiteDaum):
             if len(result_list) == 0 or result_list[0]['score'] != 100:
                 movie_list = []
                 cls.search_movie_web(movie_list, keyword, year)
-                logger.debug(d(movie_list))
+                #logger.debug(d(movie_list))
                 if len(movie_list) > 0:
                     if movie_list[0]['score'] == 100:
                         home = {'site':'daum', 'score':100, 'originaltitle':''}
@@ -183,11 +183,17 @@ class SiteDaumMovie(SiteDaum):
             logger.error(traceback.format_exc())  
         """
         try:
-            url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')))
-            ret = cls.get_movie_info_from_home(url)
-            if ret is None:
-                url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')), movie_year)
+            url_list = [
+                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % (py_urllib.quote(movie_name.encode('utf8')), movie_year),
+                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % (py_urllib.quote(movie_name.encode('utf8'))),
+                'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s %s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')), movie_year),
+                url = 'https://search.daum.net/search?nil_suggest=btn&w=tot&DA=SBC&q=%s%s' % ('%EC%98%81%ED%99%94+', py_urllib.quote(movie_name.encode('utf8')))
+            ]
+            for url in url_list:
                 ret = cls.get_movie_info_from_home(url)
+                if ret is not None:
+                    break
+
             if ret is not None:
                 # 부제목때문에 제목은 체크 하지 않는다.
                 # 홈에 검색한게 년도도 같다면 score : 100을 주고 다른것은 검색하지 않는다.
