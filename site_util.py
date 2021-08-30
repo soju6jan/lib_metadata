@@ -605,6 +605,10 @@ class SiteUtil(object):
         right = width
         bottom = width
         poster = im.crop((left, top, right, bottom))
-        poster.save(filepath)
+        try:
+            poster.save(filepath)
+        except:
+            poster = poster.convert("RGB")
+            poster.save(filepath)
         ret = cls.discord_proxy_image_localfile(filepath)
         return ret

@@ -71,26 +71,32 @@ class SiteNaverBook(SiteNaver):
         #logger.warning(d(data))
         result_list = []
         ret = {}
-        tmp = data['rss']['channel']['item'] 
-        if type(tmp) == type({}):
-            tmp = [tmp]
-        for idx, item in enumerate(tmp):
-            
-            entity = {}
-            entity['code'] = 'BN' + item['link'].split('bid=')[1]
-            entity['title'] = item['title'].replace('<b>', '').replace('</b>', '')
-            entity['image'] = item['image']
-            entity['author'] = item['author'].replace('<b>', '').replace('</b>', '')
-            entity['publisher'] = item['publisher']
-            entity['description'] = ''
-            try:
-                if item['description'] is not None:
-                    entity['description'] = item['description'].replace('<b>', '').replace('</b>', '')
-            except:
-                pass
-            entity['score'] = 100 - idx*5
-            result_list.append(entity)
 
+        if data['rss']['channel']['total'] != '0':
+            tmp = data['rss']['channel']['item'] 
+            if type(tmp) == type({}):
+                tmp = [tmp]
+            for idx, item in enumerate(tmp):
+                
+                entity = {}
+                entity['code'] = 'BN' + item['link'].split('bid=')[1]
+                entity['title'] = item['title'].replace('<b>', '').replace('</b>', '')
+                entity['image'] = item['image']
+                try:
+                    entity['author'] = item['author'].replace('<b>', '').replace('</b>', '')
+                except:
+                    entity['author'] = ''
+                entity['publisher'] = item['publisher']
+                entity['description'] = ''
+                try:
+                    if item['description'] is not None:
+                        entity['description'] = item['description'].replace('<b>', '').replace('</b>', '')
+                except:
+                    pass
+                entity['score'] = 100 - idx*5
+                result_list.append(entity)
+        else:
+            logger.warning("검색 실패")
         if result_list:
             ret['ret'] = 'success'
             ret['data'] = result_list
@@ -121,8 +127,11 @@ class SiteNaverBook(SiteNaver):
             entity['publisher'] = tmps[1].strip()
             entity['premiered'] = tmps[2].replace('.', '')
 
-        tmp = etree.tostring(root.xpath('//*[@id="bookIntroContent"]/p')[0], pretty_print=True, encoding='utf8').decode('utf8')
-        entity['desc'] = cls.change_for_plex(tmp)
+        try:
+            tmp = etree.tostring(root.xpath('//*[@id="bookIntroContent"]/p')[0], pretty_print=True, encoding='utf8').decode('utf8')
+            entity['desc'] = cls.change_for_plex(tmp)
+        except:
+            entity['desc'] = ''
 
         try:
             tmp = etree.tostring(root.xpath('//*[@id="authorIntroContent"]/p')[0], pretty_print=True, encoding='utf8').decode('utf8')
