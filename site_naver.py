@@ -7,7 +7,7 @@ import traceback, unicodedata
 from datetime import datetime
 
 from lxml import html
-
+import xmltodict
 
 from framework import SystemModelSetting, py_urllib, py_urllib2
 from framework.util import Util
@@ -448,4 +448,5 @@ class SiteNaverMovie(SiteNaver):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
 

@@ -591,3 +591,20 @@ class SiteUtil(object):
 
         res = cls.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies)
         return res
+    
+
+    @classmethod
+    def process_image_book(cls, url):
+        from PIL import Image
+        im = Image.open(requests.get(url, stream=True).raw)
+        width, height = im.size
+        filename = 'proxy_%s.jpg' % str(time.time())
+        filepath = os.path.join(path_data, 'tmp', filename)
+        left = 0
+        top = 0
+        right = width
+        bottom = width
+        poster = im.crop((left, top, right, bottom))
+        poster.save(filepath)
+        ret = cls.discord_proxy_image_localfile(filepath)
+        return ret
