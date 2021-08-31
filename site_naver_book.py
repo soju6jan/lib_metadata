@@ -122,10 +122,15 @@ class SiteNaverBook(SiteNaver):
         entity['ratings'] = root.xpath('//*[@id="txt_desc_point"]/strong[1]/text()')[0]
         tmp = root.xpath('//div[@class="book_info"]/div[2]/div[2]')[0].text_content().strip()
         tmps = tmp.split('|')
-        if len(tmps) == 3:
-            entity['author'] = tmps[0].replace('저자', '').strip()
-            entity['publisher'] = tmps[1].strip()
-            entity['premiered'] = tmps[2].replace('.', '')
+        #logger.warning(tmps)
+        #if len(tmps) == 3:
+        #entity['author'] = tmps[0].replace('저자', '').strip()
+        try:
+            entity['author'] = tmps[0].replace('저자', '').replace('글', '').strip()
+            entity['publisher'] = tmps[-2].strip()
+            entity['premiered'] = tmps[-1].replace('.', '')
+        except:
+            pass
 
         try:
             tmp = etree.tostring(root.xpath('//*[@id="bookIntroContent"]/p')[0], pretty_print=True, encoding='utf8').decode('utf8')
