@@ -436,7 +436,9 @@ class SiteNaverMovie(SiteNaver):
         try:
             tmps = param.split(',')
             #tab
-            url = 'https://movie.naver.com/movie/bi/mi/mediaView.nhn?code=%s&mid=%s' % (tmps[0][2:], tmps[1])
+            if tmps[0].startswith('MN'):
+                tmps[0] = tmps[0][2:]
+            url = 'https://movie.naver.com/movie/bi/mi/mediaView.nhn?code=%s&mid=%s' % (tmps[0], tmps[1])
             root = html.fromstring(requests.get(url).text)
             tmp = root.xpath('//iframe[@class="_videoPlayer"]')[0].attrib['src']
             match = re.search(r'&videoId=(.*?)&videoInKey=(.*?)&', tmp)
