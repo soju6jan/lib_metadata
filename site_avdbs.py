@@ -44,7 +44,7 @@ class SiteAvdbs(object):
                 nodes = tree.xpath('//div[@class="dscr"]/p')
                 tmp = nodes[1].xpath('./a')[0].text_content().strip()
                 #tmp = nodes[1].xpath('./a')[0].text_content().strip()
-                if tmp.split('(')[1].split(')')[0] == entity_actor['originalname']:
+                if tmp.split('(')[1].split(')')[0] or tmp.split('（')[1].split('）')[0] == entity_actor['originalname']:
                     entity_actor['name'] = nodes[0].xpath('./a')[0].text_content().strip()
                     entity_actor['name2'] = nodes[1].xpath('./a')[0].text_content().strip().split('(')[0]
                     entity_actor['site'] = 'avdbs'
