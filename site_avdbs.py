@@ -20,15 +20,19 @@ class SiteAvdbs(object):
     @staticmethod
     def get_actor_info(entity_actor, proxy_url=None, retry=True):
         try:
-            url = 'https://www.avdbs.com/w2017/page/search/search_actor.php?kwd=%s' % entity_actor['originalname']
-            logger.debug(url)
+            seq_url = 'https://www.avdbs.com/w2017/api/iux_kwd_srch_log.php?op=srch&kwd=%s' % entity_actor['originalname']
             proxies = None
             if proxy_url is not None:
                 proxies = {"http"  : proxy_url, "https" : proxy_url}
             try:
+                seq_val = requests.get(seq_url, headers=SiteUtil.default_headers, proxies=proxies, timeout=5).json()['seq']
+                logger.debug(seq_val)
+                url = 'https://www.avdbs.com/w2017/page/search/search_actor.php?kwd=%s&seq=%s' % (entity_actor['originalname'], seq_val)
+                logger.debug(url)
                 res = requests.get(url, headers=SiteUtil.default_headers, proxies=proxies, timeout=5)
-            except:
-                return
+            except Exception as exception: 
+                logger.error('Exception:%s', exception)
+                logger.error(traceback.format_exc())
             #logger.debug('avdbs status code : %s', res.status_code)
             #logger.debug(res.text)
             res.encoding = 'utf-8'
