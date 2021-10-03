@@ -98,15 +98,22 @@ class SiteWavveTv(SiteWavve):
     @classmethod 
     def apply_tv_by_search(cls, show, force_search_title=None):
         try:
+            from tool_base import d
             keyword = force_search_title if force_search_title is not None else show['title']
             data = cls.search(keyword)
             if data['ret'] == 'success':
                 data = data['data']
+                #logger.warning(d(show))
                 for item in data:
-                    #logger.debug(item)
+                    
+                    #logger.debug(d(item))
                     if SiteUtil.compare_show_title(item['title'], keyword) and SiteUtil.compare(cls.change_daum_channelname(item['title']), keyword):
                         info = Wavve.vod_programs_programid(item['code'][2:])
-                        if info is not None:
+                        # 2021-10-03  JTBC2 부자의 탄생
+                        # Daum 검색 -> 회차정보 없음 -> 동명 드라마 에피 정보가 들어가버림
+                        # 스튜디오로나 첫날짜가 같다면 동일로 판단. 이것들 정보가 항상 있는지 파악 못함
+                        if info is not None and (show['studio'] == info['cpname'] or show['premiered'] == info['firstreleasedate']):
+                            #logger.warning(d(info))
                             cls._apply_tv_by_program(show, info)
                             break
         except Exception as exception: 
