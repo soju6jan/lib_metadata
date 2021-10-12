@@ -1,92 +1,36 @@
-
-# -*- coding: utf-8 -*-
-
-
-import requests, re, json, time
-import traceback, unicodedata
-from datetime import datetime
-
-from lxml import html
-
-
-from framework import SystemModelSetting, py_urllib, py_urllib2
-from framework.util import Util
-from system import SystemLogicTrans
-from system.logic_site import SystemLogicSite
-
+import requests, re, json, time, urllib.request, traceback
+from tool_base import d
 
 from .plugin import P
-from .entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra, EntitySearchItemMovie, EntityMovie2, EntityExtra2, EntityReview
 from .site_util import SiteUtil
 
 logger = P.logger
 
-"""
-import requests
-from xml.etree import ElementTree
-
-response = requests.get(url)
-
-tree = ElementTree.fromstring(response.content)
-"""
 
 
-
-
-class SiteWatcha(object):
-    site_name = 'watcha'
+class SiteVibe(object):
+    site_name = 'vibe'
     
     default_headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
-        #'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        #'Accept-Language' : 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        'x-watchaplay-client': 'WatchaPlay-WebApp',
-        'x-watchaplay-client-language': 'ko',
-        'x-watchaplay-client-region' : 'KR',
-        'x-watchaplay-client-version' : '1.0.0',
-        'referer': 'https://pedia.watcha.com/',
-        'origin': 'https://pedia.watcha.com',
-        'x-watcha-client': 'watcha-WebApp',
-        'x-watcha-client-language': 'ko',
-        'x-watcha-client-region': 'KR',
-        'x-watcha-client-version': '2.0.0',
+        'Accept' : 'application/json',
     }
 
-    """
-    default_headers = {
-        #'accept': 'application/vnd.frograms+json;version=20',
-        #'accept-encoding': 'gzip, deflate, br',
-        #'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        #'cookie': 'G_ENABLED_IDPS=google; _s_guit=2c38af244878e5e28e3193052db5d0d396eb2229ed394bf9a87e2eeb406a; _c_pm=false; wp_attcn:ZBm5R18Y7vd46=[{"audio":"","subtitle":"none"},{"audio":"ko","subtitle":"none"}]; _c_pv=0.9; _c_lattpp=1611199449215; _gid=GA1.2.1565107000.1611199454; _ga_1PYHGTCRYW=GS1.1.1611221002.5.1.1611221606.0; _guinness_session=ZQgDghUno%2BqpfsWIdAa8Vofq0k0V5H5XB%2BEUzGI4dBg83pl2YEAzGMFh5WOHGONl%2F37WMOpeU%2Bc%2FS8dDmKuHo%2FWn--xPj6Wi7WxVa5tyAF--tTqhPEh2A7dA8oUXNlm4aQ%3D%3D; _ga_1PF16G1LBX=GS1.1.1611220995.15.1.1611221695.0; _ga_KJMWF42C8H=GS1.1.1611220995.16.1.1611221695.0; _ga=GA1.1.1062148787.1610196018',
-        #'origin': 'https://pedia.watcha.com',
-        #'referer': 'https://pedia.watcha.com/',
-        #'sec-ch-ua': '"Google Chrome";v="87", " Not;A Brand";v="99", "Chromium";v="87"',
-        #'sec-ch-ua-mobile': '?0',
-        #'sec-fetch-dest': 'empty',
-        #'sec-fetch-mode': 'cors',
-        #'sec-fetch-site': 'same-site',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
-        'x-watcha-client': 'watcha-WebApp',
-        'x-watcha-client-language': 'ko',
-        'x-watcha-client-region': 'KR',
-        'x-watcha-client-version': '2.0.0',
-        #'x-watcha-remote-addr': '',
-    }
-    cookies = {'G_ENABLED_IDPS':'google', '_s_guit':'2c38af244878e5e28e3193052db5d0d396eb2229ed394bf9a87e2eeb406a', '_c_pm':'false', 'wp_attcn:ZBm5R18Y7vd46':'[{"audio":"","subtitle":"none"},{"audio":"ko","subtitle":"none"}]', '_c_pv':'0.9', '_c_lattpp':'1611199449215', '_gid':'GA1.2.1565107000.1611199454', '_ga_1PF16G1LBX':'GS1.1.1611199453.14.1.1611199559.0', '_ga_KJMWF42C8H':'GS1.1.1611199453.15.1.1611199559.0', '_ga':'GA1.1.1062148787.1610196018', '_ga_1PYHGTCRYW':'GS1.1.1611203000.4.1.1611203338.0', '_guinness_session':'S17q5ecj6sVxMS4rvFpLxvoQFJSqRCFp5rKRtTVhM4%2Bjtiq1cEsPF01OBXjK%2FxLzb0Zqn4SuQMDR0FXt9J4oZb8%2B--n9fzFfU61x6mtrh6--IBwOAYjjYYLki%2FDy4aHTfA%3D%3D'}
-    """
-
-# https://developers.naver.com/docs/search/movie/
-
-class SiteWatchaMovie(SiteWatcha):
-    #site_base_url = 'https://movie.naver.com'
-    module_char = 'M'
-    site_char = 'W'
+    module_char = 'S'
+    site_char = 'V'
 
     @classmethod
-    def search_api(cls, keyword):
+    def search_api(cls, keyword, mode='all'):
         try:
-            url = 'https://api-pedia.watcha.com/api/searches?query=%s' % keyword
+            url = f"https://apis.naver.com/vibeWeb/musicapiweb/v4/searchall?query={urllib.request.quote(keyword)}&sort=RELEVANCE&vidDisplay=25"
+            
+
+
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
+            if mode == 'artist':
+                data = data['response']['result']['artistResult']['artists']
+            elif mode == 'album':
+                data = data['response']['result']['albumResult']['albums']
             return data
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -94,8 +38,73 @@ class SiteWatchaMovie(SiteWatcha):
 
 
     @classmethod
-    def info_api(cls, code):
+    def search_artist(cls, keyword, mode='normal'):
         try:
+            data = cls.search_api(keyword, 'artist')
+            if mode == 'api':
+                return data
+
+            ret = []
+            for idx, item in enumerate(data):
+                ret.append({
+                    'code': f"{cls.module_char}{cls.site_char}{item['artistId']}",
+                    'name': item['artistName'],
+                    'thumb' : item['imageUrl'],
+                    'desc' : f"{item['gender']} {item['genreNames']}",
+                    'score': 100 - (idx*5),
+                })
+            return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+    
+    @classmethod
+    def info_artist(cls, code, mode='normal'):
+        try:
+            code = code.startswith(cls.module_char + cls.site_char)
+            code = code[2:]
+            url = f"https://apis.naver.com/vibeWeb/musicapiweb/v1/artist/{code}"
+            data = SiteUtil.get_response(url, headers=cls.default_headers).json()
+            
+            if mode == 'api':
+                return data
+
+
+            ret = []
+            for idx, item in enumerate(data):
+                ret.append({
+                    'code': f"{cls.module_char}{cls.site_char}{item['artistId']}",
+                    'name': item['artistName'],
+                    'thumb' : item['imageUrl'],
+                    'desc' : f"{item['gender']} {item['genreNames']}",
+                    'score': 100 - (idx*5),
+                })
+            return ret
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @classmethod
+    def search_album_api(cls, keyword):
+        try:
+            data = cls.search_api(keyword, 'album')
+            logger.warning(d(data))
+            return data
             if code.startswith(cls.module_char + cls.site_char):
                 code = code[2:]
             ret = {}
