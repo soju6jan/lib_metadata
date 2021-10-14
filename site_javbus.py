@@ -95,7 +95,12 @@ class SiteJavbus(object):
             entity.thumb = []
             tag = tree.xpath('/html/body/div[5]/div[1]/div[1]/a/img')[0]
             
-            data = SiteUtil.get_image_url('https://www.javbus.com' + tag.attrib['src'], image_mode, proxy_url=proxy_url, with_poster=True)
+            # 2021-10-14
+            img_url = tag.attrib['src']
+            if tag.attrib['src'].startswith('http') == False:
+                img_url = 'https://www.javbus.com' + img_url
+
+            data = SiteUtil.get_image_url(img_url, image_mode, proxy_url=proxy_url, with_poster=True)
 
 
             entity.thumb.append(EntityThumb(aspect='landscape', value=data['image_url']))
@@ -169,10 +174,12 @@ class SiteJavbus(object):
 
             ret['data'] = entity.as_dict()
             ret['ret'] = 'success'
+            logger.warning(ret)
             return ret
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
             ret['ret'] = 'exception'
             ret['data'] = str(exception)
+        logger.debug(ret)
         return ret
