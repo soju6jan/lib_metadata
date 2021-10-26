@@ -23,8 +23,6 @@ class SiteVibe(object):
     def search_api(cls, keyword, mode='all'):
         try:
             url = f"https://apis.naver.com/vibeWeb/musicapiweb/v4/searchall?query={urllib.request.quote(keyword)}&sort=RELEVANCE&vidDisplay=25"
-            
-
 
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
             if mode == 'artist':
@@ -38,10 +36,10 @@ class SiteVibe(object):
 
 
     @classmethod
-    def search_artist(cls, keyword, mode='normal'):
+    def search_artist(cls, keyword, return_format='normal'):
         try:
             data = cls.search_api(keyword, 'artist')
-            if mode == 'api':
+            if return_format == 'api':
                 return data
 
             ret = []
@@ -59,16 +57,16 @@ class SiteVibe(object):
             logger.error(traceback.format_exc())
     
     @classmethod
-    def info_artist(cls, code, mode='normal'):
+    def info_artist(cls, code, return_format='normal'):
         try:
-            code = code.startswith(cls.module_char + cls.site_char)
-            code = code[2:]
+            if code.startswith(cls.module_char + cls.site_char):
+                code = code[2:]
             url = f"https://apis.naver.com/vibeWeb/musicapiweb/v1/artist/{code}"
             data = SiteUtil.get_response(url, headers=cls.default_headers).json()
             
-            if mode == 'api':
+            if return_format == 'api':
                 return data
-
+            return data
 
             ret = []
             for idx, item in enumerate(data):
