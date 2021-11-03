@@ -76,9 +76,14 @@ class SiteDaum(object):
 
             tags = root.xpath('//*[@id="tvpColl"]/div[2]/div/div[1]/div/span')
             extra_infos = [tag.text_content() for tag in tags]
-            #logger.debug(extra_infos)
+            logger.debug(extra_infos)
             #tmps = extra_infos[1].strip().split(' ')
+            # 2021-11-03 
+            # 홍루몽.  중국 방송사는 a 태그가 없기 떄문에 방송사가 장르가 되어버린다.
             entity.genre = extra_infos[0]
+            if extra_infos[1] in ['미국드라마', '중국드라마', '영국드라마', '일본드라마', '대만드라마', '기타국가드라마']:
+                entity.genre = extra_infos[1]
+                entity.studio = extra_infos[0]
             if entity.genre in ['미국드라마', '중국드라마', '영국드라마', '일본드라마', '대만드라마', '기타국가드라마']:
                 entity.status = 1
             #logger.debug(tmps)
