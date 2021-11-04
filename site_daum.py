@@ -92,11 +92,11 @@ class SiteDaum(object):
             except: entity.episode = -1
             entity.broadcast_info = extra_infos[-2].strip().replace('&nbsp;', ' ').replace('&nbsp', ' ')
             entity.broadcast_term = extra_infos[-1].split(',')[-1].strip()
+
             try: entity.year = re.compile(r'(?P<year>\d{4})').search(extra_infos[-1]).group('year')
             except: entity.year = 0
-            
+
             entity.desc = root.xpath('//*[@id="tv_program"]/div[1]/dl[1]/dd/text()')[0]
-            
 
             #logger.debug('get_show_info_on_home 1: %s', entity['status'])
             #시리즈
@@ -354,6 +354,12 @@ class SiteDaumTv(SiteDaum):
             if match:
                 show.premiered = match.group('year') + '-' + match.group('month').zfill(2) + '-'+ match.group('day').zfill(2)
                 show.year = int(match.group('year'))
+            try:
+                if show.year == '' and home_data['year'] != 0:
+                    show.year = home_data['year']
+            except:
+                pass
+                
             
             show.status = home_data['status']
             show.genre = [home_data['genre']]
