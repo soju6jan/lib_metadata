@@ -133,7 +133,7 @@ class SiteTmdbTv(SiteTmdb):
     @classmethod 
     def search_tv(cls, title, premiered):
         try:
-            tmdb_search = tmdbsimple.Search().tv(query=title, language='ko')
+            tmdb_search = tmdbsimple.Search().tv(query=title, language='ko', include_adult=True)
             for t in tmdb_search['results']:
                 if premiered == t['first_air_date']:
                     return t['id']
@@ -229,7 +229,7 @@ class SiteTmdbMovie(SiteTmdb):
 
         logger.debug(keyword)
         try:
-            tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko')
+            tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko', include_adult=True)
             return tmdb_search
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -260,7 +260,7 @@ class SiteTmdbMovie(SiteTmdb):
         try:
             ret = {}
             logger.debug('tmdb search : %s', keyword)
-            tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko')
+            tmdb_search = tmdbsimple.Search().movie(query=keyword, language='ko', include_adult=True)
             logger.debug('TMDB MOVIE SEARCh [%s] [%s]', keyword, year)
             result_list = []
             for idx, item in enumerate(tmdb_search['results']):
@@ -565,7 +565,7 @@ class SiteTmdbFtv(SiteTmdb):
     @classmethod 
     def search_api(cls, keyword):
         try:
-            tmdb_search = tmdbsimple.Search().tv(query=keyword, language='ko')
+            tmdb_search = tmdbsimple.Search().tv(query=keyword, language='ko', include_adult=True)
             return tmdb_search
         except Exception as exception: 
             logger.error('Exception:%s', exception)
