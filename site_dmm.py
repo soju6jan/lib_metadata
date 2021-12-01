@@ -171,7 +171,12 @@ class SiteDmm(object):
                 logger.debug('CRITICAL!!!')
                 return ret
             
-
+            # 2021-12-01 : div[2]/img  인 것들이 있음
+            # 예) thtp00052
+            tmp_nodes = tree.xpath('{basetag}/div[1]/div'.format(basetag=basetag))
+            if len(tmp_nodes) == 2:
+                nodes = [tmp_nodes[1]]
+            
             #logger.debug('crs-full :%s ', len(a_nodes))
             # 2020-05-31 A태그가 없는 경우가 있음. 확대이미지가 없는 경우  tsds-42464
             #if a_nodes:
