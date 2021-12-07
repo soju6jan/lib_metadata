@@ -77,6 +77,8 @@ class EntityActor(object):
         self.originalname = name
         self.site = site
         self.type = ''
+        # 2021-12-07 충사
+        self.name_original = name
 
     def as_dict(self):
         return {
@@ -88,6 +90,7 @@ class EntityActor(object):
             'site' : self.site,
             'name2' : self.name2,
             'type' : self.type,
+            'name_original' : self.name_original,
         }
     
 
