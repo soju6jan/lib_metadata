@@ -18,8 +18,7 @@ from .site_util import SiteUtil
 # 패키지
 
 
-server_plugin_ddns = 'https://meta.sjva.me'
-server_web = 'https://sjva.me'
+server_plugin_ddns = app.config['DEFINE']['METADATA_SERVER_URL']
 try:
     if SystemModelSetting.get('ddns') == server_plugin_ddns:
         server_plugin_ddns = 'http://127.0.0.1:19999'
@@ -31,10 +30,7 @@ class MetadataServerUtil(object):
     def get_metadata(cls, code):
         try:
             from framework import py_urllib
-            #url = '{server_plugin_ddns}/server/normal/metadata/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
-            #url = '{server_web}/meta/get_meta.php?type=meta&code={code}'.format(server_web=server_web, code=code)
-            #logger.debug(code)
-            url = '{server_web}/meta/get_meta.php?'.format(server_web=server_web)
+            url = f"{app.config['DEFINE']['WEB_DIRECT_URL']}/meta/get_meta.php?"
             url += py_urllib.urlencode({'type':'meta', 'code':code})
             logger.warning(url)
             data = requests.get(url).json()
@@ -101,9 +97,7 @@ class MetadataServerUtil(object):
     def get_meta_extra(cls, code):
         try:
             from framework import py_urllib
-            #url = '{server_plugin_ddns}/server/normal/meta_extra/get?code={code}'.format(server_plugin_ddns=server_plugin_ddns, code=code)
-            #url = '{server_web}/meta/get_meta.php?type=extra&code={code}'.format(server_web=server_web, code=py_urllib.quote(code))
-            url = '{server_web}/meta/get_meta.php?'.format(server_web=server_web)
+            url = f"{app.config['DEFINE']['WEB_DIRECT_URL']}/meta/get_meta.php?"
             url += py_urllib.urlencode({'type':'extra', 'code':code})
             data = requests.get(url).json()
             if data['ret'] == 'success':
