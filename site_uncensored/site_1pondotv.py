@@ -1,0 +1,148 @@
+# -*- coding: utf-8 -*-
+import requests, re, json
+import traceback
+from dateutil.parser import parse
+
+from lxml import html
+
+from framework import SystemModelSetting
+from framework.util import Util
+from system import SystemLogicTrans
+
+# lib_metadata
+from ..entity_av import EntityAVSearch
+from ..entity_base import EntityMovie, EntityThumb, EntityActor, EntityRatings, EntityExtra
+from ..site_util import SiteUtil
+
+#########################################################
+from ..plugin import P
+logger = P.logger
+ModelSetting = P.ModelSetting
+
+class Site1PondoTv(object):
+    site_name = '1pondotv'
+    site_base_url = 'https://www.1pondo.tv'
+    module_char = 'E'
+    site_char = 'D' # pacopaco를 P로 쓰려고
+
+    @classmethod
+    def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
+        try:
+            ret = {}
+            proxies = {'http': proxy_url, 'https': proxy_url}
+            url = f'{cls.site_base_url}/dyn/phpauto/movie_details/movie_id/{keyword}.json'
+            json_data = requests.get(url, proxies=proxies).json()
+            
+            ret = {'data' : []}
+
+            item = EntityAVSearch(cls.site_name)
+            item.code = cls.module_char + cls.site_char + keyword
+            item.title = item.title_ko = json_data['Title']
+            item.year = json_data['Year']
+
+            item.image_url = json_data['MovieThumb']
+            if manual == True:
+                if image_mode == '3':
+                    image_mode = '0'
+                item.image_url = SiteUtil.process_image_mode(image_mode, item.image_url, proxy_url=proxy_url)
+            
+            if do_trans:
+                item.title_ko = SystemLogicTrans.trans(item.title, source='ja', target='ko')
+            
+            item.ui_code = f'1pon-{keyword}'
+            
+            # 스코어 계산 부분 필요
+            item.score = 100
+
+            logger.debug('score :%s %s ', item.score, item.ui_code)
+            ret['data'].append(item.as_dict())
+
+            ret['data'] = sorted(ret['data'], key=lambda k: k['score'], reverse=True)  
+            ret['ret'] = 'success'
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+        
+        return ret
+
+
+    @classmethod
+    def info(cls, code, do_trans=True, proxy_url=None, image_mode='0'):
+        try:
+            ret = {}
+            proxies = {'http': proxy_url, 'https': proxy_url}
+            url = f'{cls.site_base_url}/dyn/phpauto/movie_details/movie_id/{code[2:]}.json'
+            json_data = requests.get(url, proxies=proxies).json()
+            
+            entity = EntityMovie(cls.site_name, code)
+            entity.country = [u'일본']
+            entity.mpaa = u'청소년 관람불가'
+
+            # 썸네일
+            entity.thumb = []
+            data_poster = SiteUtil.get_image_url(json_data['MovieThumb'], image_mode, proxy_url=proxy_url)
+            entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
+            data_landscape = SiteUtil.get_image_url(json_data['ThumbUltra'], image_mode, proxy_url=proxy_url)
+            entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
+
+            # tagline
+            entity.tagline = SiteUtil.trans(json_data['Desc'], do_trans=do_trans)
+
+            # date, year
+            entity.premiered = json_data['Release']
+            entity.year = json_data['Year']
+
+            # actor
+            entity.actor = []
+            for actor in json_data['ActressesJa']:
+                entity.actor.append(EntityActor(actor))
+
+
+            # director
+            entity.director = []
+
+            # tag
+            entity.tag = []
+            entity.tag.append('1Pondo')
+
+            # genre
+            entity.genre = []
+            genrelist = []
+            genrelist = json_data['UCNAME']
+            if genrelist != []:
+                for item in genrelist:
+                    # entity.genre.append(SiteUtil.get_translated_tag('1pon_tags', item)) # 미리 번역된 태그를 포함할지 말지?
+                    entity.genre.append(SiteUtil.trans(item.strip(), do_trans=do_trans))
+            
+            # title
+            entity.title = entity.originaltitle = entity.sorttitle = f'1pon-{code[2:]}'
+
+            # entity.ratings
+            try: entity.ratings.append(EntityRatings(float(json_data['AvgRating']), name=cls.site_name))
+            except: pass
+
+            # plot
+            entity.plot = SiteUtil.trans(json_data['Desc'], do_trans=do_trans)
+            
+            # 팬아트
+            # 나중에
+            entity.fanart = []
+
+            # 부가영상 or 예고편
+            # 나중에
+            entity.extras = []
+            entity.extras.append(EntityExtra('Trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], premiered=entity.premiered, thumb=json_data['ThumbUltra']))
+
+            ret['ret'] = 'success'
+            ret['data'] = entity.as_dict()
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            ret['ret'] = 'exception'
+            ret['data'] = str(exception)
+
+        return ret
