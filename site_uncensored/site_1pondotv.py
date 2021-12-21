@@ -127,8 +127,8 @@ class Site1PondoTv(object):
             genrelist = json_data['UCNAME']
             if genrelist != []:
                 for item in genrelist:
-                    # entity.genre.append(SiteUtil.get_translated_tag('1pon_tags', item)) # 미리 번역된 태그를 포함할지 말지?
-                    entity.genre.append(SiteUtil.trans(item.strip(), do_trans=do_trans).strip())
+                    entity.genre.append(SiteUtil.get_translated_tag('1pon_tags', item)) # 미리 번역된 태그를 포함
+                    # entity.genre.append(SiteUtil.trans(item.strip(), do_trans=do_trans).strip())
             
             # title
             entity.title = entity.originaltitle = entity.sorttitle = f'1pon-{code[2:]}'
@@ -145,7 +145,7 @@ class Site1PondoTv(object):
 
             # 부가영상 or 예고편
             entity.extras = []
-            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], premiered=entity.premiered, thumb=json_data['ThumbUltra']))
+            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=json_data['ThumbUltra']))
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
