@@ -20,18 +20,32 @@ logger = P.logger
 ModelSetting = P.ModelSetting
 
 class Site1PondoTv(object):
-    site_name = '1pondotv'
+    site_name = '1pondo'
     site_base_url = 'https://www.1pondo.tv'
     module_char = 'E'
-    site_char = 'D' # pacopaco를 P로 쓰려고
+    site_char = 'D' # 나중에 pacopaco를 P로 쓰려고
 
     @classmethod
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         try:
             ret = {}
+            if re.search('(\\d{6}_\\d{2,4})', keyword, re.I) is not None:
+                keyword = re.search('(\\d{6}_\\d{2,4})', keyword, re.I).group()
+            else:
+                ret['ret'] = 'failed'
+                ret['data'] = 'invalid keyword'
+                return ret
+
             proxies = {'http': proxy_url, 'https': proxy_url}
             url = f'{cls.site_base_url}/dyn/phpauto/movie_details/movie_id/{keyword}.json'
-            json_data = requests.get(url, proxies=proxies).json()
+            
+            try:
+                response = requests.get(url, proxies=proxies)
+                json_data = response.json()
+            except:
+                ret['ret'] = 'failed'
+                ret['data'] = response.status_code
+                return ret
             
             ret = {'data' : []}
 
@@ -51,7 +65,6 @@ class Site1PondoTv(object):
             
             item.ui_code = f'1pon-{keyword}'
             
-            # 스코어 계산 부분 필요
             item.score = 100
 
             logger.debug('score :%s %s ', item.score, item.ui_code)
@@ -89,7 +102,7 @@ class Site1PondoTv(object):
             entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
 
             # tagline
-            entity.tagline = SiteUtil.trans(json_data['Desc'], do_trans=do_trans)
+            entity.tagline = SiteUtil.trans(json_data['Title'], do_trans=do_trans)
 
             # date, year
             entity.premiered = json_data['Release']
@@ -102,7 +115,7 @@ class Site1PondoTv(object):
 
 
             # director
-            entity.director = []
+            # entity.director = []
 
             # tag
             entity.tag = []
@@ -115,7 +128,7 @@ class Site1PondoTv(object):
             if genrelist != []:
                 for item in genrelist:
                     # entity.genre.append(SiteUtil.get_translated_tag('1pon_tags', item)) # 미리 번역된 태그를 포함할지 말지?
-                    entity.genre.append(SiteUtil.trans(item.strip(), do_trans=do_trans))
+                    entity.genre.append(SiteUtil.trans(item.strip(), do_trans=do_trans).strip())
             
             # title
             entity.title = entity.originaltitle = entity.sorttitle = f'1pon-{code[2:]}'
@@ -128,13 +141,11 @@ class Site1PondoTv(object):
             entity.plot = SiteUtil.trans(json_data['Desc'], do_trans=do_trans)
             
             # 팬아트
-            # 나중에
-            entity.fanart = []
+            # entity.fanart = []
 
             # 부가영상 or 예고편
-            # 나중에
             entity.extras = []
-            entity.extras.append(EntityExtra('Trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], premiered=entity.premiered, thumb=json_data['ThumbUltra']))
+            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], premiered=entity.premiered, thumb=json_data['ThumbUltra']))
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
