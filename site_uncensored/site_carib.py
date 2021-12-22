@@ -94,7 +94,10 @@ class SiteCarib(object):
 
             # 썸네일
             entity.thumb = []
-            data_poster = SiteUtil.get_image_url(f'https://www.caribbeancom.com/moviepages/{code[2:]}/images/jacket.jpg', image_mode, proxy_url=proxy_url)
+            if SiteUtil.get_response(f'https://www.caribbeancom.com/moviepages/{code[2:]}/images/jacket.jpg', proxy_url=proxy_url).status_code == 404:
+                data_poster = SiteUtil.get_image_url(f'https://www.caribbeancom.com/moviepages/{code[2:]}/images/l_l.jpg', image_mode, proxy_url=proxy_url)
+            else:
+                data_poster = SiteUtil.get_image_url(f'https://www.caribbeancom.com/moviepages/{code[2:]}/images/jacket.jpg', image_mode, proxy_url=proxy_url)
             entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
             data_landscape = SiteUtil.get_image_url(f'https://www.caribbeancom.com/moviepages/{code[2:]}/images/l_l.jpg', image_mode, proxy_url=proxy_url)
             entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
