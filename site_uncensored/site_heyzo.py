@@ -94,7 +94,7 @@ class SiteHeyzo(object):
 
             # 썸네일
             entity.thumb = []
-            data_poster = SiteUtil.get_image_url(f'https://m.heyzo.com/contents/3000/{code[2:]}/images/player_thumbnail.jpg', image_mode, proxy_url=proxy_url)
+            data_poster = SiteUtil.get_image_url(f'https://m.heyzo.com/contents/3000/{code[2:]}/images/thumbnail.jpg', image_mode, proxy_url=proxy_url)
             entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
             data_landscape = SiteUtil.get_image_url(f'https://m.heyzo.com/contents/3000/{code[2:]}/images/player_thumbnail.jpg', image_mode, proxy_url=proxy_url)
             entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
