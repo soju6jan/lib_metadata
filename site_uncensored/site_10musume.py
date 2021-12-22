@@ -143,6 +143,9 @@ class Site10Musume(object):
             # 팬아트
             # entity.fanart = []
 
+            # 제작사
+            entity.studio = '10Musume'
+
             # 부가영상 or 예고편
             entity.extras = []
             entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=json_data['ThumbUltra']))

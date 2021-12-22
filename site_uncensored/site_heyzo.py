@@ -141,6 +141,9 @@ class SiteHeyzo(object):
             # 팬아트
             # entity.fanart = []
 
+            # 제작사
+            entity.studio = 'HEYZO'
+
             # 부가영상 or 예고편
             entity.extras = []
             entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', 'https:'+re.search(r"\" src=\"(.*?)\"", tree.xpath('//*[@id="container"]/script[4]/text()')[0]).group(1), thumb=f'https://m.heyzo.com/contents/3000/{code[2:]}/images/player_thumbnail.jpg'))
