@@ -29,14 +29,15 @@ class SiteCarib(object):
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         try:
             ret = {}
+
             if re.search('(\\d{6}-\\d{3})', keyword, re.I) is not None:
-                keyword = re.search('(\\d{6}-\\d{3})', keyword, re.I).group()
+                code = re.search('(\\d{6}-\\d{3})', keyword, re.I).group()
             else:
                 ret['ret'] = 'failed'
                 ret['data'] = 'invalid keyword'
                 return ret
 
-            url = f'{cls.site_base_url}/moviepages/{keyword}/index.html'
+            url = f'{cls.site_base_url}/moviepages/{code}/index.html'
 
             if SiteUtil.get_response(url, proxy_url=proxy_url).status_code == 404:
                 logger.debug(f'not found: {keyword}')
@@ -49,12 +50,12 @@ class SiteCarib(object):
             ret = {'data' : []}
 
             item = EntityAVSearch(cls.site_name)
-            item.code = cls.module_char + cls.site_char + keyword
+            item.code = cls.module_char + cls.site_char + code
 
             item.title = item.title_ko = tree.xpath('//div[@id="moviepages"]//h1[@itemprop="name"]/text()')[0].strip()
             item.year = parse(tree.xpath('//div[@class="movie-info section"]//li[@class="movie-spec"]/span[@itemprop="uploadDate"]/text()')[0].strip()).date().year
 
-            item.image_url = f'https://www.caribbeancom.com/moviepages/{keyword}/images/l_l.jpg'
+            item.image_url = f'https://www.caribbeancom.com/moviepages/{code}/images/l_l.jpg'
             if manual == True:
                 if image_mode == '3':
                     image_mode = '0'
@@ -63,9 +64,12 @@ class SiteCarib(object):
             if do_trans:
                 item.title_ko = SystemLogicTrans.trans(item.title, source='ja', target='ko')
             
-            item.ui_code = f'carib-{keyword}'
-            
-            item.score = 100
+            item.ui_code = f'carib-{code}'
+
+            if 'carib' in keyword.lower():
+                item.score = 100
+            else:
+                item.score = 50
 
             logger.debug('score :%s %s ', item.score, item.ui_code)
             ret['data'].append(item.as_dict())

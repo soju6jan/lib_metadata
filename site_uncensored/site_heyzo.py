@@ -30,13 +30,13 @@ class SiteHeyzo(object):
         try:
             ret = {}
             if re.search('(\\d{4})', keyword, re.I) is not None and 'heyzo' in keyword.lower():
-                keyword = re.search('(\\d{4})', keyword, re.I).group()
+                code = re.search('(\\d{4})', keyword, re.I).group()
             else:
                 ret['ret'] = 'failed'
                 ret['data'] = 'invalid keyword'
                 return ret
 
-            url = f'{cls.site_base_url}/moviepages/{keyword}/index.html'
+            url = f'{cls.site_base_url}/moviepages/{code}/index.html'
 
             if SiteUtil.get_response(url, proxy_url=proxy_url).status_code == 404:
                 logger.debug(f'not found: {keyword}')
@@ -49,12 +49,12 @@ class SiteHeyzo(object):
             ret = {'data' : []}
 
             item = EntityAVSearch(cls.site_name)
-            item.code = cls.module_char + cls.site_char + keyword
+            item.code = cls.module_char + cls.site_char + code
 
             item.title = item.title_ko = tree.xpath('//div[@id="container"]/h1/text()')[0].strip()
             item.year = parse(tree.xpath('//*[@id="moviedetail"]/div[2]/span/text()')[1].strip()).date().year
 
-            item.image_url = f'https://m.heyzo.com/contents/3000/{keyword}/images/player_thumbnail.jpg'
+            item.image_url = f'https://m.heyzo.com/contents/3000/{code}/images/player_thumbnail.jpg'
             if manual == True:
                 if image_mode == '3':
                     image_mode = '0'
@@ -63,9 +63,12 @@ class SiteHeyzo(object):
             if do_trans:
                 item.title_ko = SystemLogicTrans.trans(item.title, source='ja', target='ko')
             
-            item.ui_code = f'HEYZO-{keyword}'
+            item.ui_code = f'HEYZO-{code}'
             
-            item.score = 100
+            if 'heyzo' in keyword.lower():
+                item.score = 100
+            else:
+                item.score = 50
 
             logger.debug('score :%s %s ', item.score, item.ui_code)
             ret['data'].append(item.as_dict())

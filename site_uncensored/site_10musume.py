@@ -30,14 +30,14 @@ class Site10Musume(object):
         try:
             ret = {}
             if re.search('(\\d{6}_\\d{2,4})', keyword, re.I) is not None:
-                keyword = re.search('(\\d{6}_\\d{2,4})', keyword, re.I).group()
+                code = re.search('(\\d{6}_\\d{2,4})', keyword, re.I).group()
             else:
                 ret['ret'] = 'failed'
                 ret['data'] = 'invalid keyword'
                 return ret
 
             proxies = {'http': proxy_url, 'https': proxy_url}
-            url = f'{cls.site_base_url}/dyn/phpauto/movie_details/movie_id/{keyword}.json'
+            url = f'{cls.site_base_url}/dyn/phpauto/movie_details/movie_id/{code}.json'
             
             try:
                 response = requests.get(url, proxies=proxies)
@@ -50,7 +50,7 @@ class Site10Musume(object):
             ret = {'data' : []}
 
             item = EntityAVSearch(cls.site_name)
-            item.code = cls.module_char + cls.site_char + keyword
+            item.code = cls.module_char + cls.site_char + code
             item.title = item.title_ko = json_data['Title']
             item.year = json_data['Year']
 
@@ -63,9 +63,12 @@ class Site10Musume(object):
             if do_trans:
                 item.title_ko = SystemLogicTrans.trans(item.title, source='ja', target='ko')
             
-            item.ui_code = f'10mu-{keyword}'
+            item.ui_code = f'10mu-{code}'
             
-            item.score = 100
+            if '10mu' in keyword.lower():
+                item.score = 100
+            else:
+                item.score = 50
 
             logger.debug('score :%s %s ', item.score, item.ui_code)
             ret['data'].append(item.as_dict())
