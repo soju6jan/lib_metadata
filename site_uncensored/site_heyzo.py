@@ -38,7 +38,7 @@ class SiteHeyzo(object):
 
             url = f'{cls.site_base_url}/moviepages/{keyword}/index.html'
 
-            if SiteUtil.get_response(url).status_code == 404:
+            if SiteUtil.get_response(url, proxy_url=proxy_url).status_code == 404:
                 logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = 'not found'
