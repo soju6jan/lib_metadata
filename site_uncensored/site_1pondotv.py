@@ -68,7 +68,7 @@ class Site1PondoTv(object):
             if '1pon' in keyword.lower():
                 item.score = 100
             else:
-                item.score = 50
+                item.score = 90
 
             logger.debug('score :%s %s ', item.score, item.ui_code)
             ret['data'].append(item.as_dict())
