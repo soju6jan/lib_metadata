@@ -91,6 +91,32 @@ class MetadataServerUtil(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
+
+    @classmethod
+    def set_metadata_fc2(cls, code, data, keyword):
+        try:
+            if data['thumb'] is None:
+                return
+            for tmp in data['thumb']:
+                if tmp['value'] is None or tmp['value'].find('.discordapp.') == -1:
+                    return
+                if requests.get(tmp['value']).status_code != 200:
+                    return
+            if SiteUtil.is_include_hangul(data['plot']) == False:
+                return
+
+            # 메타를 불완전하게 가져오는 경우에 대한 예외처리
+            if data['title'][3:] != keyword[3:]:
+                logger.debug('title not match!!!')
+                return
+
+            cls.set_metadata(code, data, keyword)
+            logger.debug(f'set metadata fc2 complete, {code}')
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
     
     
     @classmethod
