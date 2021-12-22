@@ -29,7 +29,7 @@ class SiteHeyzo(object):
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         try:
             ret = {}
-            if re.search('(\\d{4})', keyword, re.I) is not None:
+            if re.search('(\\d{4})', keyword, re.I) is not None and 'heyzo' in keyword.lower():
                 keyword = re.search('(\\d{4})', keyword, re.I).group()
             else:
                 ret['ret'] = 'failed'
