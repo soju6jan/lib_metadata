@@ -37,6 +37,7 @@ from .site_vibe import SiteVibe
 
 from .site_uncensored.site_1pondotv import Site1PondoTv
 from .site_uncensored.site_10musume import Site10Musume
+from .site_uncensored.site_heyzo import SiteHeyzo
 
 from .site_fc2.site_7mmtv import Site7mmTv
 from .site_fc2.site_bp4x import SiteBp4x

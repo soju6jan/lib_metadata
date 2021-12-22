@@ -119,7 +119,7 @@ class Site10Musume(object):
 
             # tag
             entity.tag = []
-            entity.tag.append('1Pondo')
+            entity.tag.append('10Musume')
 
             # genre
             entity.genre = []
@@ -127,7 +127,7 @@ class Site10Musume(object):
             genrelist = json_data['UCNAME']
             if genrelist != []:
                 for item in genrelist:
-                    entity.genre.append(SiteUtil.get_translated_tag('1pon_tags', item)) # 미리 번역된 태그를 포함
+                    entity.genre.append(SiteUtil.get_translated_tag('uncen_tags', item)) # 미리 번역된 태그를 포함
                     # entity.genre.append(SiteUtil.trans(item.strip(), do_trans=do_trans).strip())
             
             # title
