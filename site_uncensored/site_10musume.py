@@ -54,7 +54,13 @@ class Site10Musume(object):
             item.title = item.title_ko = json_data['Title']
             item.year = json_data['Year']
 
-            item.image_url = json_data['MovieThumb']
+            # json에 url이 잘못된 경우
+            if '10musume.com' not in json_data['MovieThumb']:
+                moviethumb = json_data['MovieThumb'].replace('/moviepages', 'www.10musume.com/moviepages')
+            else:
+                moviethumb = json_data['MovieThumb']
+
+            item.image_url = moviethumb
             if manual == True:
                 if image_mode == '3':
                     image_mode = '0'
@@ -98,10 +104,21 @@ class Site10Musume(object):
             entity.mpaa = u'청소년 관람불가'
 
             # 썸네일
+            # json에 url이 잘못된 경우
+            if '10musume.com' not in json_data['MovieThumb']:
+                moviethumb = json_data['MovieThumb'].replace('/moviepages', 'www.10musume.com/moviepages')
+            else:
+                moviethumb = json_data['MovieThumb']
+
+            if '10musume.com' not in json_data['ThumbUltra']:
+                thumbultra = json_data['ThumbUltra'].replace('/moviepages', 'www.10musume.com/moviepages')
+            else:
+                thumbultra = json_data['ThumbUltra']
+
             entity.thumb = []
-            data_poster = SiteUtil.get_image_url(json_data['MovieThumb'], image_mode, proxy_url=proxy_url)
+            data_poster = SiteUtil.get_image_url(moviethumb, image_mode, proxy_url=proxy_url)
             entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
-            data_landscape = SiteUtil.get_image_url(json_data['ThumbUltra'], image_mode, proxy_url=proxy_url)
+            data_landscape = SiteUtil.get_image_url(thumbultra, image_mode, proxy_url=proxy_url)
             entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
 
             # tagline
@@ -151,7 +168,7 @@ class Site10Musume(object):
 
             # 부가영상 or 예고편
             entity.extras = []
-            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=json_data['ThumbUltra']))
+            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=thumbultra))
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
