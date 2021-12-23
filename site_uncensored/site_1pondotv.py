@@ -151,7 +151,9 @@ class Site1PondoTv(object):
 
             # 부가영상 or 예고편
             entity.extras = []
-            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=json_data['ThumbUltra']))
+            try:
+                entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=json_data['ThumbUltra']))
+            except: pass
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()

@@ -168,7 +168,9 @@ class Site10Musume(object):
 
             # 부가영상 or 예고편
             entity.extras = []
-            entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=thumbultra))
+            try:
+                entity.extras.append(EntityExtra('trailer', entity.title, 'mp4', json_data['SampleFiles'][-1]['URL'], thumb=thumbultra))
+            except: pass
 
             ret['ret'] = 'success'
             ret['data'] = entity.as_dict()
