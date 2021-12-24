@@ -33,6 +33,7 @@ class SiteCarib(object):
             if re.search('(\\d{6}-\\d{3})', keyword, re.I) is not None:
                 code = re.search('(\\d{6}-\\d{3})', keyword, re.I).group()
             else:
+                # logger.debug(f'invalid keyword: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = 'invalid keyword'
                 return ret
@@ -40,7 +41,7 @@ class SiteCarib(object):
             url = f'{cls.site_base_url}/moviepages/{code}/index.html'
 
             if SiteUtil.get_response(url, proxy_url=proxy_url).status_code == 404:
-                logger.debug(f'not found: {keyword}')
+                # logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = 'not found'
                 return ret

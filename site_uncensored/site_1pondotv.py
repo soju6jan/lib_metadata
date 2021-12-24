@@ -32,6 +32,7 @@ class Site1PondoTv(object):
             if re.search('(\\d{6}_\\d{2,4})', keyword, re.I) is not None:
                 code = re.search('(\\d{6}_\\d{2,4})', keyword, re.I).group()
             else:
+                # logger.debug(f'invalid keyword: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = 'invalid keyword'
                 return ret
@@ -43,6 +44,7 @@ class Site1PondoTv(object):
                 response = requests.get(url, proxies=proxies)
                 json_data = response.json()
             except:
+                # logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = response.status_code
                 return ret
