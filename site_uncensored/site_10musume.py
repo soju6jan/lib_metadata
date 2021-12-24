@@ -57,10 +57,13 @@ class Site10Musume(object):
             item.year = json_data['Year']
 
             # json에 url이 잘못된 경우
-            if '10musume.com' not in json_data['MovieThumb']:
-                moviethumb = json_data['MovieThumb'].replace('/moviepages', 'www.10musume.com/moviepages')
-            else:
-                moviethumb = json_data['MovieThumb']
+            try:
+                if '10musume.com' not in json_data['MovieThumb']:
+                    moviethumb = json_data['MovieThumb'].replace('/moviepages', 'www.10musume.com/moviepages')
+                else:
+                    moviethumb = json_data['MovieThumb']
+            except:
+                moviethumb = ''
 
             item.image_url = moviethumb
             if manual == True:
@@ -107,15 +110,18 @@ class Site10Musume(object):
 
             # 썸네일
             # json에 url이 잘못된 경우
-            if '10musume.com' not in json_data['MovieThumb']:
-                moviethumb = json_data['MovieThumb'].replace('/moviepages', 'www.10musume.com/moviepages')
-            else:
-                moviethumb = json_data['MovieThumb']
+            try:
+                if '10musume.com' not in json_data['MovieThumb']:
+                    moviethumb = json_data['MovieThumb'].replace('/moviepages', 'www.10musume.com/moviepages')
+                else:
+                    moviethumb = json_data['MovieThumb']
 
-            if '10musume.com' not in json_data['ThumbUltra']:
-                thumbultra = json_data['ThumbUltra'].replace('/moviepages', 'www.10musume.com/moviepages')
-            else:
-                thumbultra = json_data['ThumbUltra']
+                if '10musume.com' not in json_data['ThumbUltra']:
+                    thumbultra = json_data['ThumbUltra'].replace('/moviepages', 'www.10musume.com/moviepages')
+                else:
+                    thumbultra = json_data['ThumbUltra']
+            except:
+                moviethumb = thumbultra = ''
 
             entity.thumb = []
             data_poster = SiteUtil.get_image_url(moviethumb, image_mode, proxy_url=proxy_url)
