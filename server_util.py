@@ -91,6 +91,29 @@ class MetadataServerUtil(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
+
+    @classmethod
+    def set_metadata_jav_uncensored(cls, code, data, keyword):
+        try:
+            if data['thumb'] is None:
+                return
+            for tmp in data['thumb']:
+                if tmp['value'] is None or tmp['value'].find('.discordapp.') == -1:
+                    return
+                if requests.get(tmp['value']).status_code != 200:
+                    return
+            if SiteUtil.is_include_hangul(data['tagline']) == False:
+                return
+            if data['plot'] is not None and SiteUtil.is_include_hangul(data['plot']) == False:
+                return
+
+            cls.set_metadata(code, data, keyword)
+            logger.debug(f'set metadata uncensored complete, {code}')
+
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
     
     
     @classmethod

@@ -612,3 +612,41 @@ class SiteUtil(object):
             poster.save(filepath)
         ret = cls.discord_proxy_image_localfile(filepath)
         return ret
+
+
+    @classmethod
+    def get_treefromcontent(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None):
+        text = SiteUtil.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies).content
+        #logger.debug(text)
+        if text is None:
+            return
+        return html.fromstring(text)
+
+
+    @classmethod
+    def get_translated_tag(cls, type, tag):
+        tags_json = os.path.join(os.path.dirname(__file__), 'tags.json')
+        with open(tags_json, 'r', encoding='utf8') as f:
+            tags = json.load(f)
+        
+        if type in tags:
+            if tag in tags[type]:
+                res = tags[type][tag]
+            
+            else:
+                trans_text = SystemLogicTrans.trans(tag, source='ja', target='ko').strip()
+                # logger.debug(f'태그 번역: {tag} - {trans_text}')
+                if cls.is_include_hangul(trans_text) or trans_text.replace(' ', '').isalnum():
+                    tags[type][tag] = trans_text
+                    
+                    with open(tags_json, 'w', encoding='utf8') as f:
+                        json.dump(tags, f, indent=4, ensure_ascii=False)
+            
+                    res = tags[type][tag]
+                else:
+                    res = tag
+        
+            return res
+        
+        else:
+            return tag
