@@ -635,7 +635,7 @@ class SiteUtil(object):
             
             else:
                 trans_text = SystemLogicTrans.trans(tag, source='ja', target='ko').strip()
-                logger.debug(f'태그 번역: {tag} - {trans_text}')
+                # logger.debug(f'태그 번역: {tag} - {trans_text}')
                 if cls.is_include_hangul(trans_text) or trans_text.replace(' ', '').isalnum():
                     tags[type][tag] = trans_text
                     
