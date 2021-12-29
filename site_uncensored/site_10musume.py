@@ -29,8 +29,8 @@ class Site10Musume(object):
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
         try:
             ret = {}
-            if re.search('(\\d{6}_\\d{2,4})', keyword, re.I) is not None:
-                code = re.search('(\\d{6}_\\d{2,4})', keyword, re.I).group()
+            if re.search('(\\d{6}[_-]\\d+)', keyword, re.I) is not None:
+                code = re.search('(\\d{6}[_-]\\d+)', keyword, re.I).group().replace('-', '_')
             else:
                 # logger.debug(f'invalid keyword: {keyword}')
                 ret['ret'] = 'failed'
