@@ -18,8 +18,7 @@ from ..site_util import SiteUtil
 from ..plugin import P
 logger = P.logger
 ModelSetting = P.ModelSetting
-from metadata import P as MetadataPlugin
-MetadataModelSetting = MetadataPlugin.ModelSetting
+
 
 class SiteJavdb(object):
     site_name = 'javdb'
@@ -28,6 +27,8 @@ class SiteJavdb(object):
 
     @classmethod
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
+        from metadata import P as MetadataPlugin
+        MetadataModelSetting = MetadataPlugin.ModelSetting
         javdb_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -102,6 +103,8 @@ class SiteJavdb(object):
 
     @classmethod
     def info(cls, code, do_trans=True, proxy_url=None, image_mode='0'):
+        from metadata import P as MetadataPlugin
+        MetadataModelSetting = MetadataPlugin.ModelSetting
         javdb_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -193,6 +196,8 @@ class SiteJavdb(object):
 
     @classmethod
     def test_cookie(cls):
+        from metadata import P as MetadataPlugin
+        MetadataModelSetting = MetadataPlugin.ModelSetting
         javdb_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',

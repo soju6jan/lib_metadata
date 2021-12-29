@@ -18,8 +18,6 @@ from ..site_util import SiteUtil
 from ..plugin import P
 logger = P.logger
 ModelSetting = P.ModelSetting
-from metadata import P as MetadataPlugin
-MetadataModelSetting = MetadataPlugin.ModelSetting
 
 class Site7mmTv(object):
     site_name = '7mmtv'
@@ -28,6 +26,8 @@ class Site7mmTv(object):
 
     @classmethod
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
+        from metadata import P as MetadataPlugin
+        MetadataModelSetting = MetadataPlugin.ModelSetting
         try:
             ret = {}
             keyword = keyword.strip().lower()
@@ -92,6 +92,8 @@ class Site7mmTv(object):
 
     @classmethod
     def info(cls, code, do_trans=True, proxy_url=None, image_mode='0'):
+        from metadata import P as MetadataPlugin
+        MetadataModelSetting = MetadataPlugin.ModelSetting
         try:
             ret = {}
             site_base_url = MetadataModelSetting.get('jav_fc2_7mmtv_url')
