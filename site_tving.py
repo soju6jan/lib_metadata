@@ -12,7 +12,7 @@ from framework.util import Util
 from system import SystemLogicTrans
 from system.logic_site import SystemLogicSite
 
-import  framework.tving.api as Tving
+from support.site.tving import SupportTving
 from lib_metadata import MetadataServerUtil
 
 from .plugin import P
@@ -121,7 +121,7 @@ class SiteTving(object):
 
     @classmethod
     def search_api(cls, keyword):
-        return Tving.search(keyword)
+        return SupportTving.ins.search(keyword)
 
 class SiteTvingTv(SiteTving):
     module_char = 'K'
@@ -134,8 +134,8 @@ class SiteTvingTv(SiteTving):
             #http://api.tving.com/v2/media/stream/info?info=y&screenCode=CSSD0100&networkCode=CSND0900&osCode=CSOD0900&teleCode=CSCD0900&apiKey=1e7952d0917d6aab1f0293a063697610&noCache=1610252535&mediaCode=E001924532&streamCode=stream50&callingFrom=FLASH
             logger.debug('search_tv_by_episode_code : %s', episode_code)
             
-            data, video_url = Tving.get_episode_json_default(episode_code, 'stream50')
-            tving_program = data['body']['content']['info']['program']
+            data = SupportTving.ins.get_info(episode_code, 'stream50')
+            tving_program = data['content']['info']['program']
             cls._apply_tv_by_program(show, tving_program, apply_plot=apply_plot, apply_image=apply_image)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -169,11 +169,10 @@ class SiteTvingTv(SiteTving):
                     elif img['code'] in ['CAIP2000']: #square
                         show['thumb'].append(EntityThumb(aspect='square', value=cls.tving_base_image + img['url'], site=cls.site_name, score=tmp_score).as_dict())
             if True:
-                import framework.tving.api as Tving
                 page = 1
                 while True:
-                    episode_data = Tving.get_frequency_programid(program_info['code'], page=page)
-                    for epi_all in episode_data['body']['result']:
+                    episode_data = SupportTving.ins.get_frequency_programid(program_info['code'], page=page)
+                    for epi_all in episode_data['result']:
                         try:
                             epi = epi_all['episode']
                             if epi['frequency'] not in show['extra_info']['episodes']:
@@ -191,7 +190,7 @@ class SiteTvingTv(SiteTving):
                             logger.error('Exception:%s', exception)
                             logger.error(traceback.format_exc())
                     page += 1
-                    if episode_data['body']['has_more'] == 'N' or page == 10:
+                    if episode_data['has_more'] == 'N' or page == 10:
                         break
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -208,7 +207,7 @@ class SiteTvingTv(SiteTving):
                         continue
                     if item['ch_nm'].replace(' ', '').lower() == show['studio'].replace(' ', '').lower() and (item['mast_nm'].replace(' ', '').lower() == keyword.replace(' ', '').lower() or item['mast_nm'].replace(' ', '').lower().find(keyword.replace(' ', '').lower()) != -1 or keyword.replace(' ', '').lower().find(item['mast_nm'].replace(' ', '').lower()) != -1):
                         # 시작일로 체크
-                        tving_program = Tving.get_program_programid(item['mast_cd'])['body']
+                        tving_program = SupportTving.ins.get_program_programid(item['mast_cd'])
                         #logger.debug(tving_program)
                         #logger.debug(show['premiered'])
                         #logger.debug(tving_program['broad_dt'])
@@ -275,7 +274,7 @@ class SiteTvingTv(SiteTving):
     def info(cls, code):
         try:
             ret = {}
-            tving_program = Tving.get_program_programid(code[2:])['body']
+            tving_program = SupportTving.ins.get_program_programid(code[2:])
             #ogger.debug(tving_program)
             
             show = EntityShow(cls.site_name, code)
@@ -378,10 +377,8 @@ class SiteTvingMovie(SiteTving):
             entity.code_list.append(['tving_id', code[2:]])
             #wavve_data = cls.info_api(code)
 
-            tving_data_all = Tving.get_movie_json2(code[2:])
-            #logger.debug(json.dumps(tving_data_all, indent=4))
-            #logger.debug(tving_data_all['body']['result']['message'])
-            tving_data = tving_data_all['body']['content']['info']
+            tving_data_all = SupportTving.ins.get_info(code[2:], 'stream50')
+            tving_data = tving_data_all['content']['info']
    
             entity.title = tving_data['movie']['name']['ko']
             entity.extra_info['title_en'] = tving_data['movie']['name']['en']
