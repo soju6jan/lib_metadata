@@ -104,8 +104,8 @@ class SiteFc2Com(object):
                 logger.debug(f'landscape 없음: {code}')
 
 
-            # tagline
-            entity.tagline = SiteUtil.trans(tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/h3/text()')[0].strip(), do_trans=do_trans)
+            # tagline, plot
+            entity.tagline = entity.plot = SiteUtil.trans(tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/h3/text()')[0].strip(), do_trans=do_trans)
 
             # date, year
             tmp_date = parse(re.search('\d{4}/\d{2}/\d{2}', tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/div[2]/p/text()')[0]).group(0))
@@ -133,9 +133,6 @@ class SiteFc2Com(object):
 
             # 별점 지원할 경우 추가할 부분 / entity.ratings
             # fc2.com 지원은 하지만 귀찮으므로 나중에 추가
-
-            # plot
-            entity.plot = SiteUtil.trans(tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/h3/text()')[0], do_trans=do_trans)
             
             # 팬아트
             # 나중에
