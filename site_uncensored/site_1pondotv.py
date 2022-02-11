@@ -23,7 +23,7 @@ class Site1PondoTv(object):
     site_name = '1pondo'
     site_base_url = 'https://www.1pondo.tv'
     module_char = 'E'
-    site_char = 'D' # 나중에 pacopaco를 P로 쓰려고
+    site_char = 'D'
 
     @classmethod
     def search(cls, keyword, do_trans=True, proxy_url=None, image_mode='0', manual=False):
