@@ -46,7 +46,7 @@ class Site7mmTv(object):
                         tree.xpath('/html/body/section[2]/div/article/div/div/div[1]/div/div/div[1]/a/img/@src'))
                 )
                 for search_title, url, thumb in search_result:
-                    if keyword in search_title:
+                    if keyword in search_title and 'fc2' in search_title.lower():
                         item.title = item.title_ko = re.sub('(\[?FC2-?PPV-? ?\\d{6,7}\]?)', '', search_title, flags=re.I).strip()
                         item.code = cls.module_char + cls.site_char + url.split('/')[5]
                         item.image_url = thumb
