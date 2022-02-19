@@ -13,6 +13,7 @@ from system import SystemLogicTrans
 from system.logic_site import SystemLogicSite
 
 from support.site.tving import SupportTving
+from support.base import d
 from lib_metadata import MetadataServerUtil
 
 from .plugin import P
@@ -275,13 +276,18 @@ class SiteTvingTv(SiteTving):
         try:
             ret = {}
             tving_program = SupportTving.ins.get_program_programid(code[2:])
-            #ogger.debug(tving_program)
-            
             show = EntityShow(cls.site_name, code)
             show.title = tving_program['name']['ko']
             show.originaltitle = show.title
             show.sorttitle = show.title 
-            show.studio = cls.change_channel_code(tving_program['channel_code'])
+
+            # 2022-02-14 채널정보 프로그램 정보에서 빠지고, 에피소드에만 있음
+            #show.studio = cls.change_channel_code(tving_program['channel_code'])
+            show.studio = ''
+            episode_data = SupportTving.ins.get_frequency_programid(code[2:])
+            if len(episode_data['result']) > 0:
+                show.studio = episode_data['result'][0]['channel']['name']['ko']
+
             show.plot = tving_program['synopsis']['ko']
             show.premiered = cls.change_to_premiered(tving_program['broad_dt'])
             try: show.year = int(show.premiered.split('-')[0])
@@ -298,7 +304,6 @@ class SiteTvingTv(SiteTving):
             #    show.status = 2
             show.genre = [tving_program['category1_name']['ko']]
             #show.episode = home_data['episode']
-            
             
             for item in tving_program['actor']:
                 actor = EntityActor(item)
