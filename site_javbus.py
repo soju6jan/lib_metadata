@@ -1,6 +1,5 @@
 
 # -*- coding: utf-8 -*-
-import requests
 import traceback
 
 from lxml import html
@@ -35,7 +34,7 @@ class SiteJavbus(object):
                 keyword = keyword[:-3]
             keyword = keyword.replace(' ', '-')
             url = '{site_base_url}/search/{keyword}'.format(site_base_url=cls.site_base_url, keyword=keyword)
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url)
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, verify=False)
             #lists = tree.xpath('//*[@id="waterfall"]/div')
             lists = tree.xpath('//a[@class="movie-box"]')
             
