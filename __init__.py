@@ -34,6 +34,8 @@ from .site_javbus import SiteJavbus
 from .site_jav321 import SiteJav321
 from .site_mgstage import SiteMgstageDvd, SiteMgstageAma
 from .site_vibe import SiteVibe
+from .site_melon import SiteMelon
+from .site_lastfm import SiteLastfm
 
 from .site_uncensored.site_1pondotv import Site1PondoTv
 from .site_uncensored.site_10musume import Site10Musume
