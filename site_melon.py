@@ -1,17 +1,22 @@
 import requests, re, json, time, urllib.request, traceback
-from tool_base import d
 
-from .plugin import P
-from .site_util import SiteUtil
+
+#from .site_util import SiteUtil
 from support.base import get_logger, d, default_headers
 from urllib.parse import quote
 import lxml.html
 from lxml import etree
 import re
 from collections import OrderedDict 
-from .site_util import SiteUtil
 
-logger = P.logger
+try:
+    from .plugin import P
+    logger = P.logger
+except:
+    logger = None
+    def set_logger(_):
+        global logger
+        logger = _
 
 class SiteMelon(object):
     site_name = 'melon'
@@ -27,16 +32,17 @@ class SiteMelon(object):
 
     @classmethod
     def base_search(cls, mode, keyword):
-        logger.debug(quote(keyword))
+        #logger.debug(quote(keyword))
         url = f'https://www.melon.com/search/keyword/index.json?query={quote(keyword)}'
         data = requests.get(url, headers=default_headers).json()
-        logger.warning(d(data))
-        if mode == 'artist':
+        #logger.warning(d(data))
+        if mode == 'artist' and 'ARTISTCONTENTS' in data:
             return data['ARTISTCONTENTS']
-        elif mode == 'album':
+        elif mode == 'album' and 'ALBUMCONTENTS' in data:
             return data['ALBUMCONTENTS']
-        elif mode == 'song':
+        elif mode == 'song' and 'SONGCONTENTS' in data:
             return data['SONGCONTENTS']
+        return []
           
     @classmethod       
     def search_artist(cls, keyword, return_format):
@@ -127,6 +133,118 @@ class SiteMelon(object):
         del entity['info']
         return entity
 
+
+    @classmethod
+    def info_artist_albums(cls, code): 
+        url = f"https://www.melon.com/artist/albumPaging.htm?startIndex=1&pageSize=1000&listType=0&orderBy=ISSUE_DATE&artistId={code[2:]}"
+        return cls.get_album_list(url)
+    
+    @classmethod 
+    def get_album_list(cls, url):
+        ret = []
+        try:
+            text = requests.get(url, headers=default_headers).text
+            root = lxml.html.fromstring(text)
+            tags = root.xpath('//li[@class="album11_li"]')
+            #logger.error(f"HTML 앨범 수 : {len(tags)}")
+            for tag in tags:
+                entity = {'artist':'Various Artists'}
+                tmp = tag.xpath('.//div/a')[0]
+                tmp = tmp.attrib['href']
+                match = re.search('\(\'?(?P<code>\d+)\'?\)', tmp)
+                if match:
+                    entity['code'] = cls.module_char + cls.site_char + match.group('code')
+                
+                tmp = tag.xpath('.//img')
+                if len(tmp) > 0:
+                    entity['image'] = tmp[0].attrib['src']
+                
+
+                entity['album_type'] = tag.xpath('.//div/div/dl/dt/span')[0].text_content().strip().replace('[','').replace(']','')
+                
+                entity['title'] = tag.xpath('.//div/div/dl/dt/a')[0].text_content().strip()
+
+                tmp = tag.xpath('.//div/div/dl/dd[1]/div/a')
+                if len(tmp) > 0:
+                    entity['artist'] = tmp[0].text_content().strip()
+
+                entity['date'] = tag.xpath('.//div/div/dl/dd[3]/span')[0].text_content().strip()
+                ret.append(entity)
+        except Exception as e:
+            logger.debug(f'Exception:{e}')
+            logger.debug(traceback.format_exc())
+        return ret
+
+
+    @classmethod
+    def search_album_from_html(cls, data, album, artist, artist_code, pub_date):
+        if artist_code != None and artist_code.startswith('SA'):
+            data = cls.info_artist_albums(artist_code)
+            #logger.debug(d(data))
+            ret = []
+            for item in data:
+                if album == item['title']:
+                    item['score'] = 100
+                elif cls.compare(album, item['title']):
+                    item['score'] = 95
+                elif album in item['title']:
+                    item['score'] = 85
+                else:
+                    from difflib import SequenceMatcher 
+                    ratio = SequenceMatcher(None, album, item['title']).ratio()
+                    #logger.error(f"{album} {item['title']} {ratio}")
+                    if ratio > 0.80:
+                        item['score'] = int(ratio*100)
+
+                if 'score' in item:
+                    item['desc'] = f"아티스트 : {artist} / 발매일 : {item['date']}"
+                    ret.append(item)
+            logger.debug(f"html score count : {len(ret)}")    
+            return ret
+        else: #if len(pub_date) == 8:
+            ret = []
+            #logger.error(pub_date)
+            page_size = 21
+            keyword = quote(album)
+            for i in range(5):
+                url = f"https://www.melon.com/search/album/index.htm?startIndex={1+page_size*i}&pageSize=21&q={keyword}&sortorder=&section=all&sectionId=&genreDir=&sort=weight&mwkLogType=T"
+
+                data = cls.get_album_list(url)
+                if len(data) == 0:
+                    break
+
+                for item in data:
+                    if album == item['title']:
+                        item['score'] = 95
+                    elif cls.compare(album, item['title']):
+                        item['score'] = 90
+                    elif album in item['title']:
+                        item['score'] = 80
+                    else:
+                        from difflib import SequenceMatcher 
+                        ratio = SequenceMatcher(None, album, item['title']).ratio()
+                        if ratio > 0.80:
+                            item['score'] = int(ratio*100)
+
+                    if len(pub_date) == 8 and 'score' in item:
+                        tmp = item['date'].replace('.', '')
+                        if len(tmp) != 8:
+                            continue
+                        diff = abs(int(pub_date) - int(tmp))
+                        #logger.error(diff)
+                        if diff == 0:
+                            item['score'] += 10
+                        if diff < 3:
+                            item['score'] += 5
+                        if item['score'] >= 100:
+                            item['score'] = 100
+                    if 'score' in item:
+                        item['desc'] = f"아티스트 : {artist} / 발매일 : {item['date']}"
+                        ret.append(item)
+            
+            logger.error(f"html2 score count : {len(ret)}")
+            return ret
+
     
     @classmethod
     def search_album(cls, keyword, return_format):
@@ -134,10 +252,13 @@ class SiteMelon(object):
         album = tmps[0]
         artist = None
         artist_code = None
+        pub_date = None
         if len(tmps) > 1:
             artist = tmps[1]
         if len(tmps) > 2:
             artist_code = tmps[2]
+        if len(tmps) > 3:
+            pub_date = tmps[3]
         logger.debug(f'artist: {artist}')
         logger.debug(f'album: {album}')
         data = cls.base_search('album', album)
@@ -146,38 +267,56 @@ class SiteMelon(object):
             return {'ret':'success', 'data':data}
         else:
             ret = {'ret':'success', 'data':[]}
-            count = 0
-            for idx, item in enumerate(data):
-                entity = {'image':''}
-                entity['title'] = item['ALBUMNAME']
-                entity['artist'] = item['ARTISTNAME']
-                entity['code'] = cls.module_char + cls.site_char + item['ALBUMID']
-                if len(item['ALBUMIMG']) > 0:
-                    entity['image'] = item['ALBUMIMG'].split('.jpg')[0] + '.jpg'
-                entity['desc'] = f"아티스트 : {item['ARTISTNAME']} / 발매일 : {item['ISSUEDATE'][0:4]}.{item['ISSUEDATE'][4:6]}.{item['ISSUEDATE'][6:8]}"
+            ret['data'] = cls.search_album_from_api(data, album, artist, artist_code)
 
-                if artist == item['ARTISTNAME']:
-                    if album == item['ALBUMNAME']:
-                        entity['score'] = 100
-                    elif SiteUtil.compare(album, item['ALBUMNAME']):
-                        entity['score'] = 95 - idx*5
-                    else:
-                        entity['score'] = 90 - idx*5
-                else:
-                    entity['score'] = 80 - idx*5
-                if entity['score'] < 10:
-                    entity['score'] = 10
-                if entity['score'] == 10:
-                    count += 1
-                    if count > 10:
-                        continue
-                ret['data'].append(entity)
+            #ret['data'] = list(reversed(sorted(ret['data'], key=lambda k:k['score'])))
+            #if len(ret['data']) > 0 and ret['data'][0]['score'] == 100:
+            #    return ret
+
+            ret['data'] += cls.search_album_from_html(data, album, artist, artist_code, pub_date)
+            #ret['data'] = list(reversed(sorted(ret['data'], key=lambda k:k['score'])))
+            #if len(ret['data']) > 0 and ret['data'][0]['score'] == 100:
+            #    return ret
+
+
             if len(ret['data']) == 0:
                 ret['ret'] = 'empty'
             else:
                 ret['data'] = list(reversed(sorted(ret['data'], key=lambda k:k['score'])))
             return ret   
          
+    @classmethod
+    def search_album_from_api(cls, data, album, artist, artist_code):
+        ret = []
+        if data == None:
+            return ret
+        count = 0
+        for idx, item in enumerate(data):
+            entity = {'image':''}
+            entity['title'] = item['ALBUMNAME']
+            entity['artist'] = item['ARTISTNAME']
+            entity['code'] = cls.module_char + cls.site_char + item['ALBUMID']
+            if len(item['ALBUMIMG']) > 0:
+                entity['image'] = item['ALBUMIMG'].split('.jpg')[0] + '.jpg'
+            entity['desc'] = f"아티스트 : {item['ARTISTNAME']} / 발매일 : {item['ISSUEDATE'][0:4]}.{item['ISSUEDATE'][4:6]}.{item['ISSUEDATE'][6:8]}"
+
+            if artist == item['ARTISTNAME']:
+                if album == item['ALBUMNAME']:
+                    entity['score'] = 100
+                elif cls.compare(album, item['ALBUMNAME']):
+                    entity['score'] = 95 - idx*5
+                else:
+                    entity['score'] = 90 - idx*5
+            else:
+                entity['score'] = 80 - idx*5
+            if entity['score'] < 10:
+                entity['score'] = 10
+            if entity['score'] == 10:
+                count += 1
+                if count > 10:
+                    continue
+            ret.append(entity)
+        return ret
 
 
     @classmethod
@@ -262,15 +401,29 @@ class SiteMelon(object):
             elif len(span_tags) == 1 and span_tags[0].text_content().strip():
                 song_data['is_title'] = True
             
-            tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/a')[0]
-            song_data['title'] = tmp_tag.text_content().strip()
-            match = re.search("\('(?P<menu_id>\d+)',\s?'?(?P<id>\d+)'?", tmp_tag.attrib['href'])
-            song_data['song_id'] = match.group('id')
-            song_data['menu_id'] = match.group('menu_id')
 
-            tmp_tag = tag.xpath('.//td[4]/div/div/div[2]/a')[0]
-            song_data['singer'] = tmp_tag.text_content().strip()
-            song_data['singer_id'] = re.search("'(?P<id>\d+)'", tmp_tag.attrib['href']).group('id')
+            tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/a')
+            if len(tmp_tag) > 0:
+                tmp_tag = tmp_tag[0]
+                song_data['title'] = tmp_tag.text_content().strip()
+                match = re.search("\('(?P<menu_id>\d+)',\s?'?(?P<id>\d+)'?", tmp_tag.attrib['href'])
+                song_data['song_id'] = match.group('id')
+                song_data['menu_id'] = match.group('menu_id')
+            else:
+                # 링크 없는 것들 있음
+                tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/span')[0]
+                song_data['title'] = tmp_tag.text_content().strip()
+                song_data['song_id'] = ''
+                song_data['menu_id'] = ''
+            
+
+            tmp_tag = tag.xpath('.//td[4]/div/div/div[2]/a')
+            if len(tmp_tag) > 0:
+                tmp_tag = tmp_tag[0]
+                song_data['singer'] = tmp_tag.text_content().strip()
+                song_data['singer_id'] = re.search("'(?P<id>\d+)'", tmp_tag.attrib['href']).group('id')
+            else:
+                song_data['singer'] = song_data['singer_id'] = ''
 
             tmp_tag = tag.xpath('.//td[9]/div/button')[0]
             if tmp_tag.attrib.get('disabled', None) == 'disabled':
@@ -364,3 +517,13 @@ class SiteMelon(object):
         except Exception as e:
             logger.debug(f'Exception:{e}')
             logger.debug(traceback.format_exc())
+
+
+
+    @classmethod
+    def compare(cls, a, b):
+        return (cls.remove_special_char(a).replace(' ', '').lower() == cls.remove_special_char(b).replace(' ', '').lower())
+    
+    @classmethod
+    def remove_special_char(cls, text):
+        return re.sub('[-=+,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》]', '', text)
