@@ -380,7 +380,8 @@ class SiteMelon(object):
             entity['desc'] += '\n' if tmp == '' else tmp + '\n'
         entity['desc'] = entity['desc'].strip()
 
-
+        # https://www.melon.com/album/detail.htm?albumId=6690 
+        # 9번 트랙 없음
         def song_append(data, cd_index, song_data):
             tmp = int(cd_index.replace('cd', ''))
             #logger.error(tmp)
