@@ -62,7 +62,7 @@ class SiteMelon(object):
                 entity['desc'] = f"{item['NATIONALITYNAME']} / {item['ACTTYPENAMES']} / {item['SEX']} / {entity['code']}"
 
                 if keyword == entity['artist']:
-                    entity['score'] = 100 - idx*5
+                    entity['score'] = 99 - idx*5
                 else:
                     entity['score'] = 80 - idx*5
                 if entity['score'] < 10:
@@ -144,9 +144,12 @@ class SiteMelon(object):
         ret = []
         try:
             text = requests.get(url, headers=default_headers).text
+            #logger.debug(text)
+            #logger.debug(url)
             root = lxml.html.fromstring(text)
+            
             tags = root.xpath('//li[@class="album11_li"]')
-            #logger.error(f"HTML 앨범 수 : {len(tags)}")
+            logger.debug(f"HTML 앨범 수 : {len(tags)}")
             for tag in tags:
                 entity = {'artist':'Various Artists'}
                 tmp = tag.xpath('.//div/a')[0]
@@ -160,7 +163,7 @@ class SiteMelon(object):
                     entity['image'] = tmp[0].attrib['src']
                 
 
-                entity['album_type'] = tag.xpath('.//div/div/dl/dt/span')[0].text_content().strip().replace('[','').replace(']','')
+                entity['album_type'] = tag.xpath('.//div/div/dl/dt/span')[0].text_content().strip().replace('[','').replace(']','').strip()
                 
                 entity['title'] = tag.xpath('.//div/div/dl/dt/a')[0].text_content().strip()
 
@@ -242,7 +245,7 @@ class SiteMelon(object):
                         item['desc'] = f"아티스트 : {artist} / 발매일 : {item['date']}"
                         ret.append(item)
             
-            logger.error(f"html2 score count : {len(ret)}")
+            logger.debug(f"html2 score count : {len(ret)}")
             return ret
 
     
@@ -262,7 +265,7 @@ class SiteMelon(object):
         logger.debug(f'artist: {artist}')
         logger.debug(f'album: {album}')
         data = cls.base_search('album', album)
-        logger.debug(d(data))
+        #logger.debug(d(data))
         if return_format == 'api':
             return {'ret':'success', 'data':data}
         else:
@@ -328,6 +331,8 @@ class SiteMelon(object):
 
         tag = root.xpath('//div[@class="thumb"]/a/img')[0]
         entity['image'] = tag.attrib['src'].split('?')[0]
+        if entity['image'] == 'https://cdnimg.melon.co.kr':
+            entity['image'] = 'https://cdnimg.melon.co.kr/resource/image/web/default/noAlbum_500_160727.jpg'
 
         tag = root.xpath('//span[@class="gubun"]')[0]
         entity['album_type'] = re.sub('[\[\]]', '', tag.text_content()).strip()
@@ -395,11 +400,7 @@ class SiteMelon(object):
             cd_index = tag.attrib['data-group-items']
             song_data = {'has_mv':True}
             song_data['number'] = int(tag.xpath('.//td[2]/div[1]/span[1]/text()')[0])
-            span_tags = tag.xpath('.//td[4]/div[1]/div[1]/div[1]/span/span')
-            if len(span_tags) == 0:
-                song_data['is_title'] = False
-            elif len(span_tags) == 1 and span_tags[0].text_content().strip():
-                song_data['is_title'] = True
+            
             
 
             tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/a')
@@ -409,12 +410,21 @@ class SiteMelon(object):
                 match = re.search("\('(?P<menu_id>\d+)',\s?'?(?P<id>\d+)'?", tmp_tag.attrib['href'])
                 song_data['song_id'] = match.group('id')
                 song_data['menu_id'] = match.group('menu_id')
+                span_tags = tag.xpath('.//td[4]/div[1]/div[1]/div[1]/span/span')
+                if len(span_tags) == 0:
+                    song_data['is_title'] = False
+                elif len(span_tags) == 1 and span_tags[0].text_content().strip():
+                    song_data['is_title'] = True
             else:
                 # 링크 없는 것들 있음
-                tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/span')[0]
+                tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/span')[-1]
                 song_data['title'] = tmp_tag.text_content().strip()
                 song_data['song_id'] = ''
                 song_data['menu_id'] = ''
+                tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/span')[0]
+                song_data['is_title'] = False
+                if tmp_tag.text_content().strip() == 'Title':
+                    song_data['is_title'] = True
             
 
             tmp_tag = tag.xpath('.//td[4]/div/div/div[2]/a')
@@ -447,7 +457,7 @@ class SiteMelon(object):
                     for cd in entity['track']:
                         for song in cd:
                             if song['title'] == title:
-                                logger.info(f"MV: {song['title']}")
+                                #logger.info(f"MV: {song['title']}")
                                 img_tag = tmp[0].xpath('.//img')[0]
                                 song['mv_image'] = img_tag.attrib['src'].split('.jpg')[0] + '.jpg'
                                 song['mv_id'] = mv_id
