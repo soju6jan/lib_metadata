@@ -112,7 +112,7 @@ class SiteMelon(object):
                 entity['info'][key] = value
                 if key == '장르':
                     entity['genres'] = [x.strip() for x in value.split(',')]
-                if key == '국적':
+                if key == '국적': 
                     entity['countries'] = [value]
                 entity['info_desc'] += f"{key} : {value}\n"
         entity['info_desc'] = entity['info_desc'].strip()
@@ -341,8 +341,16 @@ class SiteMelon(object):
         tag = root.xpath('//div[@class="song_name"]/strong/following-sibling::text()')[0]
         entity['title'] = tag.strip()
 
+        # ellipsis artist 태그가 있는 경우 있음. 아티스트가 너무 많은 경우???
+        # https://www.melon.com/album/detail.htm?albumId=10539102
+
         tag = root.xpath('//div[@class="artist"]/a')
-        if len(tag) == 1:
+        tags = root.xpath('//div[@class="ellipsis artist"]/a')
+        logger.warning(tag)
+        logger.warning(tags)
+        if len(tag) == 0 and len(tags) > 0:
+            tag = tags
+        if len(tag) > 0:
             tag = tag[0]
             tmp = tag.attrib['href']
             entity['artist_id'] = re.search("'(?P<id>\d+)'", tmp).group('id')
