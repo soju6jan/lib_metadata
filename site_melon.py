@@ -346,8 +346,6 @@ class SiteMelon(object):
 
         tag = root.xpath('//div[@class="artist"]/a')
         tags = root.xpath('//div[@class="ellipsis artist"]/a')
-        logger.warning(tag)
-        logger.warning(tags)
         if len(tag) == 0 and len(tags) > 0:
             tag = tags
         if len(tag) > 0:
@@ -409,8 +407,6 @@ class SiteMelon(object):
             cd_index = tag.attrib['data-group-items']
             song_data = {'has_mv':True}
             song_data['number'] = int(tag.xpath('.//td[2]/div[1]/span[1]/text()')[0])
-            
-            
 
             tmp_tag = tag.xpath('.//td[4]/div/div/div[1]/span/a')
             if len(tmp_tag) > 0:
@@ -448,6 +444,12 @@ class SiteMelon(object):
             if tmp_tag.attrib.get('disabled', None) == 'disabled':
                 song_data['has_mv'] = False
 
+            tmp_tag = tag.xpath('.//td[5]/div/button/span[2]/text()')
+            try:
+                song_data['rating_count'] = int(tmp_tag[1].replace(',', '').strip())
+            except:
+                logger.error("rating_count error")
+                song_data['rating_count'] = 0
             song_append(entity['track'], cd_index, song_data)
 
         tag = root.xpath('//div[@class="section_movie"]')
