@@ -468,7 +468,7 @@ class SiteDaumTv(SiteDaum):
 
 
     @classmethod
-    def episode_info(cls, episode_code, include_kakao=False, is_ktv=True):
+    def episode_info(cls, episode_code, include_kakao=False, is_ktv=True, summary_duplicate_remove=False):
         try:
             ret = {}
             episode_code = episode_code[2:]
@@ -496,20 +496,28 @@ class SiteDaumTv(SiteDaum):
                     date2 = tmp[0].text_content().strip()
                     entity.title = ('%s %s' % (date1, date2)).strip()
             items = root.xpath('//p[@class="episode_desc"]')
+            has_strong_tag = False
+            strong_title = ''
             if len(items) == 1:
                 tmp = items[0].xpath('strong')
                 if len(tmp) == 1:
-                    title = tmp[0].text_content().strip()
-                    if title !='None': 
+                    has_strong_tag = True
+                    strong_title = tmp[0].text_content().strip()
+                    if strong_title != 'None': 
                         if is_ktv:
-                            entity.title = '%s %s' % (entity.title, title)
+                            entity.title = '%s %s' % (entity.title, strong_title)
                         else:
-                            entity.title = title
+                            entity.title = strong_title
+                        
                 else:
                     if is_ktv == False:
                         entity.title = ''
+            entity.title = entity.title.strip()
             summary2 = '\r\n'.join(txt.strip() for txt in root.xpath('//p[@class="episode_desc"]/text()'))
-            entity.plot = '%s\r\n%s' % (entity.title, summary2)
+            if summary_duplicate_remove == False:
+                entity.plot = '%s\r\n%s' % (entity.title, summary2)
+            else:
+                entity.plot = summary2.replace(strong_title, '').strip()
             
             items = root.xpath('//*[@id="tv_episode"]/div[2]/div[1]/div/a/img')
             if len(items) == 1:
