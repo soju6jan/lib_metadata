@@ -162,8 +162,8 @@ class SiteMsin(object):
 
             # actor
             entity.actor = []
-            for actor in tree.xpath('//*[@id="content"]//div[contains(@class, "mv_artist")]/span/a/text()'):
-                tmpactor = cls.get_actor_msin(actor.strip())
+            for actorurl in tree.xpath('//*[@id="content"]//div[contains(@class, "mv_artist")]/span/a/@href'):
+                tmpactor = cls.get_actor_msin(actorurl)
                 entity.actor.append(tmpactor)
 
             # 팬아트
@@ -187,13 +187,12 @@ class SiteMsin(object):
         return ret
 
     @classmethod
-    def get_actor_msin(cls, name):
-        url = f'https://db.msin.jp/search/actress?name={name}'
+    def get_actor_msin(cls, url):
         response = SiteUtil.get_response(url, cookies={'age': 'off'})
         tree = html.fromstring(response.text)
         actor = EntityActor('', site='msin')
         actor.originalname = tree.xpath('//div[@class="act_name"]/span[@class="mv_name"]/text()')[0].strip()
-        actor.name = SiteUtil.trans(actor.originalname, do_trans=True)
+        actor.name = SiteUtil.trans(actor.originalname, do_trans=True).strip()
         try:
             actor.thumb = SiteUtil.get_image_url(tree.xpath('//div[@class="act_image"]//img/@src')[0], image_mode='3')['image_url']
         except:
