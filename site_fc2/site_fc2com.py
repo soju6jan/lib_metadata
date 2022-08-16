@@ -37,7 +37,7 @@ class SiteFc2Com(object):
 
             if tree.xpath('/html/head/title/text()')[0] == 'お探しの商品が見つかりません':
                 logger.debug(f'not found: {keyword}')
-                logger.debug(f'try search google cache')
+                logger.debug(f'try search google cache: {keyword}')
                 cache = cls.search_cache(url)
                 if cache is not None:
                     tree = cache
@@ -95,8 +95,11 @@ class SiteFc2Com(object):
 
             # 썸네일
             entity.thumb = []
-            data_poster = SiteUtil.get_image_url('https:'+tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[1]/span/img/@src')[0], image_mode, proxy_url=proxy_url)
-            entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
+            try:
+                data_poster = SiteUtil.get_image_url('https:'+tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[1]/span/img/@src')[0], image_mode, proxy_url=proxy_url)
+                entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
+            except:
+                logger.debug(f'포스터 없음: {code}')
             try:
                 data_landscape = SiteUtil.get_image_url(tree.xpath('//*[@id="top"]/div[1]/section[2]/ul/li[1]/a/@href')[0], image_mode, proxy_url=proxy_url)
                 entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
@@ -104,8 +107,8 @@ class SiteFc2Com(object):
                 logger.debug(f'landscape 없음: {code}')
 
 
-            # tagline
-            entity.tagline = SiteUtil.trans(tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/h3/text()')[0].strip(), do_trans=do_trans)
+            # tagline, plot
+            entity.tagline = entity.plot = SiteUtil.trans(tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/h3/text()')[0].strip(), do_trans=do_trans)
 
             # date, year
             tmp_date = parse(re.search('\d{4}/\d{2}/\d{2}', tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/div[2]/p/text()')[0]).group(0))
@@ -133,9 +136,6 @@ class SiteFc2Com(object):
 
             # 별점 지원할 경우 추가할 부분 / entity.ratings
             # fc2.com 지원은 하지만 귀찮으므로 나중에 추가
-
-            # plot
-            entity.plot = SiteUtil.trans(tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[2]/h3/text()')[0], do_trans=do_trans)
             
             # 팬아트
             # 나중에
