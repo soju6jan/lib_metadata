@@ -72,7 +72,7 @@ class SiteMsin(object):
                 for entry in tree.xpath('//*[@id="content"]//div[@class="movie_info"]'):
                     item = EntityAVSearch(cls.site_name)
                     item.code = cls.module_char + cls.site_char + entry.xpath('./div[@class="movie_ditail"]/div[contains(@class, "movie_title")]/a/@href')[0].split('=')[-1]
-                    item.title = item.title_ko = entry.xpath('./div[@class="movie_ditail"]/div[contains(@class, "movie_title")]/a/text()')[0]
+                    item.title = item.title_ko = entry.xpath('./div[@class="movie_ditail"]/div[contains(@class, "movie_title")]/a/text()')[0].strip()
                     item.year = parse(entry.xpath('./div[@class="movie_ditail"]/div[@class="movie_create"]/a/text()')[0]).year
                     item.image_url = entry.xpath('./div//div[@class="img_wrap"]/a/img/@src')[0] if entry.xpath('./div//div[@class="img_wrap"]/a/img/@src') != [] else None
 
