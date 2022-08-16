@@ -44,8 +44,8 @@ class SiteMsin(object):
                     item = EntityAVSearch(cls.site_name)
                     item.code = cls.module_char + cls.site_char + response.url.split('=')[-1]
                     item.title = item.title_ko = "".join(tree.xpath('//*[@id="content"]//div[contains(@class, "mv_title")]//span/text()')).strip()
-                    item.year = parse(tree.xpath('//*[@id="content"]//div[@class="mv_createDate"]/a/text()')[0]).year
-                    item.image_url = tree.xpath('//*[@id="content"]//div[@class="movie_image_ditail"]/img/@src')[0] if tree.xpath('//*[@id="content"]//div[@class="movie_image_ditail"]/img/@src') !=[] else None
+                    item.year = parse(tree.xpath('//*[@id="content"]//div[@class="mv_createDate"]/a/text()')[0]).year if tree.xpath('//*[@id="content"]//div[@class="mv_createDate"]/a/text()') !=[] else None
+                    item.image_url = tree.xpath('//*[@id="content"]//div[contains(@class, "movie_image_ditail")]/img/@src')[0] if tree.xpath('//*[@id="content"]//div[contains(@class, "movie_image_ditail")]/img/@src') !=[] else None
 
                     if manual == True:
                         if image_mode == '3':
@@ -124,7 +124,7 @@ class SiteMsin(object):
             # 썸네일
             entity.thumb = []
             try:
-                data_poster = SiteUtil.get_image_url(tree.xpath('//*[@id="content"]//div[@class="movie_image_ditail"]/img/@src')[0], image_mode, proxy_url=proxy_url)
+                data_poster = SiteUtil.get_image_url(tree.xpath('//*[@id="content"]//div[contains(@class, "movie_image_ditail")]/img/@src')[0], image_mode, proxy_url=proxy_url)
                 entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
             except:
                 logger.debug(f'포스터 없음: {code}')
@@ -133,12 +133,13 @@ class SiteMsin(object):
             entity.tagline = entity.plot = SiteUtil.trans("".join(tree.xpath('//*[@id="content"]//div[contains(@class, "mv_title")]//span/text()')).strip(), do_trans=do_trans)
 
             # date, year
-            tmp_date = parse(tree.xpath('//*[@id="content"]//div[@class="mv_createDate"]/a/text()')[0])
-            entity.premiered = str(tmp_date.date())
-            entity.year = str(tmp_date.date().year)
+            tmp_date = parse(tree.xpath('//*[@id="content"]//div[@class="mv_createDate"]/a/text()')[0]) if tree.xpath('//*[@id="content"]//div[@class="mv_createDate"]/a/text()') !=[] else None
+            if tmp_date:
+                entity.premiered = str(tmp_date.date())
+                entity.year = str(tmp_date.date().year)
 
             # director
-            entity.director = tree.xpath('//*[@id="content"]//div[contains(@class, "mv_writer")]/a/text()')[0].strip()
+            entity.director = tree.xpath('//*[@id="content"]//div[contains(@class, "mv_writer")]/a/text()')[0].strip() if tree.xpath('//*[@id="content"]//div[contains(@class, "mv_writer")]/a/text()') !=[] else None
 
             # tag
             entity.tag = []
@@ -162,7 +163,8 @@ class SiteMsin(object):
             # actor
             entity.actor = []
             for actor in tree.xpath('//*[@id="content"]//div[contains(@class, "mv_artist")]/span/a/text()'):
-                entity.actor.append(EntityActor(actor))
+                tmpactor = cls.get_actor_msin(actor.strip())
+                entity.actor.append(tmpactor)
 
             # 팬아트
             # 나중에
@@ -183,3 +185,18 @@ class SiteMsin(object):
             ret['data'] = str(exception)
 
         return ret
+
+    @classmethod
+    def get_actor_msin(cls, name):
+        url = f'https://db.msin.jp/search/actress?name={name}'
+        response = SiteUtil.get_response(url, cookies={'age': 'off'})
+        tree = html.fromstring(response.text)
+        actor = EntityActor('', site='msin')
+        actor.originalname = tree.xpath('//div[@class="act_name"]/span[@class="mv_name"]/text()')[0].strip()
+        actor.name = SiteUtil.trans(actor.originalname, do_trans=True)
+        try:
+            actor.thumb = SiteUtil.get_image_url(tree.xpath('//div[@class="act_image"]//img/@src')[0], image_mode='3')['image_url']
+        except:
+            pass
+
+        return actor
