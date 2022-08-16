@@ -83,7 +83,7 @@ class Site7mmTv(object):
 
             ret['data'] = sorted(ret['data'], key=lambda k: k['score'], reverse=True)  
             ret['ret'] = 'success'
-            logger.debug(ret)
+
 
         except Exception as exception: 
             logger.error('Exception:%s', exception)

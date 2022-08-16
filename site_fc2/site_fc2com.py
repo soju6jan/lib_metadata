@@ -37,7 +37,7 @@ class SiteFc2Com(object):
 
             if tree.xpath('/html/head/title/text()')[0] == 'お探しの商品が見つかりません':
                 logger.debug(f'not found: {keyword}')
-                logger.debug(f'try search google cache')
+                logger.debug(f'try search google cache: {keyword}')
                 cache = cls.search_cache(url)
                 if cache is not None:
                     tree = cache
@@ -95,8 +95,11 @@ class SiteFc2Com(object):
 
             # 썸네일
             entity.thumb = []
-            data_poster = SiteUtil.get_image_url('https:'+tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[1]/span/img/@src')[0], image_mode, proxy_url=proxy_url)
-            entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
+            try:
+                data_poster = SiteUtil.get_image_url('https:'+tree.xpath('//*[@id="top"]/div[1]/section[1]/div/section/div[1]/span/img/@src')[0], image_mode, proxy_url=proxy_url)
+                entity.thumb.append(EntityThumb(aspect='poster', value=data_poster['image_url']))
+            except:
+                logger.debug(f'포스터 없음: {code}')
             try:
                 data_landscape = SiteUtil.get_image_url(tree.xpath('//*[@id="top"]/div[1]/section[2]/ul/li[1]/a/@href')[0], image_mode, proxy_url=proxy_url)
                 entity.thumb.append(EntityThumb(aspect='landscape', value=data_landscape['image_url']))
