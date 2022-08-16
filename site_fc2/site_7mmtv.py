@@ -32,24 +32,27 @@ class Site7mmTv(object):
             ret = {}
             keyword = keyword.strip().lower()
             site_base_url = MetadataModelSetting.get('jav_fc2_7mmtv_url')
-            url = f'{site_base_url}/ko/uncensored_search/all/{keyword}/1.html'
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url)
-            
+            url = f'{site_base_url}/ko/searchform_search/all/index.html'
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, post_data={'search_keyword': keyword, 'search_type': 'uncensored', 'op': 'search'})
+
             ret = {'data' : []}
 
             item = EntityAVSearch(cls.site_name)
 
             if tree.xpath('//div[@class="latest-korean-box-row"]'):
                 search_result = (
-                    zip(tree.xpath('/html/body/section[2]/div/article/div/div/div[1]/div/div/div[2]/a/h2/text()'),
-                        tree.xpath('/html/body/section[2]/div/article/div/div/div[1]/div/div/div[2]/a/@href'),
-                        tree.xpath('/html/body/section[2]/div/article/div/div/div[1]/div/div/div[1]/a/img/@src'))
+                    zip(tree.xpath('//div[@class="latest-korean-box-row"]/div[@class="latest-korean-box-text"]/a/h2/text()'),
+                        tree.xpath('//div[@class="latest-korean-box-row"]/div[@class="latest-korean-box-text"]/a/@href'),
+                        tree.xpath('//div[@class="latest-korean-box-row"]/div[@class="latest-korean-box-img"]/a/figure/video/@poster')
+                        or tree.xpath('//div[@class="latest-korean-box-row"]/div[@class="latest-korean-box-img"]/a/img/@src'),
+                        tree.xpath('//div[@class="latest-korean-box-row"]/div[@class="latest-korean-box-text"]/div[@class="korean-box-text-date-row"]//span[@class="date-part"]/text()'))
                 )
-                for search_title, url, thumb in search_result:
+                for search_title, url, thumb, date in search_result:
                     if keyword in search_title and 'fc2' in search_title.lower():
                         item.title = item.title_ko = re.sub('(\[?FC2-?PPV-? ?\\d{6,7}\]?)', '', search_title, flags=re.I).strip()
                         item.code = cls.module_char + cls.site_char + url.split('/')[5]
                         item.image_url = thumb
+                        item.year = parse(date).year
                         break
 
             else:
@@ -80,6 +83,7 @@ class Site7mmTv(object):
 
             ret['data'] = sorted(ret['data'], key=lambda k: k['score'], reverse=True)  
             ret['ret'] = 'success'
+            logger.debug(ret)
 
         except Exception as exception: 
             logger.error('Exception:%s', exception)
