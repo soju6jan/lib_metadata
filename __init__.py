@@ -46,5 +46,5 @@ from .site_fc2.site_7mmtv import Site7mmTv
 from .site_fc2.site_bp4x import SiteBp4x
 from .site_fc2.site_fc2com import SiteFc2Com
 from .site_fc2.site_fc2cm import SiteFc2Cm
-from .site_fc2.site_javdb import SiteJavdb
+from .site_fc2.site_msin import SiteMsin
 from .site_fc2.site_fc2hub import SiteFc2Hub
