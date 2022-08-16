@@ -77,6 +77,7 @@ class SiteNaverBook(SiteNaver):
             if type(tmp) == type({}):
                 tmp = [tmp]
             for idx, item in enumerate(tmp):
+                #logger.debug(d(item))
                 
                 entity = {}
                 entity['code'] = 'BN' + item['link'].split('bid=')[1]
@@ -93,7 +94,19 @@ class SiteNaverBook(SiteNaver):
                         entity['description'] = item['description'].replace('<b>', '').replace('</b>', '')
                 except:
                     pass
-                entity['score'] = 100 - idx*5
+                #logger.warning(idx)
+                if titl in entity['title'] and auth in entity['author']:
+                    if entity['image'] != None:
+                        entity['score'] = 100 - idx
+                    else:
+                        entity['score'] = 90 - idx
+                elif titl in entity['title']:
+                    entity['score'] = 95 - idx*5
+                else:
+                    entity['score'] = 90 - idx*5
+                if entity['description'] == '':
+                    entity['score'] += -10
+                #logger.error(entity['score'])
                 result_list.append(entity)
         else:
             logger.warning("검색 실패")
@@ -117,7 +130,7 @@ class SiteNaverBook(SiteNaver):
         entity = {}
         root = SiteUtil.get_tree(url, headers=cls.default_headers)
         entity['code'] = code
-        entity['title'] = root.xpath('//div[@class="book_info"]/h2/a/text()')[0]
+        entity['title'] = cls.change_for_plex(root.xpath('//div[@class="book_info"]/h2/a/text()')[0].strip())
         entity['poster'] = root.xpath('//div[@class="book_info"]/div[1]/div/a/img')[0].attrib['src'].split('?')[0]
         entity['ratings'] = root.xpath('//*[@id="txt_desc_point"]/strong[1]/text()')[0]
         tmp = root.xpath('//div[@class="book_info"]/div[2]/div[2]')[0].text_content().strip()

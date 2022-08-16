@@ -25,23 +25,23 @@ class SiteUtil(object):
     } 
 
     @classmethod 
-    def get_tree(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None):
-        text = cls.get_text(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies)
+    def get_tree(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None, verify=None):
+        text = cls.get_text(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies, verify=verify)
         #logger.debug(text)
         if text is None:
             return
         return html.fromstring(text)
     
     @classmethod 
-    def get_text(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None):
-        res = cls.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies)
+    def get_text(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None, verify=None):
+        res = cls.get_response(url, proxy_url=proxy_url, headers=headers, post_data=post_data, cookies=cookies, verify=verify)
         #logger.debug('url: %s, %s', res.status_code, url)
         #if res.status_code != 200:
         #    return None
         return res.text
 
     @classmethod 
-    def get_response(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None):
+    def get_response(cls, url, proxy_url=None, headers=None, post_data=None, cookies=None, verify=None):
         proxies = None
         if proxy_url is not None and proxy_url != '':
             proxies = {"http"  : proxy_url, "https" : proxy_url}
@@ -49,9 +49,15 @@ class SiteUtil(object):
             headers = cls.default_headers
 
         if post_data is None:
-            res = cls.session.get(url, headers=headers, proxies=proxies, cookies=cookies)
+            if verify == None:
+                res = cls.session.get(url, headers=headers, proxies=proxies, cookies=cookies)
+            else:
+                res = cls.session.get(url, headers=headers, proxies=proxies, cookies=cookies, verify=verify)
         else:
-            res = cls.session.post(url, headers=headers, proxies=proxies, data=post_data, cookies=cookies)
+            if verify == None:
+                res = cls.session.post(url, headers=headers, proxies=proxies, data=post_data, cookies=cookies)
+            else:
+                res = cls.session.post(url, headers=headers, proxies=proxies, data=post_data, cookies=cookies, verify=verify)
         
         #logger.debug(res.headers)
         #logger.debug(res.text)
