@@ -29,7 +29,8 @@ class SiteFc2Cm(object):
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36',
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'accept-language': 'ko-KR,ko;q=0.9',
-        'sec-ch-ua': '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"'
+        'sec-ch-ua': '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
+        'X-Forwarded-For': '127.0.0.1'
     }
 
     @classmethod
@@ -39,12 +40,12 @@ class SiteFc2Cm(object):
             keyword = keyword.strip().lower()
             url = f'{cls.site_base_url}/?p={keyword}&nc=0'
 
-            if SiteUtil.get_response(url).status_code == 404:
+            if SiteUtil.get_response(url, headers=cls.headers).status_code == 404:
                 logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = 'not found'
                 return ret
-            elif SiteUtil.get_response(url).status_code == 403:
+            elif SiteUtil.get_response(url, headers=cls.headers).status_code == 403:
                 logger.debug('fc2cm 403 error')
                 ret['ret'] = 'failed'
                 ret['data'] = 'fc2cm 403'
