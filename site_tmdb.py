@@ -383,10 +383,12 @@ class SiteTmdbMovie(SiteTmdb):
                     try:
                         if SiteUtil.is_include_hangul(tmdb_item['original_name']) == False:
                             people_info = tmdbsimple.People(tmdb_item['credit_id']).info()
-                            for tmp in people_info['also_known_as']:
-                                if SiteUtil.is_include_hangul(tmp):
-                                    name = tmp
-                                    break
+                            # 2022-08-18 정보가 없으면 API가 디폴트로 브루스 윌리스를 넘김
+                            if people_info['id'] != 62:
+                                for tmp in people_info['also_known_as']:
+                                    if SiteUtil.is_include_hangul(tmp):
+                                        name = tmp
+                                        break
                     except: pass
 
                     actor = EntityActor('', site=cls.site_name)
