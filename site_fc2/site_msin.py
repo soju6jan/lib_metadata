@@ -37,7 +37,7 @@ class SiteMsin(object):
             tree.make_links_absolute(url)
             
             ret = {'data' : []}
-            logger.debug(tree.xpath('//*[@id="content"]/p[1]/text()'))
+            # logger.debug(tree.xpath('//*[@id="content"]/p[1]/text()'))
             if tree.xpath('//*[@id="content"]/p[1]/text()') != []:
                 logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
@@ -79,7 +79,7 @@ class SiteMsin(object):
                     item = EntityAVSearch(cls.site_name)
                     item.code = cls.module_char + cls.site_char + entry.xpath('./div[@class="movie_ditail"]/div[contains(@class, "movie_title")]/a/@href')[0].split('=')[-1]
                     item.title = item.title_ko = entry.xpath('./div[@class="movie_ditail"]/div[contains(@class, "movie_title")]/a/text()')[0].strip()
-                    item.year = parse(entry.xpath('./div[@class="movie_ditail"]/div[@class="movie_create"]/a//text()')[0]).year
+                    item.year = parse(entry.xpath('./div[@class="movie_ditail"]/div[@class="movie_create"]/a//text()')[0]).year if entry.xpath('./div[@class="movie_ditail"]/div[@class="movie_create"]/a//text()') !=[] else None
                     item.image_url = entry.xpath('./div//div[@class="img_wrap"]/a/img/@src')[0] if entry.xpath('./div//div[@class="img_wrap"]/a/img/@src') != [] else None
 
                     if manual == True:

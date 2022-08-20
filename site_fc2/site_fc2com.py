@@ -43,7 +43,7 @@ class SiteFc2Com(object):
                 if google_cache is not None:
                     tree = google_cache
                 else:
-                    wayback_cache = cls.search_wayback(url)
+                    wayback_cache = cls.search_wayback(url, proxy_url=proxy_url)
                     if wayback_cache is not None:
                         tree = wayback_cache
                     else:
@@ -95,7 +95,7 @@ class SiteFc2Com(object):
                 if cls.search_google_cache(url):
                     tree = cls.search_google_cache(url)
                 else:
-                    tree = cls.search_wayback(url)
+                    tree = cls.search_wayback(url, proxy_url=proxy_url)
                 
             entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
@@ -184,14 +184,14 @@ class SiteFc2Com(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
-    def search_wayback(url):
+    def search_wayback(url, proxy_url):
         wayback_url = f'http://archive.org/wayback/available?url={url}&timestamp=0'
         try:
-            wayback_response = SiteUtil.get_response(wayback_url)
+            wayback_response = SiteUtil.get_response(wayback_url, headers=SiteUtil.default_headers, proxy_url=proxy_url)
             if len(wayback_response.json()['archived_snapshots']) > 0:
                 logger.debug(f'found in wayback machine')
                 cache_url = wayback_response.json()['archived_snapshots']['closest']['url']
-                tree = SiteUtil.get_tree(cache_url)
+                tree = SiteUtil.get_tree(cache_url, headers=SiteUtil.default_headers, proxy_url=proxy_url)
                 return tree
             else:
                 logger.debug(f'not found in wayback machine')
