@@ -188,11 +188,12 @@ class SiteFc2Com(object):
     def search_wayback(url, proxy_url):
         wayback_url = f'http://archive.org/wayback/available?url={url}&timestamp=0'
         try:
-            wayback_response = SiteUtil.get_response(wayback_url, headers=SiteUtil.default_headers, proxy_url=proxy_url)
+            wayback_response = SiteUtil.get_response(wayback_url, headers=SiteUtil.default_headers)
             if len(wayback_response.json()['archived_snapshots']) > 0:
                 logger.debug(f'found in wayback machine')
                 cache_url = wayback_response.json()['archived_snapshots']['closest']['url']
-                tree = SiteUtil.get_tree(cache_url, headers=SiteUtil.default_headers, proxy_url=proxy_url)
+                logger.debug(SiteUtil.get_response(cache_url, headers=SiteUtil.default_headers).text)
+                tree = SiteUtil.get_tree(cache_url, headers=SiteUtil.default_headers)
                 return tree
             else:
                 logger.debug(f'not found in wayback machine')
