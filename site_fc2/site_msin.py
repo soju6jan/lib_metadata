@@ -37,8 +37,14 @@ class SiteMsin(object):
             tree.make_links_absolute(url)
             
             ret = {'data' : []}
+        
+            if response.status_code == 404:
+                logger.debug(f'not found: {keyword}')
+                ret['ret'] = 'failed'
+                ret['data'] = 'not found'
+                return ret
 
-            if len(response.history) >= 1:
+            elif len(response.history) >= 1:
                 # logger.debug('302')
                 try:
                     item = EntityAVSearch(cls.site_name)
