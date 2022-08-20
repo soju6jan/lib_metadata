@@ -38,13 +38,18 @@ class SiteFc2Com(object):
             if tree.xpath('/html/head/title/text()')[0] == 'お探しの商品が見つかりません':
                 logger.debug(f'not found: {keyword}')
                 logger.debug(f'try search google cache: {keyword}')
-                cache = cls.search_cache(url)
-                if cache is not None:
-                    tree = cache
+                google_cache = cls.search_google_cache(url)
+
+                if google_cache is not None:
+                    tree = google_cache
                 else:
-                    ret['ret'] = 'failed'
-                    ret['data'] = 'not found'
-                    return ret
+                    wayback_cache = cls.search_wayback(url)
+                    if wayback_cache is not None:
+                        tree = wayback_cache
+                    else:
+                        ret['ret'] = 'failed'
+                        ret['data'] = 'not found'
+                        return ret
 
             item = EntityAVSearch(cls.site_name)
             item.code = cls.module_char + cls.site_char + keyword
@@ -87,7 +92,10 @@ class SiteFc2Com(object):
             url = f'{cls.site_base_url}/{code[2:]}/'
             tree = SiteUtil.get_tree(url, proxy_url=proxy_url)
             if tree.xpath('/html/head/title/text()')[0] == 'お探しの商品が見つかりません':
-                tree = cls.search_cache(url)
+                if cls.search_google_cache(url):
+                    tree = cls.search_google_cache(url)
+                else:
+                    tree = cls.search_wayback(url)
                 
             entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
@@ -157,16 +165,38 @@ class SiteFc2Com(object):
 
         return ret
     
-    def search_cache(url):
+    def search_google_cache(url):
         cache_url = f'https://webcache.googleusercontent.com/search?q=cache:{url}'
         try:
-            if SiteUtil.get_response(cache_url).status_code == 404:
+            cache_response = SiteUtil.get_response(cache_url, headers=SiteUtil.default_headers).status_code
+            if cache_response == 404:
                 logger.debug(f'not found in google cache')
                 return
+            elif cache_response == 302:
+                logger.debug(f'google cache blocked')
+                return
             else:
-                tree = SiteUtil.get_tree(cache_url)
+                logger.debug(f'found in google cache')
+                tree = SiteUtil.get_tree(cache_url, headers=SiteUtil.default_headers)
                 return tree
             
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+
+    def search_wayback(url):
+        wayback_url = f'http://archive.org/wayback/available?url={url}&timestamp=0'
+        try:
+            wayback_response = SiteUtil.get_response(wayback_url)
+            if len(wayback_response.json()['archived_snapshots']) > 0:
+                logger.debug(f'found in wayback machine')
+                cache_url = wayback_response.json()['archived_snapshots']['closest']['url']
+                tree = SiteUtil.get_tree(cache_url)
+                return tree
+            else:
+                logger.debug(f'not found in wayback machine')
+                return
+
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
