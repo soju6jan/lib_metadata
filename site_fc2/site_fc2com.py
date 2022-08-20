@@ -169,10 +169,11 @@ class SiteFc2Com(object):
         cache_url = f'https://webcache.googleusercontent.com/search?q=cache:{url}'
         try:
             cache_response = SiteUtil.get_response(cache_url, headers=SiteUtil.default_headers).status_code
+            logger.debug(cache_response)
             if cache_response == 404:
                 logger.debug(f'not found in google cache')
                 return
-            elif cache_response == 302:
+            elif cache_response == 429:
                 logger.debug(f'google cache blocked')
                 return
             else:
