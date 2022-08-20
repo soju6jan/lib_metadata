@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import requests, re, json
+import requests, re, json, random
 import traceback
 from dateutil.parser import parse
 
@@ -26,11 +26,10 @@ class SiteFc2Cm(object):
     site_char = 'M'
 
     headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36',
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'accept-language': 'ko-KR,ko;q=0.9',
-        'sec-ch-ua': '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
-        'X-Forwarded-For': '127.0.0.1'
+        'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6,zh;q=0.5',
+        'sec-ch-ua': '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104'
     }
 
     @classmethod
@@ -39,19 +38,22 @@ class SiteFc2Cm(object):
             ret = {}
             keyword = keyword.strip().lower()
             url = f'{cls.site_base_url}/?p={keyword}&nc=0'
-
-            if SiteUtil.get_response(url, headers=cls.headers).status_code == 404:
+            cm_headers = cls.headers
+            cm_headers['X-Forwarded-For'] = '.'.join(map(lambda x: str(random.randrange(1,256)), range(4)))
+            # logger.debug(cm_headers)
+            status_code = SiteUtil.get_response(url, headers=cm_headers).status_code
+            if status_code == 404:
                 logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
                 ret['data'] = 'not found'
                 return ret
-            elif SiteUtil.get_response(url, headers=cls.headers).status_code == 403:
+            elif status_code == 403:
                 logger.debug('fc2cm 403 error')
                 ret['ret'] = 'failed'
                 ret['data'] = 'fc2cm 403'
                 return ret
 
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.headers)
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cm_headers)
             if tree.xpath('/html/head/title/text()')[0] == '404':
                 logger.debug(f'not found: {keyword}')
                 ret['ret'] = 'failed'
@@ -112,7 +114,10 @@ class SiteFc2Cm(object):
         try:
             ret = {}
             url = f'{cls.site_base_url}/?p={code[2:]}&nc=0'
-            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cls.headers)
+            cm_headers = cls.headers
+            cm_headers['X-Forwarded-For'] = '.'.join(map(lambda x: str(random.randrange(1,256)), range(4)))
+            # logger.debug(cm_headers)
+            tree = SiteUtil.get_tree(url, proxy_url=proxy_url, headers=cm_headers)
             entity = EntityMovie(cls.site_name, code)
             entity.country = [u'일본']
             entity.mpaa = u'청소년 관람불가'
